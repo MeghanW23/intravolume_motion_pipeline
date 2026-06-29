@@ -7,7 +7,7 @@ This project directly addresses the motion confound using this novel slice-by-sl
 
 This project was developed in collaboration with the [Computational Radiology Lab](http://crl.med.harvard.edu/). 
 
-### How to run the pipeline
+### How to Run The Pipeline
 
 1. Create a config file for your data by making a copy of [run_pipeline/config_files/TEMPLATE_CONFIG.env](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/run_pipeline/config_files/TEMPLATE_CONFIG.env). These config files are used to point to the input data and pipeline configurations. For additional information on how to use a config file, there are notes in the TEMPLATE_CONFIG.env file.
 2. [run_pipeline/submit_job.sh](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/run_pipeline/submit_job.sh) starts the pipeline. It receives one or more config files as command line inputs. Pass the config file(s) to submit_job.sh and start a slurm job like this:
@@ -16,7 +16,7 @@ sbatch submit_job.sh <your config file(s)>
 ```
 *Currently, it is much faster to run 1 job per single-run data. I recommend submitting a job per run, then running fMRIPrep separately afterwards.*
 
-### About this Repository
+### About This Repository
 *Please note that this pipeline is designed to be run on Boston Children's HPC cluster E3.*
 This repository contains the pipeline for correcting slice-by-slice (intravolume) motion in [SMS Accelerated](https://pmc.ncbi.nlm.nih.gov/articles/PMC4915494/) fMRI data obtained from prospective studies conducted by the [Cohen Lab](https://bchcohenlab.com/). This pipeline can be broken down into 2 main steps:
 
@@ -33,3 +33,13 @@ Conventionally, motion-corrupted volumes are censored from fMRI time series. Whe
 The source code for the Structured Matrix Completion Approach can be found in the [rsfMRI_SMC_mc-ORIGINAL_CODE](https://github.com/bchimagine/rsfMRI_SMC_mc/tree/abe415496bc38fc7d590e49ff7a435117b0f97ec) directory. The code I edited for this pipeline can be found in the [rsfMRI_SMC_mc](https://github.com/MeghanW23/intravolume_motion_pipeline/tree/master/rsfMRI_SMC_mc) directory.
 
 #### After running both motion correction and characterization, you will have the option to run fMRIPrep on the motion corrected NiFTI Timeseries.
+
+### Pipeline Steps
+1. [run_pipeline/submit_job.sh](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/run_pipeline/submit_job.sh): Submits the job to slurm and runs the run_pipeline.py script.
+2. [run_pipeline/pipeline_scripts/run_pipeline.py](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/run_pipeline/pipeline_scripts/run_pipeline.py): This script validates the inputs in the config file(s) and acts as a wrapper for each of the follows steps/scripts.
+3. [run_pipeline/pipeline_scripts/dicom_to_nifti.py](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/run_pipeline/pipeline_scripts/dicom_to_nifti.py): Runs only if a DICOM Directory is given. It decompresses the DICOMS and runs dcm2niix.
+4. [run_pipeline/pipeline_scripts/motion_characterization.py](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/run_pipeline/pipeline_scripts/motion_characterization.py): Characterizes motion in 6 dimensions for every aquisition. Unless a reference volume is listed in the config file, it will select a reference volume via [run_pipeline/pipeline_scripts/get_reference_volume.py](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/run_pipeline/pipeline_scripts/get_reference_volume.py). It is very important a motion-free reference volume is selected and motion may not be visible to the naked eye. For a step-by-step guide on what the motion characterization script does, please see the [PDF Guide](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/other/motion-characterization-step-by-step.pdf).
+5. [run_pipeline/pipeline_scripts/graph_transforms.py](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/run_pipeline/pipeline_scripts/graph_transforms.py): This script graphs the outputs of motion_characterization.py. It also calculates displacements between each transform and the next, and outputs a parameters.txt and displacement.txt files with the values. The file parameters.txt will be inputted to the motion correction software.
+6. [run_pipeline/pipeline_scripts/remove_background.py](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/run_pipeline/pipeline_scripts/remove_background.py): The motion correction software requires both the raw NiFTI data and the NiFTI data with the background removed. This script strips the background. *Please assure it has not stripped more than the background.*
+7. [run_pipeline/pipeline_scripts/start_motion_correction.py](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/run_pipeline/pipeline_scripts/start_motion_correction.py): the motion correction software is mainly written in MATLAB. This python script starts the main MATLAB script.
+8. [run_pipeline/pipeline_scripts/run_fmriprep.py](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/run_pipeline/pipeline_scripts/run_fmriprep.py): If you are running fMRIPrep, this script prepares the fmriprep directories and materials and starts fMRIPrep.
