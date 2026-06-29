@@ -1,0 +1,3 @@
+[submodule "sms-mi-reg"]
+	path = sms-mi-reg
+	url = git@github.com:ComputationalRadiology/sms-mi-reg.git
