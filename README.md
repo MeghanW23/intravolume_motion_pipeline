@@ -12,7 +12,9 @@ in the [Cohen Lab](https://bchcohenlab.com/)'s ADHD and ASD Cohorts. This pipeli
 
 **STEP ONE: Motion Characterization**: We must first characterize the slice-by-slice movement before we can correct for it. We characterize each slice group's motion via a 3D Rigid Body Transform detailing the movement, in 6 dimensions, from a 3D reference volume. This alignment is powered via Computational Radiology Lab's [Sms-Mi-Reg Optimizer](https://github.com/ComputationalRadiology/sms-mi-reg). 
 
-We first use the [Reference Volume Selection Script](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/run_pipeline/pipeline_scripts/get_reference_volume.py) to select a motion-free reference volume. We then align each slice group in the timeseries to the reference volume via the [Motion Characterization Script](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/run_pipeline/pipeline_scripts/motion_characterization.py).
+We first use [run_pipeline/pipeline_scripts/get_reference_volume.py](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/run_pipeline/pipeline_scripts/get_reference_volume.py) to select a motion-free reference volume. We then align each slice group in the timeseries to the reference volume via [run_pipeline/pipeline_scripts/motion_characterization.py](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/run_pipeline/pipeline_scripts/motion_characterization.py).
+
+For a step-by-step guide on what the motion characterization script does, please see the [PDF Guide](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/other/motion-characterization-step-by-step.pdf).
 
 **STEP TWO: Motion Correction**: Conventionally, motion-corrupted volumes are censored from fMRI time series. Where this censoring can result in discontinuities in the fMRI signal, which may lead to substantial alterations in fMRI analysis. Instead, we utilize a [Structured Matrix Completion Approach](https://pubmed.ncbi.nlm.nih.gov/34432631/), where we recover the missing entries from censoring based on structured low rank matrix completion.
 
