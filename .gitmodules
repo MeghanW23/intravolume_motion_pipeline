@@ -1,9 +1,9 @@
 [submodule "sms-mi-reg"]
 	path = sms-mi-reg
 	url = git@github.com:ComputationalRadiology/sms-mi-reg.git
-[submodule "ITKLatestRelease"]
-	path = ITKLatestRelease
-	url = git@github.com:InsightSoftwareConsortium/ITK
 [submodule "rsfMRI_SMC_mc-ORIGINAL_CODE"]
 	path = rsfMRI_SMC_mc-ORIGINAL_CODE
 	url = git@github.com:bchimagine/rsfMRI_SMC_mc
+[submodule "ITKLatestRelease"]
+	path = ITKLatestRelease
+	url = git@github.com:InsightSoftwareConsortium/ITK.git
