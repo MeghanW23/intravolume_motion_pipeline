@@ -5,6 +5,8 @@ Pharmacological fMRI (phMRI) is the primary tool for understanding how stimulant
 
 This project directly addresses the motion confound using this novel slice-by-slice motion correction pipeline. Standard correction methods treat each MRI volume as if it were captured in a single instant, but participants can move within a volume acquisition, and in ADHD, they frequently do. Our algorithm corrects motion at the level of individual slice groups rather than whole volumes, capturing within-volume jitter that standard methods miss. By comparing findings with and without this superior correction, we can separate true treatment effects from motion artifacts and begin to identify accurate neuroanatomical targets for ADHD intervention.
 
+This project was developed in collaboration with the [Computational Radiology Lab](http://crl.med.harvard.edu/). 
+
 ### How to run the pipeline
 
 1. Create a config file for your data by making a copy of [run_pipeline/config_files/TEMPLATE_CONFIG.env](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/run_pipeline/config_files/TEMPLATE_CONFIG.env). These config files are used to point to the input data and pipeline configurations. For additional information on how to use a config file, there are notes in the TEMPLATE_CONFIG.env file.
@@ -19,14 +21,14 @@ sbatch submit_job.sh <your config file(s)>
 This repository contains the pipeline for correcting slice-by-slice (intravolume) motion in [SMS Accelerated](https://pmc.ncbi.nlm.nih.gov/articles/PMC4915494/) fMRI data obtained from prospective studies conducted by the [Cohen Lab](https://bchcohenlab.com/). This pipeline can be broken down into 2 main steps:
 
 #### 1. Motion Characterization
-We must first characterize the slice-by-slice movement before we can correct for it. We characterize each slice group's motion via a 3D Rigid Body Transform detailing the movement, in 6 dimensions, from a 3D reference volume. This alignment is powered via Computational Radiology Lab's [Sms-Mi-Reg Optimizer](https://github.com/ComputationalRadiology/sms-mi-reg). 
+We must first characterize the slice-by-slice movement before we can correct for it. We characterize each slice group's motion via a 3D Rigid Body Transform detailing the movement, in 6 dimensions, from a 3D reference volume. This alignment is powered via [Computational Radiology Lab](http://crl.med.harvard.edu/)'s [Sms-Mi-Reg Optimizer](https://github.com/ComputationalRadiology/sms-mi-reg). 
 
 We first use [run_pipeline/pipeline_scripts/get_reference_volume.py](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/run_pipeline/pipeline_scripts/get_reference_volume.py) to select a motion-free reference volume. We then align each slice group in the timeseries to the reference volume via [run_pipeline/pipeline_scripts/motion_characterization.py](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/run_pipeline/pipeline_scripts/motion_characterization.py).
 
 For a step-by-step guide on what the motion characterization script does, please see the [PDF Guide](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/master/other/motion-characterization-step-by-step.pdf).
 
 #### 2. Motion Correction
-Conventionally, motion-corrupted volumes are censored from fMRI time series. Where this censoring can result in discontinuities in the fMRI signal, which may lead to substantial alterations in fMRI analysis. Instead, we utilize a [Structured Matrix Completion Approach](https://pubmed.ncbi.nlm.nih.gov/34432631/), where we recover the missing entries from censoring based on structured low rank matrix completion.
+Conventionally, motion-corrupted volumes are censored from fMRI time series. Where this censoring can result in discontinuities in the fMRI signal, which may lead to substantial alterations in fMRI analysis. Instead, we utilize a [Structured Matrix Completion Approach](https://pubmed.ncbi.nlm.nih.gov/34432631/), created by the [Computational Radiology Lab](http://crl.med.harvard.edu/), where we recover the missing entries from censoring based on structured low rank matrix completion.
 
 The source code for the Structured Matrix Completion Approach can be found in the [rsfMRI_SMC_mc-ORIGINAL_CODE](https://github.com/bchimagine/rsfMRI_SMC_mc/tree/abe415496bc38fc7d590e49ff7a435117b0f97ec) directory. The code I edited for this pipeline can be found in the [rsfMRI_SMC_mc](https://github.com/MeghanW23/intravolume_motion_pipeline/tree/master/rsfMRI_SMC_mc) directory.
 
