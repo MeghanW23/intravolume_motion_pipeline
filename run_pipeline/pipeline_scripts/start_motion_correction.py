@@ -31,8 +31,8 @@ class StartMotionCorrection:
         sms_factor = self.get_sms_factor(slice_timing)
         print(f"SMS Factor: {sms_factor}")
 
-        # scrubbing_threshold_in_mm = self.get_scrub_threshold_in_mm(input_json_path, scrubbing_threshold)
-        scrubbing_threshold_in_mm = 0.4157
+        scrubbing_threshold_in_mm = self.get_scrub_threshold_in_mm(input_json_path, scrubbing_threshold)
+        # scrubbing_threshold_in_mm = 0.4157
         print(f"Scrubbing Threshold in mm: {scrubbing_threshold_in_mm}mm")
 
         matlab_command = [
