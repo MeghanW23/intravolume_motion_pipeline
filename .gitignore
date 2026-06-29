@@ -1,0 +1,17 @@
+.vscode
+fmriprep/input_directory/*
+!fmriprep/input_directory/.gitinclude
+fmriprep/output_directory/*
+!fmriprep/output_directory/.gitinclude
+fmriprep/tmp_directory/*
+!fmriprep/tmp_directory/.gitinclude
+fmriprep/license.txt
+other/
+!run_pipeline/config_files/
+run_pipeline/config_files/*
+!run_pipeline/config_files/TEMPLATE_CONFIG.env
+run_pipeline/logs/*
+runs_and_data/participant_data/*
+!runs_and_data/participant_data/.gitinclude
+runs_and_data/participant_runs/*
+!runs_and_data/participant_runs/.gitinclude
