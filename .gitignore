@@ -6,7 +6,8 @@ fmriprep/output_directory/*
 fmriprep/tmp_directory/*
 !fmriprep/tmp_directory/.gitinclude
 fmriprep/license.txt
-other/
+other/*
+!other/motion-characterization-step-by-step.pdf
 !run_pipeline/config_files/
 run_pipeline/config_files/*
 !run_pipeline/config_files/TEMPLATE_CONFIG.env
