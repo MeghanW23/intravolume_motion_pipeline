@@ -45,9 +45,10 @@ class GraphTransformDirectory:
         num_volumes = int(num_volumes)
 
         # Write extracted info to files
+        self.radian_parameters = self.extract_parameters(transforms, input_rotation_unit, to_radians=True)
         self.write_parameters_to_text_file(
-            self.parameters,
-            output_text_file_path=os.path.join(output_directory, "parameters.txt"),
+            self.radian_parameters,
+            output_text_file_path=os.path.join(output_directory, "radian_parameters.txt"),
             num_slice_groups=self.num_slice_groups
         )
         self.write_displacements_to_text_file(
@@ -147,21 +148,39 @@ class GraphTransformDirectory:
         return transforms
 
 
-    def extract_parameters(self, transforms, input_rotation_unit):
+    def extract_parameters(self, transforms, input_rotation_unit, to_radians=False):
         parameters = [list(transform.GetParameters()) for transform in transforms]
+        
         if input_rotation_unit == 'versor':
+            if to_radians:
+                print("Returning Radian Values...")
+                return [
+                    self.versor_to_radians(rx, ry, rz) + [tx, ty, tz]
+                    for rx, ry, rz, tx, ty, tz in parameters
+                ]
+                
             return [
                 self.versor_to_degrees(rx, ry, rz) + [tx, ty, tz]
                 for rx, ry, rz, tx, ty, tz in parameters
             ]
 
         elif input_rotation_unit == 'radians':
+            if to_radians:
+                print("Returning Radian Values...")
+                return parameters
+                
             return [
                 self.radians_to_degrees(rx, ry, rz) + [tx, ty, tz]
                 for rx, ry, rz, tx, ty, tz in parameters
             ]
         
         elif input_rotation_unit == 'degrees':
+            if to_radians:
+                print("Returning Radian Values...")
+                return [
+                    [math.radians(rx), math.radians(ry), math.radians(rz)] + [tx, ty, tz]
+                    for rx, ry, rz, tx, ty, tz in parameters
+                ]
             return parameters
 
         else:
@@ -200,6 +219,34 @@ class GraphTransformDirectory:
             math.degrees(ry),
             math.degrees(rz)
         ]
+        
+    def versor_to_radians(self, x, y, z):
+        
+        # reconstruct quaternion
+        w = math.sqrt(max(0.0, 1 - x*x - y*y - z*z))
+
+        # rotation matrix
+        r00 = 1 - 2*(y*y + z*z)
+        r01 = 2*(x*y - z*w)
+
+        r10 = 2*(x*y + z*w)
+        r11 = 1 - 2*(x*x + z*z)
+
+        r20 = 2*(x*z - y*w)
+        r21 = 2*(y*z + x*w)
+        r22 = 1 - 2*(x*x + y*y)
+
+        # euler angles
+        ry = math.asin(-r20)
+
+        if abs(r20) != 1:
+            rx = math.atan2(r21, r22)
+            rz = math.atan2(r10, r00)
+        else:
+            rx = 0
+            rz = math.atan2(-r01, r11)
+
+        return [rx, ry, rz]
 
 
     def radians_to_degrees(self, x, y, z):

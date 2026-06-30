@@ -131,10 +131,38 @@ function main = main_cameraparams(data_path, fmri_fname, fmri_fname_bgremoved, O
 	%params = matlabtonumpy(params);
 	opt.params = py.numpy.asarray(params_temp);   %%% numpy stored in opt
 
+	disp("First 5 rows of RAW rotation params (before *50):");
+	disp(params_temp(1:5,1:3))
+	disp("Units check - if radians, values should be small (< 0.1 typically):");
+	disp("If degrees, values will be larger (1-10 range typically):")
+
 	params_temp(:,1:3) = params_temp(:,1:3)*50;%% displacement = r times theta, where r = 35 mm for DHCP
+
+	disp("First 5 rows of scaled rotation params:");
+	disp(params_temp(1:5,1:3))
+	disp("Max rotation displacement (mm):");
+	disp(max(max(abs(params_temp(1:5,1:3)))))
+
 	params_diff = params_temp(1:end-1,:) - params_temp(2:end,:);
 	SWD = sum(abs(params_diff),2); % frame wise displacement
 	SWD = [0;SWD];
+
+	disp("First 10 SWD values:");
+	disp(SWD(1:min(10,end)))
+	disp("Max SWD:");
+	disp(max(SWD))
+	disp("Min SWD:");
+	disp(min(SWD))
+	disp("Mean SWD:");
+	disp(mean(SWD))
+	disp("Number of aquisitions exceeding scrubbing threshold:");
+	disp(sum(SWD >= thresh_forscrub))
+	disp("Total aquisitions:");
+	disp(length(SWD))
+	disp("Scrubbing threshold:");
+	disp(thresh_forscrub)
+	disp("Fraction of aquisitions flagged:");
+	disp(sum(SWD >= thresh_forscrub)/length(SWD))
 	%figure(1),plot(SWD);drawnow;
 	y = thresh_forscrub*ones(1,length(SWD));
 	%hold on,plot(y);drawnow;

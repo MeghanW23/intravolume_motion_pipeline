@@ -309,7 +309,7 @@ def run_main_pipeline(start_time, config_file, input_variables):
         output_directory=input_variables['OUTPUT_DIRECTORY'],
         input_rotation_unit='versor',
         plot_tile=f"{os.path.basename(input_nifti_path)} Motion Characterization Plots", 
-        threshold_as_percent_of_voxel=input_variables['MOTION_THRESHOLD'],
+        threshold_as_percent=input_variables['MOTION_THRESHOLD'],
         transform_suffix = ".tfm"
     )
 
@@ -339,7 +339,7 @@ def run_main_pipeline(start_time, config_file, input_variables):
         input_nifti_image_path=input_nifti_path,
         input_json_path=input_json_path,
         bgremoved_input_nifti_image_path=bgremoved_output_nifti_path,
-        parameters_textfile_path=os.path.join(input_variables['OUTPUT_DIRECTORY'], "parameters.txt"),
+        parameters_textfile_path=os.path.join(input_variables['OUTPUT_DIRECTORY'], "radian_parameters.txt"),
         recon_abruptmotion_output_filepath=os.path.join(input_variables['OUTPUT_DIRECTORY'], "recon_abruptmotion.nii.gz"),
         directliftandunliftcodes_dir=input_variables['MCORR_DIRECT_LIFTANDUNLIFT_CODES_DIR'],
         operators_dir=input_variables['MCORR_OPERATORS_DIR'],
