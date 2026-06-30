@@ -139,6 +139,7 @@ class GetReferenceVolume:
                 print(f"All Displacement Values < {threshold_in_mm}mm")
                 print(f"Reference Volume Selected: {upsampled_volume_path}")
                 self.found_reference_volume = upsampled_volume_path
+                return
             
         print(f"NO GOOD REFERENCE VOLUME FOUND.")
 
