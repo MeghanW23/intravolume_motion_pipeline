@@ -171,7 +171,7 @@ def dicom_to_nifti(working_directory, dcm2niix_path, dicom_directory, return_one
     else:
         return found_nifti_images, found_json_images
 
-def upsample_reference_volume(reference_volume_path, spacing, output_volume_path):
+def upsample_reference_volume(reference_volume_path, output_volume_path, spacing = (1.236, 1.236, 1.236)):
     def resample_img(img, spacing, sz, interpolator = sitk.sitkLinear):
         # interpolator could be sitk.sitkLinear
         # interpolator could be sitk.sitkBSpline
@@ -194,6 +194,19 @@ def upsample_reference_volume(reference_volume_path, spacing, output_volume_path
         print(f"Reference Volume New Size: {new_sz}")
         return resample_img(img, new_spacing, new_sz.tolist())
 
+    # check if already upsampled
+    input_spacing = [
+        round(val, 5)
+        for val in list(sitk.ReadImage(reference_volume_path).GetSpacing())
+    ]
+    target_spacing = [
+        round(val, 5)
+        for val in list(spacing)
+    ]
+    if input_spacing == target_spacing:
+        print(f"Reference Volume Already Has Dimensions: {input_spacing}")
+        return reference_volume_path
+    
     upsampled_volume = resample_img_new_spacing(
         sitk.ReadImage(reference_volume_path),
         new_spacing=spacing
@@ -203,7 +216,6 @@ def upsample_reference_volume(reference_volume_path, spacing, output_volume_path
         upsampled_volume, 
         output_volume_path
     )
-
     return output_volume_path
     
 def get_parameters_from_tfm_file(transform_path):

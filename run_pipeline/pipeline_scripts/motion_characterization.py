@@ -112,15 +112,11 @@ class MotionCharacterization():
         if upsample_reference_volume:
             print(f"Upsampling Reference Volume {os.path.basename(self.reference_volume_path)} To Spacing: {reference_volume_spacing}")
 
-            upsampled_reference_volume_path = os.path.join(self.working_directory, f"UPSAMPLED_{os.path.basename(self.reference_volume_path)}")
             self.reference_volume_path = functions.upsample_reference_volume(
                 self.reference_volume_path, 
                 spacing=reference_volume_spacing,
-                output_volume_path=upsampled_reference_volume_path
+                output_volume_path=os.path.join(self.working_directory, f"UPSAMPLED_{os.path.basename(self.reference_volume_path)}")
             )
-            self.reference_volume_path = upsampled_reference_volume_path
-
-            print(f"Upsampled Reference Volume at: {self.reference_volume_path}")
 
 
         identity_transform_path = functions.make_identity_transform(
