@@ -490,8 +490,8 @@ if __name__ == "__main__":
         default=10,
         type=int,
         help=\
-            "The percentage of the diameter of a single voxel" + \
-            "Default: 10 Percent"
+            "The percentage of the diameter of a single voxel. " + \
+            "Default: 10 Percent."
     )
     args: argparse.Namespace = parser.parse_args()
     CharacterizeIntraVolumeMotion(
