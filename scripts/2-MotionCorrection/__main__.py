@@ -41,8 +41,8 @@ class StartMotionCorrection:
         print(f"MATLAB Path/Command: {matlab_path}")
         print("======================================================================\n")
         print(
-            f"NOTE: {os.path.basename(__file__)} requires quite a bit of memory. If your "
-            "script dies suddenly, check your memory allocation."
+            "NOTE: The motion correction step requires quite a bit of memory. If your "
+            "script dies suddenly check your memory allocation."
         )
 
         self.validate_inputted_data(dicom_directory, nifti_image_path, json_file_path)
