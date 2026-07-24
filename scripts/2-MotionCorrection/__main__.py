@@ -236,36 +236,11 @@ class StartMotionCorrection:
         if verbose:
             print(f"Running Command: {command}")
 
-        result: subprocess.CompletedProcess = subprocess.run(
+        subprocess.run(
             command
         )
         
-        if result.returncode != 0:
-            raise CalledProcessError(
-                returncode=result.returncode,
-                cmd=result.args,
-                output=result.stdout,
-                stderr=result.stderr
-            )
-
-        elif verbose: 
-            print(f"Command: {command} was Sucessful.")
-            if result.stdout:
-                print(f"Stdout: {result.stdout}")
-            if result.stderr:
-                print(f"Stderr: {result.stderr}")
-
-
-# more verbose than subprocess.CalledProcessError
-class CalledProcessError(subprocess.CalledProcessError):
-    def __str__(self) -> str:
-        return (
-            f"Command resulted in non-zero exit code:\n\n"
-            f"Command: {self.cmd}\n\n"
-            f"Exit code: {self.returncode}\n\n"
-            f"Stdout: {self.output}\n\n"
-            f"Stderr: {self.stderr}"
-        )
+        
     
 if __name__ == "__main__":
     # 
