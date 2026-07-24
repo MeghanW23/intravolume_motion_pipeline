@@ -53,7 +53,6 @@ class RemoveBackground:
 
         print("Creating the transforms")
         data1: np.ndarray = masker.fit_transform(nib_fmri_image)
-        data1: np.ndarray = masker.fit_transform(nib_fmri_image)
         data2: np.ndarray = masker.inverse_transform(data1) # pyright: ignore[reportAssignmentType]
         A: np.ndarray = data2.get_fdata() # pyright: ignore[reportAttributeAccessIssue]
         data3: np.ndarray = np.transpose(A,(3,2,1,0))
