@@ -2,3 +2,7 @@
 	path = scripts/1-MotionCharacterization/sms-mi-reg
 	url = git@github.com:ComputationalRadiology/sms-mi-reg.git
         ignore = dirty
+[submodule "scripts/1-MotionCharacterization/motion-monitor"]
+	path = scripts/1-MotionCharacterization/motion-monitor
+	url = git@github.com:josh-auger/motion-monitor.git
+        ignore = dirty
