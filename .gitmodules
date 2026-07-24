@@ -6,3 +6,7 @@
 	path = scripts/1-MotionCharacterization/motion-monitor
 	url = git@github.com:josh-auger/motion-monitor.git
         ignore = dirty
+[submodule "scripts/2-MotionCorrection/rsfMRI_SMC_mc"]
+	path = scripts/2-MotionCorrection/rsfMRI_SMC_mc
+	url = git@github.com:bchimagine/rsfMRI_SMC_mc
+        ignore = dirty
