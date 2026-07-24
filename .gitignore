@@ -1,5 +1,12 @@
 scripts/1-MotionCharacterization/__pycache__
 scripts/2-MotionCorrection/__pycache__
+scripts/Other/__pycache__
+scripts/fMRIPrep/__pycache__
+
+scripts/fMRIPrep/input_directory
+!scripts/fMRIPrep/input_directory/dataset_description.json
+scripts/fMRIPrep/output_directory
+!scripts/fMRIPrep/output_directory/.gitkeep
 
 participant_data/*
 !participant_data/.gitkeep
@@ -9,3 +16,5 @@ participant_runs/*
 
 run_pipeline/config_files
 !run_pipeline/config_files/TEMPLATE_CONFIG.env
+
+
