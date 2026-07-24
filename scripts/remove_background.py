@@ -49,9 +49,9 @@ class RemoveBackground:
             upper_cutoff=0.75
         ) # pyright: ignore[reportAssignmentType]
         masker: NiftiMasker = NiftiMasker(mask_img=mask)
-        masker.fit(nib_fmri_image)
 
         print("Creating the transforms")
+        data1: np.ndarray = masker.fit_transform(nib_fmri_image)
         data1: np.ndarray = masker.fit_transform(nib_fmri_image)
         data2: np.ndarray = masker.inverse_transform(data1) # pyright: ignore[reportAssignmentType]
         A: np.ndarray = data2.get_fdata() # pyright: ignore[reportAttributeAccessIssue]
