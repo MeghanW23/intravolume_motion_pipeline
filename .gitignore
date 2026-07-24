@@ -1,2 +1,11 @@
 scripts/1-MotionCharacterization/__pycache__
 scripts/2-MotionCorrection/__pycache__
+
+participant_data/*
+!participant_data/.gitkeep
+
+participant_runs/*
+!participant_runs/.gitkeep
+
+run_pipeline/config_files
+!run_pipeline/config_files/TEMPLATE_CONFIG.env
