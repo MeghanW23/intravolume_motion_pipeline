@@ -40,6 +40,10 @@ class StartMotionCorrection:
         print(f"dcm2niix Path/Command: {dcm2niix_path}")
         print(f"MATLAB Path/Command: {matlab_path}")
         print("======================================================================\n")
+        print(
+            f"NOTE: {os.path.basename(__file__)} requires quite a bit of memory. If your "
+            "script dies suddenly, check your memory allocation."
+        )
 
         self.validate_inputted_data(dicom_directory, nifti_image_path, json_file_path)
 
@@ -243,7 +247,6 @@ class StartMotionCorrection:
         
     
 if __name__ == "__main__":
-    # 
     import argparse
     parser: argparse.ArgumentParser = argparse.ArgumentParser(
         description=\
