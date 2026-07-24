@@ -57,9 +57,8 @@ class StartMotionCorrection:
         motion_correction_main_script_dir: str = \
             os.path.join(motion_correction_main_directory, "main_scripts")
         print(f"Motion Correction Main Scripts Directory: {motion_correction_main_script_dir}")
-        motion_correction_main_function_name: str = \
-            os.path.join(motion_correction_main_script_dir, "main_cameraparams.m")
-        print(f"Motion Correction Main MATLAB Script Directory: {motion_correction_main_function_name}")
+        motion_correction_main_function_name: str = "main_cameraparams.m"
+        print(f"Motion Correction Main MATLAB Script Name: {motion_correction_main_function_name}")
         directliftandunliftcodes_dir: str = \
             os.path.join(motion_correction_main_directory, "direct-liftandunlift-codes")
         print(f"direct-liftandunlift-codes Scripts Directory: {directliftandunliftcodes_dir}")
@@ -238,8 +237,7 @@ class StartMotionCorrection:
             print(f"Running Command: {command}")
 
         result: subprocess.CompletedProcess = subprocess.run(
-            command,
-            capture_output=True
+            command
         )
         
         if result.returncode != 0:
