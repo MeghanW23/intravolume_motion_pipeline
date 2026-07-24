@@ -4,8 +4,8 @@ import shutil
 import SimpleITK as sitk 
 from collections import OrderedDict
 
-# in order of usage:
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+# in order of usage:
 from decompress_dicoms import DecompressDicoms
 from dicom_to_nifti import DicomToNifti
 from get_slice_timing import GetSliceTiming
