@@ -48,7 +48,8 @@ class RemoveBackground:
             lower_cutoff=0.25,
             upper_cutoff=0.75
         ) # pyright: ignore[reportAssignmentType]
-        masker: NiftiMasker = NiftiMasker(mask_img=mask)
+        masker = NiftiMasker(mask_img=mask)
+        masker.fit() 
 
         print("Creating the transforms")
         data1: np.ndarray = masker.fit_transform(nib_fmri_image)
