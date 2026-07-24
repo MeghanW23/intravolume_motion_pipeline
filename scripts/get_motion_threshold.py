@@ -37,7 +37,7 @@ class GetMotionThreshold:
             raise ValueError("Image must be at least 3D.")
 
         d_x, d_y, d_z = spacing[:3]
-        print(f"Voxel Spacng: {d_x, d_y, d_z}")
+        print(f"Voxel Spacing: {d_x, d_y, d_z}")
         
         diagonal: float = math.sqrt(d_x ** 2 + d_y ** 2 + d_z ** 2)
         print(f"Voxel diagonal: {diagonal} mm")
