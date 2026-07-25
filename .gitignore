@@ -2,7 +2,7 @@ scripts/__pycache__
 scripts/1-MotionCharacterization/__pycache__
 scripts/2-MotionCorrection/__pycache__
 scripts/Other/__pycache__
-scripts/fMRIPrep/__pycache__
+scripts/3-Single-Subject-fMRIPrep/__pycache__/
 
 scripts/fMRIPrep/input_directory 
 !scripts/fMRIPrep/input_directory/dataset_description.json
