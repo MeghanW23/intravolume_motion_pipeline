@@ -27,17 +27,17 @@ class SingleRunfMRIPrep:
                  dcm2niix_path: str = 'dcm2niix',
                  FMRIPREP_CONTAINER_PATH: str | None = None,
                  FMRIPREP_TEMPLATEFLOW_DIRECTORY: str | None = None,
-                 nprocs: int | None = os.cpu_count(), # pyright: ignore[reportRedeclaration]
+                 n_jobs: int | None = os.cpu_count(), # pyright: ignore[reportRedeclaration]
                  omp_nthreads: int = 8,
-                 mem_gb: int = 24  # in GB
+                 mem_mb: int = 24000  # in MB
                  ) -> None: 
 
         # Set up input configurations 
-        if nprocs == None:
-            nprocs: int = 8
-        print(f"fMRIPrep Max Number of Processes: {nprocs}")
+        if n_jobs == None:
+            n_jobs: int = 8
+        print(f"fMRIPrep Max Number of Processes: {n_jobs}")
         print(f"fMRIPrep Max Number of Threads: {omp_nthreads}")
-        print(f"fMRIPrep Max Memory: {mem_gb} GB")
+        print(f"fMRIPrep Max Memory: {mem_mb} MB / {round(mem_mb / 1000, 2)} GB")
 
         subject_id_str: str = 'sub-' + '{:02d}'.format(subject_id)
         session_num_str: str = 'ses-' + '{:02d}'.format(session_num)
@@ -125,7 +125,7 @@ class SingleRunfMRIPrep:
         anat_t1w_json_file_path, \
         anat_t2w_nifti_image_path, \
         anat_t2w_json_file_path = self.get_input_images(
-            func_data, anat_data, working_directory=working_directory, series_name=series_name
+            func_data, anat_data, working_directory=working_directory, series_name=series_name, n_jobs=n_jobs
         )
 
         # Convert Functional Data to BIDs
@@ -200,9 +200,9 @@ class SingleRunfMRIPrep:
             "/out_dir", 
             "participant", "--participant-label", '{:02d}'.format(run_num),
             "--fs-license-file", "/license.txt",
-            "--nprocs", str(nprocs),
+            "--nprocs", str(n_jobs),
             "--omp-nthreads", str(omp_nthreads),
-            "--mem-gb", str(mem_gb),
+            "--mem", str(mem_mb),
             "-w", "/work_dir",
             "--skip_bids_validation",
             "--output-spaces", "MNI152NLin2009cAsym:res-2",
@@ -221,7 +221,8 @@ class SingleRunfMRIPrep:
                          func_data: str | list[str],
                          anat_data: str | list[str],
                          working_directory: str, 
-                         series_name: str
+                         series_name: str,
+                         n_jobs: int = -1
                          ) -> tuple[
                              str, str,
                              str, str,
@@ -246,7 +247,8 @@ class SingleRunfMRIPrep:
                 dicom_directory=func_data[0],
                 output_directory=decompression_directory,
                 dcmdjpeg_path=self.dcmdjpeg_path,
-                series_name=series_name
+                series_name=series_name,
+                n_jobs=n_jobs
             )
     
             """
@@ -579,6 +581,12 @@ if __name__ == "__main__":
         default='fmriprep_outputs',
         help=\
             f"Default: {os.path.abspath('outputs')}"
+    )
+    parser.add_argument(
+        "--n_jobs",
+        required=False,
+        default=os.cpu_count(),
+        help=f"Default: 1 Job per CPU Core (n_jobs = os.cpu_count())."
     )
     args: argparse.Namespace = parser.parse_args()
     SingleRunfMRIPrep(
