@@ -225,7 +225,7 @@ class SingleRunfMRIPrep:
             "--output-spaces", "MNI152NLin2009cAsym:res-2",
         ] 
         print(f"Running Command: {fmriprep_command}")
-        result: subprocess.CompletedProcess = subprocess.run(fmriprep_command, capture_output=True, text=True)
+        result: subprocess.CompletedProcess = subprocess.run(fmriprep_command)
         if result.returncode != 0:
             raise CalledProcessError(
                 returncode=result.returncode,
