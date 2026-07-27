@@ -421,7 +421,7 @@ class RunfMRIPrep:
             "--fs-license-file", "/license.txt",
             "--nprocs", str(nprocs),
             "--omp-nthreads", str(omp_nthreads),
-            "--mem", str(mem),
+            "--mem-gb", str(mem),
             "-w", "/work_dir",
             "--skip_bids_validation",
             "--output-spaces", "MNI152NLin2009cAsym:res-2",
@@ -431,9 +431,6 @@ class RunfMRIPrep:
             print("fMRIPrep failed:")
             print(result.stdout)
             print(result.stderr)
-
-        subprocess.run(command)
-
 
 
 if __name__ == '__main__':

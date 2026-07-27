@@ -6,7 +6,9 @@ class DicomToNifti:
     def __init__(self, 
                  dicom_directory: str, 
                  output_directory: str = 'outputs',
-                 dcm2niix_path: str = 'dcm2niix') -> None:
+                 dcm2niix_path: str = 'dcm2niix',
+                 filename_keyword: str | None = None,
+                 return_multiple_ok: bool = False) -> None:
         
         os.makedirs(output_directory, exist_ok=True)
 
@@ -22,17 +24,21 @@ class DicomToNifti:
 
         self.run_command()
 
-        self.created_nifti_image_path: str = self.find_output_file(
+        self.nifti_outputs: str | list[str] = self.find_output_file(
             output_directory,
-            file_extension=".nii.gz"
+            file_extension=".nii.gz",
+            filename_keyword=filename_keyword,
+            return_multiple_ok=return_multiple_ok
         )
-        print(f"Outputted NiFTI File: {self.created_nifti_image_path}")
+        print(f"Outputted NiFTI File(s): {self.nifti_outputs}")
 
-        self.created_json_file_path: str = self.find_output_file(
+        self.json_outputs: str | list[str] = self.find_output_file(
             output_directory,
-            file_extension=".json"
+            file_extension=".json",
+            filename_keyword=filename_keyword,
+            return_multiple_ok=return_multiple_ok
         )
-        print(f"Outputted JSON File: {self.created_json_file_path}")
+        print(f"Outputted JSON File(s): {self.json_outputs}")
 
 
     def run_command(self, verbose: bool = True):
@@ -62,7 +68,10 @@ class DicomToNifti:
 
     def find_output_file(self,
                          output_directory: str, 
-                         file_extension: str) -> str:
+                         file_extension: str,
+                         filename_keyword: str | None = None,
+                         return_multiple_ok: bool = False
+                         ) -> str | list[str]:
         
         all_filenames: list[str] = sorted(
             os.listdir(output_directory),
@@ -71,8 +80,15 @@ class DicomToNifti:
         all_matching_filenames: list[str] = [
             filename 
             for filename in all_filenames
-            if filename.endswith(file_extension)
+            if filename.endswith(file_extension) 
+            and "epi" not in filename
         ]
+        if filename_keyword != None:
+            all_matching_filenames: list[str] = [
+                    filename 
+                    for filename in all_matching_filenames
+                    if filename_keyword in filename
+                ]
 
         if len(all_matching_filenames) == 0: 
             raise FileNotFoundError(
@@ -82,6 +98,11 @@ class DicomToNifti:
             )
         
         elif len(all_matching_filenames) > 1:
+
+            if return_multiple_ok:
+                print(f"Returning all matching files...")
+                return all_matching_filenames
+            
             most_recent_file_path: str = os.path.join(output_directory, all_matching_filenames[-1])
             warnings.warn(
                 f"More than one matching file was found in directory '{output_directory}' "
@@ -98,12 +119,12 @@ class DicomToNifti:
             return os.path.join(output_directory, all_matching_filenames[0])
 
 
-    def return_nifti_image(self) -> str:
-        return self.created_nifti_image_path
+    def return_nifti_image(self) -> str | list[str]:
+        return self.nifti_outputs
 
 
-    def return_json_file(self) -> str:
-        return self.created_json_file_path
+    def return_json_file(self) -> str | list[str]:
+        return self.json_outputs
     
 
 # more verbose than subprocess.CalledProcessError
