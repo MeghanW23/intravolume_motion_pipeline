@@ -11,6 +11,5 @@ participant_runs/*
 !participant_runs/.gitkeep
 
 run_pipeline/config_files
-!run_pipeline/config_files/TEMPLATE_CONFIG.env
-
+!run_pipeline/config_files/TEMPLATE.yaml
 
