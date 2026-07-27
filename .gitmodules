@@ -1,12 +1,12 @@
 [submodule "scripts/1-MotionCharacterization/sms-mi-reg"]
-	path = scripts/1-MotionCharacterization/sms-mi-reg
+	path = scripts/MotionCharacterization/sms-mi-reg
 	url = https://github.com/ComputationalRadiology/sms-mi-reg
         ignore = dirty
 [submodule "scripts/1-MotionCharacterization/motion-monitor"]
-	path = scripts/1-MotionCharacterization/motion-monitor
+	path = scripts/MotionCharacterization/motion-monitor
 	url = https://github.com/josh-auger/motion-monitor
         ignore = dirty
 [submodule "scripts/2-MotionCorrection/rsfMRI_SMC_mc"]
-	path = scripts/2-MotionCorrection/rsfMRI_SMC_mc
+	path = scripts/MotionCorrection/rsfMRI_SMC_mc
 	url = git@github.com:bchimagine/rsfMRI_SMC_mc
         ignore = dirty

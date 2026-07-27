@@ -1,15 +1,8 @@
 scripts/__pycache__
-scripts/1-MotionCharacterization/__pycache__
-scripts/2-MotionCorrection/__pycache__
+scripts/MotionCharacterization/__pycache__
+scripts/MotionCorrection/__pycache__
 scripts/Other/__pycache__
-scripts/3-Single-Run-fMRIPrep/__pycache__
-
-scripts/fMRIPrep/input_directory 
-!scripts/fMRIPrep/input_directory/dataset_description.json
-scripts/fMRIPrep/output_directory/
-!scripts/fMRIPrep/output_directory/.gitkeep
-scripts/fMRIPrep/tmp_directory/
-!scripts/fMRIPrep/tmp_directory/.gitkeep
+scripts/SingleRunfMRIPrep/__pycache__
 
 participant_data/*
 !participant_data/.gitkeep
