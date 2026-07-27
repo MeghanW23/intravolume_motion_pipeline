@@ -114,7 +114,7 @@ class SingleRunfMRIPrep:
                 f"Could not find fMRIPrep Dataset Description JSON File at: {self.dataset_description_json}"
             )
         else:
-            new_dataset_description_json: str = os.path.join(fmriprep_main_directory, os.path.basename(self.dataset_description_json))
+            new_dataset_description_json: str = os.path.join(fmriprep_input_directory, os.path.basename(self.dataset_description_json))
             print(f"Copying: {self.dataset_description_json} to: {new_dataset_description_json}")
             shutil.copy(
                 src=self.dataset_description_json,
@@ -127,7 +127,7 @@ class SingleRunfMRIPrep:
                 f"Could not find fMRIPrep License Path at: {self.license_path}"
             )
         else:
-            new_license_path: str = os.path.join(fmriprep_main_directory, os.path.basename(self.license_path))
+            new_license_path: str = os.path.join(fmriprep_input_directory, os.path.basename(self.license_path))
             print(f"Copying: {self.license_path} to: {new_license_path}")
             shutil.copy(
                 src=self.license_path,
