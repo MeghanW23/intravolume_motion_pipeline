@@ -56,7 +56,7 @@ class SingleRunfMRIPrep:
         self.FMRIPREP_TEMPLATEFLOW_DIRECTORY: str | None = FMRIPREP_TEMPLATEFLOW_DIRECTORY # pyright: ignore[reportAttributeAccessIssue, reportRedeclaration]
         if self.FMRIPREP_TEMPLATEFLOW_DIRECTORY == None:
             self.FMRIPREP_TEMPLATEFLOW_DIRECTORY: str = "/lab-share/Neuro-Cohen-e2/Public/templateflow/"
-        print(f"fMRIPrep Templateflow Directory Path: {self.FMRIPREP_CONTAINER_PATH}")
+        print(f"fMRIPrep Templateflow Directory Path: {self.FMRIPREP_TEMPLATEFLOW_DIRECTORY}")
 
         self.dcmdjpeg_path: str = dcmdjpeg_path
         print(f"dcmdjpeg Path: {self.dcmdjpeg_path}")
@@ -114,7 +114,7 @@ class SingleRunfMRIPrep:
                 f"Could not find fMRIPrep Dataset Description JSON File at: {self.dataset_description_json}"
             )
         else:
-            new_dataset_description_json: str = os.path.join(fmriprep_main_directory, self.dataset_description_json)
+            new_dataset_description_json: str = os.path.join(fmriprep_main_directory, os.path.basename(self.dataset_description_json))
             print(f"Copying: {self.dataset_description_json} to: {new_dataset_description_json}")
             shutil.copy(
                 src=self.dataset_description_json,
@@ -127,7 +127,7 @@ class SingleRunfMRIPrep:
                 f"Could not find fMRIPrep License Path at: {self.license_path}"
             )
         else:
-            new_license_path: str = os.path.join(fmriprep_main_directory, self.license_path)
+            new_license_path: str = os.path.join(fmriprep_main_directory, os.path.basename(self.license_path))
             print(f"Copying: {self.license_path} to: {new_license_path}")
             shutil.copy(
                 src=self.license_path,
@@ -209,13 +209,13 @@ class SingleRunfMRIPrep:
             "singularity", "run", "--cleanenv", \
             "-B", f"{self.FMRIPREP_TEMPLATEFLOW_DIRECTORY}:/templateflow",
             "-B", f"{fmriprep_input_directory}:/bids_dir",
-            "-B", f"{working_directory}:/work_dir",
-            "-B", f"{output_directory}:/out_dir",
+            "-B", f"{fmriprep_working_directory}:/work_dir",
+            "-B", f"{fmriprep_output_directory}:/out_dir",
             "-B", f"{self.license_path}:/license.txt",
             self.FMRIPREP_CONTAINER_PATH,
             "/bids_dir", 
             "/out_dir", 
-            "participant", "--participant-label", '{:02d}'.format(run_num),
+            "participant", "--participant-label", '{:02d}'.format(subject_id),
             "--fs-license-file", "/license.txt",
             "--nprocs", str(n_jobs),
             "--omp-nthreads", str(omp_nthreads),
@@ -453,7 +453,7 @@ class SingleRunfMRIPrep:
                 json_data: dict[str, Any] = json.load(file)
                 if not 'SeriesDescription' in json_data:
                     raise ValueError(
-                        f"Could not fine 'SeriesDescription' in JSON File: {json_file}")
+                        f"Could not find 'SeriesDescription' in JSON File: {json_file}")
                 else:
                     if anat_type.lower().strip() in json_data['SeriesDescription'].lower().strip():
                         found_json_file: str = json_file
@@ -602,6 +602,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--n_jobs",
         required=False,
+        type=int,
         default=os.cpu_count(),
         help=f"Default: 1 Job per CPU Core (n_jobs = os.cpu_count())."
     )
@@ -620,6 +621,7 @@ if __name__ == "__main__":
         session_num=args.session_num,
         run_num=args.run_num,
         working_directory=os.path.abspath(args.working_directory),
-        output_directory=os.path.abspath(args.output_directory)
+        output_directory=os.path.abspath(args.output_directory),
+        n_jobs=args.n_jobs
     )
     
