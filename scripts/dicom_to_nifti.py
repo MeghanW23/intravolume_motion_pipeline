@@ -15,10 +15,11 @@ class DicomToNifti:
         self.command: list[str] = [
             dcm2niix_path,  # path to dcm2niix
             "-o", output_directory,
-            "-z", "y",      # compress images 
-            "-b", "y",      # BIDS sidecar
-            "-ba", "n",     # don't anonymize BIDS 
-            "-w", "1",      # overwrite if name conflict
+            "-z", "y",          # compress images 
+            "-b", "y",          # BIDS sidecar
+            "-ba", "n",         # don't anonymize BIDS 
+            "-w", "1",          # overwrite if name conflict
+            "-f", '%p_%t_%s',   # filename
             dicom_directory # input directory
         ]
 
