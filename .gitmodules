@@ -1,10 +1,9 @@
-[submodule "scripts/1-MotionCharacterization/sms-mi-reg"]
+[submodule "scripts/MotionCharacterization/sms-mi-reg"]
 	path = scripts/MotionCharacterization/sms-mi-reg
 	url = https://github.com/ComputationalRadiology/sms-mi-reg
-[submodule "scripts/1-MotionCharacterization/motion-monitor"]
+[submodule "scripts/MotionCharacterization/motion-monitor"]
 	path = scripts/MotionCharacterization/motion-monitor
 	url = https://github.com/josh-auger/motion-monitor
-[submodule "scripts/2-MotionCorrection/rsfMRI_SMC_mc"]
+[submodule "scripts/MotionCorrection/rsfMRI_SMC_mc"]
 	path = scripts/MotionCorrection/rsfMRI_SMC_mc
-	url = git@github.com:bchimagine/rsfMRI_SMC_mc
-
+	url = https://github.com/bchimagine/rsfMRI_SMC_mc
