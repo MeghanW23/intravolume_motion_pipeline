@@ -1,0 +1,114 @@
+# 
+# Please make a copy of this TEMPLATE.yaml file and edit it with your data
+# 
+# Notes: 
+# I decided on using .yaml files to input data into the pipeline 
+# because there are quite a few variables and cofigurations;  
+# It would not be fun to input all of these via the command line. 
+# 
+# It is also helpful to have a record of all the settings associated 
+# with a prior run. 
+# 
+# It also allows code comments, which made it a better choice 
+# than JSON files
+# 
+# ==================================================
+# RUN-SPECIFIC CONFIGURATIONS
+# ==================================================
+
+# These are the three main steps we can run 
+RUN_MOTION_CHARACTERIZATION: true
+RUN_MOTION_CORRECTION: true
+RUN_FMRIPREP: true
+
+# We will make these directories for you: 
+WORKING_DIRECTORY_PATH: "/Users/meghan/motion_fmri/intravolume_motion_pipeline_v2/participant_runs/test/working"
+OUTPUT_DIRECTORY_PATH: "/Users/meghan/motion_fmri/intravolume_motion_pipeline_v2/participant_runs/test/outputs"
+    
+
+# Input a path for either:
+# FUNCTIONAL_DICOM_DIRECTORY 
+# or both
+# FUNCTIONAL_NIFTI_IMAGE_PATH and FUNCTIONAL_JSON_FILE_PATH
+FUNCTIONAL_DICOM_DIRECTORY: 
+FUNCTIONAL_NIFTI_IMAGE_PATH: "participant_data/p004-ses-04_func-bold_task-NFB2_20250827181314_24.nii.gz"
+FUNCTIONAL_JSON_FILE_PATH: "participant_data/p004-ses-04_func-bold_task-NFB2_20250827181314_24.json"
+
+# Enter the series name (ex. "func-bold_task-NFB2")
+# Required if:
+#   you are entering a FUNCTIONAL_DICOM_DIRECTORY 
+#   or 
+#   if RUN_FMRIPREP = True
+SERIES_NAME: "func-bold_task-NFB2"
+
+
+# ==================================================
+# 
+# RUN-NON-SPECIFIC CONFIGURATIONS
+# 
+# These should not have to be changed that much, as they are 
+# already set to the configurations we have found to be the 
+# best for the Neurofeedback/K23 data. 
+# ==================================================
+
+N_JOBS: -1 # -1 = All CPU cores, -2 = All CPU cores except one
+
+# This motion threshold will determine which slice groups and 
+# volumes have "too much" motion. The threshold below is the 
+# pecentage of the diameter of a single voxel.
+MOTION_THRESHOLD: 10
+
+# For limiting the intensity of the voxels of the 3D volumes
+LIMIT_VOXEL_INTENSITY: True
+VOXEL_LOWER_BOUND: 10       # in AIU
+VOXEL_UPPER_BOUND: 1000     # in AIU
+
+# This is the index of a 3D volume in the input 4D NiFTI Image.
+# This 3D volume will be used at the reference volume during alignment.
+# Please not that it must be motion-free, and that motion may not be 
+# visually noticable. 
+# If left empty, we will run our own script to find a suitable 
+# motion-free reference volume.
+REFERENCE_VOLUME_INDEX: 
+
+# For upsampling the voxel spacing of the 3D reference volume 
+UPSAMPLE_REFERENCE_VOLUME: True 
+# If UPSAMPLE_REFERENCE_VOLUME = True:
+# give the new spacing as 3 float values (in mm)
+REFERENCE_VOLUME_SPACING: [1.236, 1.236, 1.236]
+
+# Float value for the radius of the participant's head 
+# I have never changed this value, not sure how it would 
+# affect the results
+HEAD_RADIUS: 50 
+
+# For SMS_MI_REG_RUN_ENVIRONMENT, please enter: 
+# "singularity", "docker", or "local"
+SMS_MI_REG_RUN_ENVIRONMENT: "singularity"
+
+# If SMS_MI_REG_RUN_ENVIRONMENT = "singularity":
+# please also provide the Singularity .sif path via: SMS_MI_REG_SINGULARITY_IMAGE_PATH
+SMS_MI_REG_SINGULARITY_IMAGE_PATH: "/.../sms-mi-reg/sms-mi-reg.sif"
+
+# If SMS_MI_REG_RUN_ENVIRONMENT = "local":
+# please also provide the path to the compiled CPP code via: SMS_MI_REG_EXECUTABLE_PATH.
+# This path is outputted by compiling sms-mi-reg.cpp:
+# https://github.com/ComputationalRadiology/sms-mi-reg/blob/main/sms-mi-reg.cpp 
+SMS_MI_REG_EXECUTABLE_PATH: "/.../sms-mi-reg/build/sms-mi-reg"
+
+# Conda paths
+CONDA_ENV_NAME: "intravolume_motion_pipeline_env"
+CONDA_INIT_PATH: "lab-share/Neuro-Cohen-e2/Public/software/miniforge3/etc/profile.d/conda.sh"
+CONDA_ENV_PYTHON_PATH: "/lab-share/Neuro-Cohen-e2/Public/environment/conda/intravolume_motion_pipeline_env/bin/python"
+
+# Other software paths (some may only exist on compute nodes)
+MATLAB_INSTALLATION_PATH: "/programs/local/MATLAB/R2022b/bin/matlab"
+DCM2NIIX_PATH: "lab-share/Neuro-Cohen-e2/Public/software/fsl/bin/dcm2niix"
+BIOGRIDS_PATH: "/programs/biogrids.shrc"
+DCMDJPEG_PATH: "/programs/x86_64-linux/system/biogrids_bin/dcmdjpeg"
+FSLDIR_PATH: "/lab-share/Neuro-Cohen-e2/Public/software/fsl"
+
+# fMRIPrep Paths
+FMRIPREP_CONTAINER_PATH: "/lab-share/Neuro-Cohen-e2/Public/containers/fmriprep-23.1.3.simg"
+FMRIPREP_TEMPLATEFLOW_DIRECTORY: "/.../templateflow/"
+FMRIPREP_LICENSE_PATH: "/.../license.txt"
