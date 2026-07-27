@@ -1,6 +1,7 @@
 [submodule "scripts/MotionCharacterization/sms-mi-reg"]
 	path = scripts/MotionCharacterization/sms-mi-reg
 	url = https://github.com/ComputationalRadiology/sms-mi-reg
+        ignore = dirty
 [submodule "scripts/MotionCharacterization/motion-monitor"]
 	path = scripts/MotionCharacterization/motion-monitor
 	url = https://github.com/josh-auger/motion-monitor
