@@ -13,7 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from decompress_dicoms import DecompressDicoms
 from dicom_to_nifti import DicomToNifti
 
-class SingleRunfMRIPrep:
+class StartSingleRunfMRIPrep:
     def __init__(self,
                  func_data: list[str],
                  anat_data: list[str],
@@ -607,7 +607,7 @@ if __name__ == "__main__":
         help=f"Default: 1 Job per CPU Core (n_jobs = os.cpu_count())."
     )
     args: argparse.Namespace = parser.parse_args()
-    SingleRunfMRIPrep(
+    StartSingleRunfMRIPrep(
         func_data=[
             os.path.abspath(file_path)
             for file_path in args.func_data
