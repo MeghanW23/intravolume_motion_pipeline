@@ -58,18 +58,6 @@ class SingleRunfMRIPrep:
             self.FMRIPREP_TEMPLATEFLOW_DIRECTORY: str = "/lab-share/Neuro-Cohen-e2/Public/templateflow/"
         print(f"fMRIPrep Templateflow Directory Path: {self.FMRIPREP_CONTAINER_PATH}")
 
-        fmriprep_script_directory = os.path.dirname(__file__)
-        self.dataset_description_json: str = os.path.join(fmriprep_script_directory, "dataset_description.json")
-        if not os.path.exists(self.dataset_description_json):
-            raise FileNotFoundError(
-                f"Could not find fMRIPrep Dataset Description JSON File at: {self.dataset_description_json}"
-            )
-        self.license_path: str = os.path.join(fmriprep_script_directory, "license.txt")
-        if not os.path.exists(self.license_path):
-            raise FileNotFoundError(
-                f"Could not find fMRIPrep License Path at: {self.license_path}"
-            )
-
         self.dcmdjpeg_path: str = dcmdjpeg_path
         print(f"dcmdjpeg Path: {self.dcmdjpeg_path}")
 
@@ -117,6 +105,35 @@ class SingleRunfMRIPrep:
         tmp_directory = os.path.join(fmriprep_main_directory, "fmriprep_tmp") 
         os.makedirs(tmp_directory, exist_ok=True)
         print(f"Temporary Directory: {tmp_directory}")
+
+        # Copy fmriprep regulatory files
+        fmriprep_script_directory = os.path.dirname(__file__)
+        self.dataset_description_json: str = os.path.join(fmriprep_script_directory, "dataset_description.json")
+        if not os.path.exists(self.dataset_description_json):
+            raise FileNotFoundError(
+                f"Could not find fMRIPrep Dataset Description JSON File at: {self.dataset_description_json}"
+            )
+        else:
+            new_dataset_description_json: str = os.path.join(fmriprep_main_directory, self.dataset_description_json)
+            print(f"Copying: {self.dataset_description_json} to: {new_dataset_description_json}")
+            shutil.copy(
+                src=self.dataset_description_json,
+                dst=new_dataset_description_json
+            )
+            self.dataset_description_json: str = new_dataset_description_json        
+        self.license_path: str = os.path.join(fmriprep_script_directory, "license.txt")
+        if not os.path.exists(self.license_path):
+            raise FileNotFoundError(
+                f"Could not find fMRIPrep License Path at: {self.license_path}"
+            )
+        else:
+            new_license_path: str = os.path.join(fmriprep_main_directory, self.license_path)
+            print(f"Copying: {self.license_path} to: {new_license_path}")
+            shutil.copy(
+                src=self.license_path,
+                dst=new_license_path
+            )
+            self.license_path: str = new_license_path
 
         # Get input data 
         func_nifti_image_path, \
@@ -241,7 +258,7 @@ class SingleRunfMRIPrep:
             DECOMPRESS DICOMS 
             =======================================================
             """
-            decompression_directory: str = os.path.join(working_directory, "decompressed_dicoms")
+            decompression_directory: str = os.path.join(working_directory, "func_decompressed_dicoms")
             print(f"Decompressing DICOMs into directory: {decompression_directory}")
             DecompressDicoms(
                 dicom_directory=func_data[0],
@@ -316,7 +333,7 @@ class SingleRunfMRIPrep:
             DECOMPRESS DICOMS 
             =======================================================
             """
-            decompression_directory: str = os.path.join(working_directory, "decompressed_dicoms")
+            decompression_directory: str = os.path.join(working_directory, "anat_decompressed_dicoms")
             print(f"Decompressing DICOMs into directory: {decompression_directory}")
             DecompressDicoms(
                 dicom_directory=anat_data[0],
