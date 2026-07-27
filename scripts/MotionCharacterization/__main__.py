@@ -1,6 +1,7 @@
 import os 
 import sys
 import shutil
+from typing import Sequence
 import SimpleITK as sitk 
 from collections import OrderedDict
 
@@ -34,12 +35,14 @@ class CharacterizeIntraVolumeMotion:
                  n_jobs: int | None = os.cpu_count(),
                  motion_threshold: int = 10,
                  reference_volume_index: int | None = None, # pyright: ignore[reportRedeclaration],
-                 voxel_intensity_lower_bound: int = 10,
-                 voxel_intensity_upper_bound: int = 1000,
+                 limit_voxel_intensity: bool = True,
+                 voxel_intensity_lower_bound: int | None = 10,
+                 voxel_intensity_upper_bound: int | None = 1000,
                  dcmdjpeg_path: str = 'dcmdjpeg',
                  dcm2niix_path: str = 'dcm2niix',
-                 reference_volume_spacing: tuple[float, float, float] = (1.236, 1.236, 1.236),
-                 head_radius: int = 50
+                 upsample_reference_volume: bool = True,
+                 reference_volume_spacing: Sequence[float] | None = (1.236, 1.236, 1.236),
+                 head_radius: float = 50
                  ) -> None:
         
         print(f"\n========== Starting Intravolume Motion Characterization ========== ")
@@ -143,15 +146,16 @@ class CharacterizeIntraVolumeMotion:
         LIMIT INTENSITY RANGE OF EACH VOLUME
         =======================================================
         """
-        print(f"Limiting the Voxel Intensity in {len(volume_paths)} Volumes.")
-        volume_paths: list[str] = LimitVoxelIntensityRange(
-            nifti_image_paths=volume_paths,
-            output_directory=working_directory,
-            lower_bound=voxel_intensity_lower_bound,
-            upper_bound=voxel_intensity_upper_bound,
-            n_jobs=n_jobs # pyright: ignore[reportArgumentType]
-        ).return_output_image_paths()
-        print(f"Limited the Intensity in {len(volume_paths)} Volumes.")
+        if limit_voxel_intensity:
+            print(f"Limiting the Voxel Intensity in {len(volume_paths)} Volumes.")
+            volume_paths: list[str] = LimitVoxelIntensityRange(
+                nifti_image_paths=volume_paths,
+                output_directory=working_directory,
+                lower_bound=voxel_intensity_lower_bound, # pyright: ignore[reportArgumentType]
+                upper_bound=voxel_intensity_upper_bound, # pyright: ignore[reportArgumentType]
+                n_jobs=n_jobs # pyright: ignore[reportArgumentType]
+            ).return_output_image_paths()
+            print(f"Limited the Intensity in {len(volume_paths)} Volumes.")
 
         """
         =======================================================
@@ -159,15 +163,17 @@ class CharacterizeIntraVolumeMotion:
         =======================================================
         """
         input_reference_volume_path: str = volume_paths[reference_volume_index]
-        reference_volume_path: str = os.path.join(working_directory,
-                                                  f"upsampled_{os.path.basename(input_reference_volume_path)}") 
-        UpsampleReferenceVolume(
-            input_nifti_image=input_reference_volume_path,
-            output_file_path=reference_volume_path,
-            new_spacing=reference_volume_spacing
-        )
+        reference_volume_path = ""
+        if upsample_reference_volume:
+            reference_volume_path: str = os.path.join(working_directory, f"upsampled_{os.path.basename(input_reference_volume_path)}") 
+            UpsampleReferenceVolume(
+                input_nifti_image=input_reference_volume_path,
+                output_file_path=reference_volume_path,
+                new_spacing=reference_volume_spacing # pyright: ignore[reportArgumentType]
+            )
+        else:
+            reference_volume_path: str = input_reference_volume_path
         print(f"Reference Volume Path: {reference_volume_path}")
-
 
         """
         =======================================================

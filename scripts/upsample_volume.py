@@ -1,4 +1,5 @@
 import os
+from typing import Sequence
 import numpy as np 
 import SimpleITK as sitk 
 
@@ -6,7 +7,7 @@ class UpsampleReferenceVolume:
     def __init__(self, 
                  input_nifti_image: str | sitk.Image,
                  output_file_path: str | None = None,
-                 new_spacing: tuple[float, float, float] = (1.236, 1.236, 1.236)) -> None:
+                 new_spacing: Sequence[float] = (1.236, 1.236, 1.236)) -> None:
         
         sitk_image: sitk.Image = sitk.ReadImage(input_nifti_image) if isinstance(input_nifti_image, str) else input_nifti_image
         if sitk_image.GetDimension() != 3:
@@ -37,7 +38,7 @@ class UpsampleReferenceVolume:
         
     def resample_image(self,
                        image: sitk.Image, 
-                       spacing: tuple[float, float, float],
+                       spacing: Sequence[float],
                        volume_size: list[int],
                        interpolator: int = sitk.sitkLinear) -> sitk.Image:
         
@@ -55,7 +56,7 @@ class UpsampleReferenceVolume:
 
     def get_new_size(self,
                      image: sitk.Image,
-                     new_spacing: tuple[float, float, float]) -> np.ndarray:
+                     new_spacing: Sequence[float]) -> np.ndarray:
         
         spacing: np.ndarray = np.array(image.GetSpacing())
         size: np.ndarray = np.array(image.GetSize())
