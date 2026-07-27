@@ -1,7 +1,7 @@
 scripts/__pycache__
 scripts/MotionCharacterization/__pycache__
 scripts/MotionCorrection/__pycache__
-scripts/Other/__pycache__
+scripts/other/__pycache__
 scripts/SingleRunfMRIPrep/__pycache__
 
 participant_data/*
