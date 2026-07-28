@@ -21,6 +21,7 @@ CONDA_INIT_PATH=$(python3 -c "import yaml, sys; print(yaml.safe_load(open(sys.ar
 CONDA_ENV_PYTHON_PATH=$(python3 -c "import yaml, sys; print(yaml.safe_load(open(sys.argv[1]))['CONDA_ENV_PYTHON_PATH'])" ${config_file})
 FSLDIR_PATH=$(python3 -c "import yaml, sys; print(yaml.safe_load(open(sys.argv[1]))['FSLDIR_PATH'])" ${config_file})
 OUTPUT_DIRECTORY_PATH=$(python3 -c "import yaml, sys; print(yaml.safe_load(open(sys.argv[1]))['OUTPUT_DIRECTORY_PATH'])" ${config_file})
+mkdir -p ${OUTPUT_DIRECTORY_PATH}
 
 echo "Sourcing ${BIOGRIDS_PATH}"
 source ${BIOGRIDS_PATH}
@@ -45,11 +46,11 @@ echo "Running the Main Pipeline Script Via:"
 echo
 echo "  srun ${CONDA_ENV_PYTHON_PATH} run_pipeline.py \\"
 echo "      --configuration_file ${config_file} \\"
-echo "      >> ${OUTPUT_DIRECTORY_PATH}/output_${SLURM_JOB_ID}.out \\"
-echo "      2>> ${OUTPUT_DIRECTORY_PATH}/output_${SLURM_JOB_ID}.err"
+echo "      >> ${OUTPUT_DIRECTORY_PATH}output_${SLURM_JOB_ID}.out \\"
+echo "      2>> ${OUTPUT_DIRECTORY_PATH}output_${SLURM_JOB_ID}.err"
 echo
 
 srun ${CONDA_ENV_PYTHON_PATH} run_pipeline.py --configuration_file ${config_file} \
-    >> "${OUTPUT_DIRECTORY_PATH}/output_${SLURM_JOB_ID}.out" \
-    2>> "${OUTPUT_DIRECTORY_PATH}/output_${SLURM_JOB_ID}.err"
+    >> "${OUTPUT_DIRECTORY_PATH}output_${SLURM_JOB_ID}.out" \
+    2>> "${OUTPUT_DIRECTORY_PATH}output_${SLURM_JOB_ID}.err"
 
