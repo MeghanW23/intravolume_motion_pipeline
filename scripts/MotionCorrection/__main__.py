@@ -99,8 +99,8 @@ class StartMotionCorrection:
                 output_directory=working_directory,
                 dcm2niix_path=dcm2niix_path
             )
-            nifti_image_path: str = dcm2niix_module.return_nifti_image()
-            json_file_path: str = dcm2niix_module.return_json_file()
+            nifti_image_path: str = dcm2niix_module.return_nifti_image() # pyright: ignore[reportAssignmentType]
+            json_file_path: str = dcm2niix_module.return_json_file() # pyright: ignore[reportAssignmentType]
 
         nifti_image: sitk.Image = sitk.ReadImage(nifti_image_path) # pyright: ignore[reportArgumentType]
         dimensions: tuple[int, int, int, int] = nifti_image.GetSize()

@@ -96,7 +96,6 @@ class Configurations(BaseModel):
 
         return self
 
-
     @model_validator(mode='after')
     def validate_fmriprep_inputs(self):
         if self.RUN_FMRIPREP:
@@ -105,7 +104,6 @@ class Configurations(BaseModel):
                     "Provide SERIES_NAME if RUN_FMRIPREP = True."
                 )
         return self
-
 
     @model_validator(mode='after')
     def validate_smsmireg_run_env(self):
@@ -157,7 +155,15 @@ class Configurations(BaseModel):
                 )
         return self
 
+    @model_validator(mode='after')
+    def add_backslash(self):
+        if self.WORKING_DIRECTORY_PATH[-1].strip() != "/":
+            self.WORKING_DIRECTORY_PATH += "/"
+        elif self.OUTPUT_DIRECTORY_PATH[-1].strip() != "/":
+            self.OUTPUT_DIRECTORY_PATH += "/"
 
+        return self
+    
 if __name__ == "__main__":
     import argparse
 

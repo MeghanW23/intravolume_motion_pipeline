@@ -5,8 +5,10 @@ import shutil
 # add script directory to path
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "scripts"))
 from manage_configuration_files import Configurations
+from decompress_dicoms import DecompressDicoms
+from dicom_to_nifti import DicomToNifti
 from MotionCharacterization import CharacterizeIntraVolumeMotion
-
+from MotionCorrection import StartMotionCorrection
  
 class RunPipeline:
     def __init__(self, configuration_file: str) -> None:
@@ -47,15 +49,49 @@ class RunPipeline:
 
         """
         ========================================
+        DO DICOM TO NIFTI IF NEEDED 
+        ========================================
+        """
+        func_nifti_image_path: str | None = configurations.FUNCTIONAL_NIFTI_IMAGE_PATH # pyright: ignore
+        func_json_file_path: str | None = configurations.FUNCTIONAL_JSON_FILE_PATH # pyright: ignore
+        if configurations.FUNCTIONAL_DICOM_DIRECTORY:
+                """
+                =======================================================
+                DECOMPRESS DICOMS 
+                =======================================================
+                """
+                decompression_directory: str = os.path.join(configurations.WORKING_DIRECTORY_PATH, "func_decompressed_dicoms")
+                print(f"Decompressing DICOMs into directory: {decompression_directory}")
+                DecompressDicoms(
+                    dicom_directory=configurations.FUNCTIONAL_DICOM_DIRECTORY,
+                    output_directory=decompression_directory,
+                    dcmdjpeg_path=configurations.DCMDJPEG_PATH,
+                    series_name=configurations.SERIES_NAME
+                )
+    
+                """
+                =======================================================
+                DO DICOM TO NIFTI
+                =======================================================
+                """
+                print(f"Doing dcm2niix on the Decompressed Dicoms at: {decompression_directory}")
+                dcm2niix_module: DicomToNifti = DicomToNifti(
+                    dicom_directory=decompression_directory,
+                    output_directory=configurations.WORKING_DIRECTORY_PATH,
+                    dcm2niix_path=configurations.DCM2NIIX_PATH
+                )
+                func_nifti_image_path: str = dcm2niix_module.return_nifti_image() # pyright: ignore[reportAssignmentType]
+                func_json_file_path: str = dcm2niix_module.return_json_file() # pyright: ignore[reportAssignmentType]
+
+        """
+        ========================================
         STEP ONE: MOTION CHARACTERIZATION
         ========================================
         """
         if configurations.RUN_MOTION_CHARACTERIZATION:
             CharacterizeIntraVolumeMotion(
-                dicom_directory=configurations.FUNCTIONAL_DICOM_DIRECTORY,
-                series_name=configurations.SERIES_NAME,
-                nifti_image_path=configurations.FUNCTIONAL_NIFTI_IMAGE_PATH,
-                json_file_path=configurations.FUNCTIONAL_JSON_FILE_PATH,
+                nifti_image_path=func_nifti_image_path,
+                json_file_path=func_json_file_path,
                 working_directory=configurations.WORKING_DIRECTORY_PATH,
                 output_directory=configurations.OUTPUT_DIRECTORY_PATH,
                 run_environment=configurations.SMS_MI_REG_RUN_ENVIRONMENT,
@@ -72,6 +108,18 @@ class RunPipeline:
                 upsample_reference_volume=configurations.UPSAMPLE_REFERENCE_VOLUME,
                 reference_volume_spacing=configurations.REFERENCE_VOLUME_SPACING,
                 head_radius=configurations.HEAD_RADIUS
+            )
+        if configurations.RUN_MOTION_CORRECTION:
+            StartMotionCorrection(
+                radian_parameters_path=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "radian-parameters.txt"),
+                nifti_image_path=func_nifti_image_path,
+                json_file_path=func_json_file_path,
+                working_directory=configurations.WORKING_DIRECTORY_PATH,
+                output_directory=configurations.OUTPUT_DIRECTORY_PATH,
+                motion_threshold=configurations.MOTION_THRESHOLD,
+                dcmdjpeg_path=configurations.DCMDJPEG_PATH,
+                dcm2niix_path=configurations.DCM2NIIX_PATH,
+                matlab_path=configurations.MATLAB_INSTALLATION_PATH
             )
 
 if __name__ == "__main__":
