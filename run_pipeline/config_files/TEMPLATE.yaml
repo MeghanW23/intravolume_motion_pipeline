@@ -47,15 +47,15 @@ SERIES_NAME: "func-bold_task-NFB2"
 # ANATOMICAL_DICOM_DIRECTORY 
 # or both
 # ANATOMICAL_NIFTI_IMAGE_PATH and ANATOMICAL_JSON_FILE_PATH
-ANATOMICAL_DICOM_DIRECTORY: 
+ANATOMICAL_DICOM_DIRECTORY: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/subject_data/p004/ses-04/anat"
 ANATOMICAL_NIFTI_IMAGE_PATH: 
 ANATOMICAL_JSON_FILE_PATH:
 
 # If you are running fMRIPrep, please enter 
 # the following variables with integer values:
-SUBJECT_ID: 
-SESSION_NUM: 
-RUN_NUM:
+SUBJECT_ID: 4
+SESSION_NUM: 4
+RUN_NUM: 1
 
 
 # ==================================================
@@ -100,7 +100,7 @@ HEAD_RADIUS: 50
 
 # For SMS_MI_REG_RUN_ENVIRONMENT, please enter: 
 # "singularity", "docker", or "local"
-SMS_MI_REG_RUN_ENVIRONMENT: "singularity"
+SMS_MI_REG_RUN_ENVIRONMENT: "local"
 
 # If SMS_MI_REG_RUN_ENVIRONMENT = "singularity":
 # please also provide the Singularity .sif path via: SMS_MI_REG_SINGULARITY_IMAGE_PATH
