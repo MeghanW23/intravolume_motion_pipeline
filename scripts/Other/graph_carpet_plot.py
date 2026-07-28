@@ -298,7 +298,7 @@ class CarpetPlot:
         with open(json_path) as f:
             json_data = json.load(f)
             if not 'SliceTiming' in json_data:
-                print(f"\n\ERROR: 'SliceTiming' Key Not In JSON File.\n\n")
+                print(f"\nERROR: 'SliceTiming' Key Not In JSON File.\n\n")
                 exit(0)
             else:
                return OrderedDict(sorted(find_matching_indexes(json_data['SliceTiming']).items()))
