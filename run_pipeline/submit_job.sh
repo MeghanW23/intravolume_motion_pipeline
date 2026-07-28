@@ -12,11 +12,13 @@
 
 # set -euo pipefail
 
-config_files=($@)
-echo "Inputted Files: ${config_files[@]}"
+config_file=$1
+echo "Inputted File: ${config_file}"
 
-echo "Getting Environment Variables from Inputted .env File: ${config_files[0]}"
-source "${config_files[0]}"
+BIOGRIDS_PATH=$(python3 -c "import yaml, sys; print(yaml.safe_load(open(sys.argv[1]))['BIOGRIDS_PATH'])" ${config_file})
+CONDA_ENV_NAME=$(python3 -c "import yaml, sys; print(yaml.safe_load(open(sys.argv[1]))['CONDA_ENV_NAME'])" ${config_file})
+FSLDIR_PATH=$(python3 -c "import yaml, sys; print(yaml.safe_load(open(sys.argv[1]))['FSLDIR_PATH'])" ${config_file})
+CONDA_ENV_PYTHON_PATH=$(python3 -c "import yaml, sys; print(yaml.safe_load(open(sys.argv[1]))['CONDA_ENV_PYTHON_PATH'])" ${config_file})
 
 echo "Sourcing ${BIOGRIDS_PATH}"
 source ${BIOGRIDS_PATH}
@@ -40,12 +42,12 @@ SCRIPT_PATH="$(dirname "$(realpath "$0")")"
 
 echo "Running the Main Pipeline Script Via:"
 echo " "
-echo "  srun ${CONDA_ENV_PYTHON_PATH} ${RUN_PIPELINE_SCRIPT} \\" 
+echo "  srun ${CONDA_ENV_PYTHON_PATH} run_pipeline.py" \\" 
 echo "      --configuration_files ${config_files[@]} \\" 
 echo "      >> logs/output_${SLURM_JOB_ID}.out \\" 
 echo "      2>> logs/output_${SLURM_JOB_ID}.err"
 echo " "
-srun ${CONDA_ENV_PYTHON_PATH} "${RUN_PIPELINE_SCRIPT}" --configuration_files "${config_files[@]}" \
+srun ${CONDA_ENV_PYTHON_PATH} run_pipeline.py --configuration_file ${config_file} \
     >> "logs/output_${SLURM_JOB_ID}.out" \
     2>> "logs/output_${SLURM_JOB_ID}.err"
 
