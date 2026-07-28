@@ -98,7 +98,7 @@ class FourierTransform:
                 y=magnitude[1:]
             )
         )
-        fig.show()
+        # fig.show()
         fig.write_html(output_file_path)
 
         print(f"Output Graph at: {output_file_path}")
