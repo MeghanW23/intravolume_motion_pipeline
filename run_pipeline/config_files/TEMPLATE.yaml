@@ -119,7 +119,7 @@ MCORR_ABRUPTMOTION_FILE_NAME: "recon_abruptmotion.nii.gz"
 
 # Conda paths
 CONDA_ENV_NAME: "intravolume_motion_pipeline_env"
-CONDA_INIT_PATH: "lab-share/Neuro-Cohen-e2/Public/software/miniforge3/etc/profile.d/conda.sh"
+CONDA_INIT_PATH: "/lab-share/Neuro-Cohen-e2/Public/software/miniforge3/etc/profile.d/conda.sh"
 CONDA_ENV_PYTHON_PATH: "/lab-share/Neuro-Cohen-e2/Public/environment/conda/intravolume_motion_pipeline_env/bin/python"
 
 # Other software paths (some may only exist on compute nodes)
