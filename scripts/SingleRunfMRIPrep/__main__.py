@@ -35,6 +35,13 @@ class StartSingleRunfMRIPrep:
         # Set up input configurations 
         if n_jobs == None:
             n_jobs: int = 8
+
+        if n_jobs < 0:
+            new_n_jobs: int = os.cpu_count() + (n_jobs  + 1) # pyright: ignore[reportOptionalOperand]
+            if new_n_jobs < 0:
+                raise ValueError(f"n_jobs value: {n_jobs} is not a valid number of jobs.")
+            n_jobs: int = new_n_jobs
+
         print(f"fMRIPrep Max Number of Processes: {n_jobs}")
         print(f"fMRIPrep Max Number of Threads: {omp_nthreads}")
         print(f"fMRIPrep Max Memory: {mem_mb} MB / {round(mem_mb / 1000, 2)} GB")
