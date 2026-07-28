@@ -42,12 +42,13 @@ export ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS=$SLURM_CPUS_PER_TASK
 SCRIPT_PATH="$(dirname "$(realpath "$0")")"
 
 echo "Running the Main Pipeline Script Via:"
-echo " "
-echo "  srun ${CONDA_ENV_PYTHON_PATH} run_pipeline.py" \\" 
-echo "      --configuration_files ${config_files[@]} \\" 
-echo "      >> logs/output_${SLURM_JOB_ID}.out \\" 
+echo
+echo "  srun ${CONDA_ENV_PYTHON_PATH} run_pipeline.py \\"
+echo "      --configuration_file ${config_file} \\"
+echo "      >> logs/output_${SLURM_JOB_ID}.out \\"
 echo "      2>> logs/output_${SLURM_JOB_ID}.err"
-echo " "
+echo
+
 srun ${CONDA_ENV_PYTHON_PATH} run_pipeline.py --configuration_file ${config_file} \
     >> "logs/output_${SLURM_JOB_ID}.out" \
     2>> "logs/output_${SLURM_JOB_ID}.err"
