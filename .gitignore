@@ -4,14 +4,14 @@ scripts/MotionCorrection/__pycache__
 scripts/other/__pycache__
 scripts/SingleRunfMRIPrep/__pycache__
 
-logs/*
-!logs/.gitkeep
-
 participant_data/*
 !participant_data/.gitkeep
 
 participant_runs/*
 !participant_runs/.gitkeep
+
+run_pipeline/logs/*
+!logs/.gitkeep
 
 run_pipeline/config_files
 !run_pipeline/config_files/TEMPLATE.yaml
