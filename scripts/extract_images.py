@@ -33,7 +33,7 @@ class ExtractNiFTIImage:
                 )
 
             self.images: list[str] | list[tuple[int, sitk.Image]] = Parallel(
-                n_jobs=n_jobs, verbose=11, return_as="list")(
+                n_jobs=n_jobs, return_as="list")(
                 delayed(self.extract_single_volume)(
                     volume_num,
                     input_nifti_image_path=input_nifti_image_path,
@@ -54,7 +54,7 @@ class ExtractNiFTIImage:
                     f"Inputted (zero-indexed) 2D slice index ({index_to_extract}) is greater than the number of slices ({dimensions[-1]})."
                 )
             self.images: list[str] | list[tuple[int, sitk.Image]] = Parallel(
-                n_jobs=n_jobs, verbose=11, return_as="list")(
+                n_jobs=n_jobs, return_as="list")(
                 delayed(self.extract_single_slice)(
                     slice_num,
                     input_nifti_image_path=input_nifti_image_path,

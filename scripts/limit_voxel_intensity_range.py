@@ -14,7 +14,7 @@ class LimitVoxelIntensityRange:
         os.makedirs(output_directory, exist_ok=True)
 
         print(f"Clamping images to voxel intensity range: {lower_bound} - {upper_bound}")
-        Parallel(n_jobs=n_jobs, verbose=11)(
+        Parallel(n_jobs=n_jobs)(
             delayed(self.single_voxel_clamp)(
                 nifti_image_path,
                 output_file_path=os.path.join(
