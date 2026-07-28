@@ -175,6 +175,11 @@ class CharacterizeIntraVolumeMotion:
         else:
             reference_volume_path: str = input_reference_volume_path
         print(f"Reference Volume Path: {reference_volume_path}")
+        print("Copying Reference Volume to Output Directory...")
+        shutil.copy(
+            src=reference_volume_path,
+            dst=os.path.join(output_directory, "refvol_" + os.path.basename(reference_volume_path))
+        )
 
         """
         =======================================================
