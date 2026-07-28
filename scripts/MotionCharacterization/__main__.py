@@ -138,7 +138,7 @@ class CharacterizeIntraVolumeMotion:
                 plot=True,
                 save=True,
                 verbose=True,
-                output_directory=output_directory
+                output_directory=os.path.join(output_directory, "reference_volume_script_outputs")
             ).return_reference_volume_index()
             print(f"We will use reference volume index: {reference_volume_index}")
 
