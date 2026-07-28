@@ -22,7 +22,7 @@ class StartSingleRunfMRIPrep:
                  session_num: int,  
                  run_num: int,      
                  working_directory: str = 'working',
-                 output_directory: str = 'fmriprep_outputs',
+                 output_directory: str = 'outputs',
                  dcmdjpeg_path: str = 'dcmdjpeg',
                  dcm2niix_path: str = 'dcm2niix',
                  FMRIPREP_CONTAINER_PATH: str | None = None,

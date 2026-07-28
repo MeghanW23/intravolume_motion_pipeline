@@ -2,6 +2,9 @@ import os
 import sys
 import yaml
 import shutil
+import warnings
+from glob import glob
+
 # add script directory to path
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "scripts"))
 from manage_configuration_files import Configurations
@@ -9,6 +12,7 @@ from decompress_dicoms import DecompressDicoms
 from dicom_to_nifti import DicomToNifti
 from MotionCharacterization import CharacterizeIntraVolumeMotion
 from MotionCorrection import StartMotionCorrection
+from SingleRunfMRIPrep import StartSingleRunfMRIPrep
  
 class RunPipeline:
     def __init__(self, configuration_file: str) -> None:
@@ -109,6 +113,12 @@ class RunPipeline:
                 reference_volume_spacing=configurations.REFERENCE_VOLUME_SPACING,
                 head_radius=configurations.HEAD_RADIUS
             )
+
+        """
+        ========================================
+        STEP TWO: MOTION CORRECTION
+        ========================================
+        """
         if configurations.RUN_MOTION_CORRECTION:
             StartMotionCorrection(
                 radian_parameters_path=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "radian-parameters.txt"),
@@ -121,6 +131,53 @@ class RunPipeline:
                 dcm2niix_path=configurations.DCM2NIIX_PATH,
                 matlab_path=configurations.MATLAB_INSTALLATION_PATH
             )
+        """
+        ========================================
+        STEP THREE: FMRIPREP CORRECTION
+        ========================================
+        """
+        if configurations.RUN_FMRIPREP:
+
+            scrubbed_image: str = ""
+            matching_scrubbed_files: list[str] = glob(os.path.join(configurations.OUTPUT_DIRECTORY_PATH, configurations.MCORR_OUTPUT_FILENAME_PATTERN))
+            if len(matching_scrubbed_files) == 0:
+                scrubbed_image: str = os.path.join(configurations.OUTPUT_DIRECTORY_PATH, configurations.MCORR_ABRUPTMOTION_FILE_NAME) 
+                print(f"Could not find scrubbed data matching pattern: {configurations.MCORR_OUTPUT_FILENAME_PATTERN}")
+                print(f"Using file: {scrubbed_image}")
+            elif len(matching_scrubbed_files) > 1:
+                scrubbed_image: str = sorted(matching_scrubbed_files, key=os.path.getmtime)[-1]
+                warnings.warn(
+                    message=(
+                        f"More than one srubbed NiFTI Image Found: {matching_scrubbed_files}. "
+                        f"Using the most recently modified image: {scrubbed_image}"
+                    )
+                )
+            else:
+                scrubbed_image: str = matching_scrubbed_files[0]
+
+
+            StartSingleRunfMRIPrep(
+                func_data=[
+                    scrubbed_image, 
+                    func_json_file_path],
+                anat_data=\
+                    [configurations.ANATOMICAL_DICOM_DIRECTORY] if configurations.ANATOMICAL_DICOM_DIRECTORY
+                    else [configurations.ANATOMICAL_NIFTI_IMAGE_PATH, configurations.ANATOMICAL_JSON_FILE_PATH], # pyright: ignore[reportArgumentType]
+                series_name=configurations.SERIES_NAME, # pyright: ignore[reportArgumentType]
+                subject_id=configurations.SUBJECT_ID, # pyright: ignore[reportArgumentType]
+                session_num=configurations.SESSION_NUM, # pyright: ignore[reportArgumentType]
+                run_num=configurations.RUN_NUM, # pyright: ignore[reportArgumentType]
+                working_directory=configurations.WORKING_DIRECTORY_PATH,
+                output_directory=configurations.OUTPUT_DIRECTORY_PATH,
+                dcmdjpeg_path=configurations.DCMDJPEG_PATH,
+                dcm2niix_path=configurations.DCM2NIIX_PATH,
+                FMRIPREP_CONTAINER_PATH=configurations.FMRIPREP_CONTAINER_PATH,
+                FMRIPREP_TEMPLATEFLOW_DIRECTORY=configurations.FMRIPREP_TEMPLATEFLOW_DIRECTORY,
+                n_jobs=configurations.N_JOBS,
+                omp_nthreads=configurations.OMP_NTHREADS, # pyright: ignore[reportArgumentType],
+                mem_mb=configurations.MEM_MB # pyright: ignore[reportArgumentType]
+            )
+             
 
 if __name__ == "__main__":
     import argparse

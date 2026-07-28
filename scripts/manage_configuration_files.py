@@ -21,6 +21,14 @@ class Configurations(BaseModel):
 
     SERIES_NAME: str | None
 
+    ANATOMICAL_DICOM_DIRECTORY: str | None
+    ANATOMICAL_NIFTI_IMAGE_PATH: str | None
+    ANATOMICAL_JSON_FILE_PATH: str | None
+
+    SUBJECT_ID: int | None
+    SESSION_NUM: int | None 
+    RUN_NUM: int | None
+
     SMS_MI_REG_RUN_ENVIRONMENT: Literal[
         "singularity",
         "docker",
@@ -28,6 +36,9 @@ class Configurations(BaseModel):
     ]
     SMS_MI_REG_EXECUTABLE_PATH: str | None 
     SMS_MI_REG_SINGULARITY_IMAGE_PATH: str | None
+
+    MCORR_OUTPUT_FILENAME_PATTERN: str
+    MCORR_ABRUPTMOTION_FILE_NAME: str 
 
     CONDA_ENV_NAME: str
     CONDA_INIT_PATH: str
@@ -55,6 +66,9 @@ class Configurations(BaseModel):
     VOXEL_UPPER_BOUND: int | None 
 
     HEAD_RADIUS: int 
+
+    OMP_NTHREADS: int | None
+    MEM_MB: int | None
     
 
     @model_validator(mode='after')
@@ -94,6 +108,44 @@ class Configurations(BaseModel):
                     )
             
 
+        return self
+
+    @model_validator(mode='after')
+    def validate_anatomical_inputs(self):
+        if self.RUN_FMRIPREP:
+            has_dicom: bool = self.ANATOMICAL_DICOM_DIRECTORY is not None
+            has_nifti: bool = self.ANATOMICAL_NIFTI_IMAGE_PATH is not None
+            has_json: bool = self.ANATOMICAL_JSON_FILE_PATH is not None
+            if has_dicom:
+                # Don't allow mixing input types
+                if has_nifti or has_json:
+                    raise ValueError(
+                        "Provide either ANATOMICAL_DICOM_DIRECTORY "
+                        "or both ANATOMICAL_NIFTI_IMAGE_PATH and "
+                        "ANATOMICAL_JSON_FILE_PATH, not both."
+                    )
+                elif not self.SERIES_NAME:
+                    raise ValueError(
+                        "Provide SERIES_NAME if you are using ANATOMICAL_DICOM_DIRECTORY"
+                    )
+            else:
+                # No DICOM directory, so require both files
+                if not (has_nifti and has_json):
+                    raise ValueError(
+                        "Either provide ANATOMICAL_DICOM_DIRECTORY, "
+                        "or provide BOTH ANATOMICAL_NIFTI_IMAGE_PATH "
+                        "and ANATOMICAL_JSON_FILE_PATH."
+                    )
+
+                if not self.ANATOMICAL_NIFTI_IMAGE_PATH.endswith(".nii.gz") and not self.ANATOMICAL_NIFTI_IMAGE_PATH.endswith(".nii"):  # pyright: ignore[reportOptionalMemberAccess]
+                    raise ValueError(
+                        "ANATOMICAL_NIFTI_IMAGE_PATH must end in '.nii.gz' or '.nii'"
+                    )
+
+                if not self.ANATOMICAL_JSON_FILE_PATH.endswith(".json"): # pyright: ignore[reportOptionalMemberAccess]
+                        raise ValueError(
+                            "ANATOMICAL_JSON_FILE_PATH must end in '.json'"
+                        )
         return self
 
     @model_validator(mode='after')
@@ -163,7 +215,23 @@ class Configurations(BaseModel):
             self.OUTPUT_DIRECTORY_PATH += "/"
 
         return self
-    
+    @model_validator(mode='after')
+    def check_for_fmriprep_ids(self):
+        if self.RUN_FMRIPREP:
+            if not self.SUBJECT_ID:
+                raise ValueError(
+                    "If you are running fMRIPrep, please enter the following variables with integer values: "
+                    "SUBJECT_ID, SESSION_NUM, RUN_NUM")
+            if not self.SESSION_NUM:
+                raise ValueError(
+                    "If you are running fMRIPrep, please enter the following variables with integer values: "
+                    "SUBJECT_ID, SESSION_NUM, RUN_NUM")
+            if not self.RUN_NUM:
+                raise ValueError(
+                    "If you are running fMRIPrep, please enter the following variables with integer values: "
+                    "SUBJECT_ID, SESSION_NUM, RUN_NUM"
+                )
+        return self
 if __name__ == "__main__":
     import argparse
 
