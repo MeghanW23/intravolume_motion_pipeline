@@ -17,8 +17,9 @@ echo "Inputted File: ${config_file}"
 
 BIOGRIDS_PATH=$(python3 -c "import yaml, sys; print(yaml.safe_load(open(sys.argv[1]))['BIOGRIDS_PATH'])" ${config_file})
 CONDA_ENV_NAME=$(python3 -c "import yaml, sys; print(yaml.safe_load(open(sys.argv[1]))['CONDA_ENV_NAME'])" ${config_file})
-FSLDIR_PATH=$(python3 -c "import yaml, sys; print(yaml.safe_load(open(sys.argv[1]))['FSLDIR_PATH'])" ${config_file})
+CONDA_INIT_PATH=$(python3 -c "import yaml, sys; print(yaml.safe_load(open(sys.argv[1]))['CONDA_INIT_PATH'])" ${config_file})
 CONDA_ENV_PYTHON_PATH=$(python3 -c "import yaml, sys; print(yaml.safe_load(open(sys.argv[1]))['CONDA_ENV_PYTHON_PATH'])" ${config_file})
+FSLDIR_PATH=$(python3 -c "import yaml, sys; print(yaml.safe_load(open(sys.argv[1]))['FSLDIR_PATH'])" ${config_file})
 
 echo "Sourcing ${BIOGRIDS_PATH}"
 source ${BIOGRIDS_PATH}
