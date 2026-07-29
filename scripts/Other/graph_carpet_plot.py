@@ -308,7 +308,7 @@ class CarpetPlot:
                             else:
                                 slice_timing.append(float(line.strip()))
                     print(f"Using the slice timing from the input file: {slice_timing}")
-                    OrderedDict(sorted(find_matching_indexes(slice_timing).items()))
+                    return OrderedDict(sorted(find_matching_indexes(slice_timing).items()))
 
                 else:
                     print(f"\n\nERROR: 'SliceTiming' Key Not In JSON File: {json_path}\n\n")
