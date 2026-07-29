@@ -7,6 +7,7 @@ import subprocess
 from glob import glob
 from typing import Any
 import SimpleITK as sitk 
+from datetime import datetime
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 # in order of usage:
@@ -85,7 +86,7 @@ class StartSingleRunfMRIPrep:
         os.makedirs(fmriprep_main_directory, exist_ok=True)
         print(f"fMRIPrep Main Directory: {fmriprep_main_directory}")
         
-        fmriprep_working_directory: str = os.path.join(fmriprep_main_directory, "fmriprep_working_directory")
+        fmriprep_working_directory: str = os.path.join(fmriprep_main_directory, f'fmriprep_working_directory_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}')
         os.makedirs(fmriprep_working_directory, exist_ok=True)
         print(f"fMRIPrep Working Directory: {fmriprep_working_directory}")
 
@@ -229,7 +230,7 @@ class StartSingleRunfMRIPrep:
             "--mem", str(mem_mb),
             "-w", "/work_dir",
             "--skip_bids_validation",
-            "--output-spaces", "MNI152NLin2009cAsym:res-2",
+            "--output-spaces", "MNI152NLin2009cAsym:res-2", "func"
         ] 
         print(f"Running Command: {fmriprep_command}")
         result: subprocess.CompletedProcess = subprocess.run(fmriprep_command)
