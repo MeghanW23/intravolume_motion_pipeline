@@ -35,11 +35,11 @@ class CarpetPlot:
                  reference_volume_image, transform_directory, displacement_threshold, 
                  output_directory = "outputs", transform_suffix = ".tfm", 
                  plot_title="Voxel Percent Signal Change Carpet Plot + Displacements",
-                 output_file_path="carpet_plot.html"):
+                 output_file_path="carpet_plot.html", slice_timing = None):
         
         os.makedirs(output_directory, exist_ok=True)
 
-        slice_timing = self.get_slice_timing(json_file)
+        slice_timing = self.get_slice_timing(json_file, slice_timing)
         print(f"Slice Timing: {slice_timing}")
         
         print("\nCoregistering the anatomical image to reference functional image")
@@ -281,7 +281,7 @@ class CarpetPlot:
         print(f"\nDone. Output Plot At: {output_file_path}")
     
     
-    def get_slice_timing(self, json_path):
+    def get_slice_timing(self, json_path, slice_timing):
 
         def find_matching_indexes(numbers):
             
@@ -298,8 +298,16 @@ class CarpetPlot:
         with open(json_path) as f:
             json_data = json.load(f)
             if not 'SliceTiming' in json_data:
-                print(f"\nERROR: 'SliceTiming' Key Not In JSON File.\n\n")
-                exit(0)
+                print(f"'SliceTiming' Key Not In JSON File: {json_path}")
+                if slice_timing:
+                    print(f"Using the slice timing from the input argument 'slice_timing': {slice_timing}")
+                    OrderedDict(sorted(find_matching_indexes(slice_timing).items()))
+
+                else:
+                    print(f"\n\nERROR: 'SliceTiming' Key Not In JSON File: {json_path}\n\n")
+                    print(f"Please provide a different JSON file or provide slice timing via the argument 'slice_timing'")
+
+                    exit(0)
             else:
                return OrderedDict(sorted(find_matching_indexes(json_data['SliceTiming']).items()))
             
@@ -500,6 +508,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--json_file",
         required=True
+    )
+    parser.add_argument(
+        "--slice_timing",
+        required=False,
+        help=\
+            "If your  JSON file is missing 'SliceTiming' key, provide the values here" + \
+            "(fMRIPrep's derivative JSON sidecars for desc-preproc_bold files typically don't carry SliceTiming forward)."
     )
     parser.add_argument(
         "--functional_image",
