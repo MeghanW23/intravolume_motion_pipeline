@@ -514,7 +514,9 @@ if __name__ == "__main__":
         required=False,
         help=\
             "If your  JSON file is missing 'SliceTiming' key, provide the values here" + \
-            "(fMRIPrep's derivative JSON sidecars for desc-preproc_bold files typically don't carry SliceTiming forward)."
+            "(fMRIPrep's derivative JSON sidecars for desc-preproc_bold files typically don't carry SliceTiming forward).",
+        nargs='+',
+        type=float
     )
     parser.add_argument(
         "--functional_image",
