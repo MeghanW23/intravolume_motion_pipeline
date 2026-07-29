@@ -78,7 +78,7 @@ class StartSingleRunfMRIPrep:
         os.makedirs(output_directory, exist_ok=True)
         print(f"Output Directory: {output_directory}")
 
-        fmriprep_output_directory: str = os.path.join(output_directory, "fmriprep_output_directory")
+        fmriprep_output_directory: str = os.path.join(output_directory, f'fmriprep_output_directory_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}')
         os.makedirs(fmriprep_output_directory, exist_ok=True)
         print(f"fMRIPrep Output Directory: {fmriprep_output_directory}")
 
@@ -86,7 +86,7 @@ class StartSingleRunfMRIPrep:
         os.makedirs(fmriprep_main_directory, exist_ok=True)
         print(f"fMRIPrep Main Directory: {fmriprep_main_directory}")
         
-        fmriprep_working_directory: str = os.path.join(fmriprep_main_directory, f'fmriprep_working_directory_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}')
+        fmriprep_working_directory: str = os.path.join(fmriprep_main_directory, 'fmriprep_working_directory')
         os.makedirs(fmriprep_working_directory, exist_ok=True)
         print(f"fMRIPrep Working Directory: {fmriprep_working_directory}")
 
