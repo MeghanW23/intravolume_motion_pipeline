@@ -82,7 +82,7 @@ class StartSingleRunfMRIPrep:
         os.makedirs(fmriprep_output_directory, exist_ok=True)
         print(f"fMRIPrep Output Directory: {fmriprep_output_directory}")
 
-        fmriprep_main_directory: str = os.path.join(working_directory, "fmriprep")
+        fmriprep_main_directory: str = os.path.join(working_directory, f'fmriprep_{datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}')
         os.makedirs(fmriprep_main_directory, exist_ok=True)
         print(f"fMRIPrep Main Directory: {fmriprep_main_directory}")
         
