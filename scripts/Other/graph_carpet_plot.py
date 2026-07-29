@@ -35,11 +35,11 @@ class CarpetPlot:
                  reference_volume_image, transform_directory, displacement_threshold, 
                  output_directory = "outputs", transform_suffix = ".tfm", 
                  plot_title="Voxel Percent Signal Change Carpet Plot + Displacements",
-                 output_file_path="carpet_plot.html", slice_timing = None):
+                 output_file_path="carpet_plot.html", slice_times_text_file = None):
         
         os.makedirs(output_directory, exist_ok=True)
 
-        slice_timing = self.get_slice_timing(json_file, slice_timing)
+        slice_timing = self.get_slice_timing(json_file, slice_times_text_file)
         print(f"Slice Timing: {slice_timing}")
         
         print("\nCoregistering the anatomical image to reference functional image")
@@ -281,7 +281,7 @@ class CarpetPlot:
         print(f"\nDone. Output Plot At: {output_file_path}")
     
     
-    def get_slice_timing(self, json_path, slice_timing):
+    def get_slice_timing(self, json_path, slice_times_text_file):
 
         def find_matching_indexes(numbers):
             
@@ -299,8 +299,15 @@ class CarpetPlot:
             json_data = json.load(f)
             if not 'SliceTiming' in json_data:
                 print(f"'SliceTiming' Key Not In JSON File: {json_path}")
-                if slice_timing:
-                    print(f"Using the slice timing from the input argument 'slice_timing': {slice_timing}")
+                if slice_times_text_file:
+                    slice_timing = []
+                    with open(slice_times_text_file, mode='r') as file:
+                        for line in file:
+                            if not line.strip():
+                                continue 
+                            else:
+                                slice_timing.append(float(line.strip()))
+                    print(f"Using the slice timing from the input file: {slice_timing}")
                     OrderedDict(sorted(find_matching_indexes(slice_timing).items()))
 
                 else:
@@ -510,10 +517,10 @@ if __name__ == "__main__":
         required=True
     )
     parser.add_argument(
-        "--slice_timing",
+        "--slice_times_text_file",
         required=False,
         help=\
-            "If your  JSON file is missing 'SliceTiming' key, provide the values here" + \
+            "If your JSON file is missing 'SliceTiming' key, provide a text file containing the timing for each slice in a volume." + \
             "(fMRIPrep's derivative JSON sidecars for desc-preproc_bold files typically don't carry SliceTiming forward).",
         nargs='+',
         type=float
@@ -568,5 +575,8 @@ if __name__ == "__main__":
         displacement_threshold=args.displacement_threshold,
         output_directory=os.path.abspath(args.output_directory),
         plot_title=args.plot_title,
-        output_file_path=os.path.abspath(args.output_plot_path)
+        output_file_path=os.path.abspath(args.output_plot_path),
+        slice_times_text_file=\
+            os.path.abspath(args.slice_times_text_file) 
+            if args.slice_times_text_file else None
     )
