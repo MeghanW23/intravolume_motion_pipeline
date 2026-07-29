@@ -147,4 +147,4 @@ if __name__ == "__main__":
         output_txt_timing_path=os.path.abspath(args.output_txt_timing_path) 
                         if args.output_txt_timing_path else
                         None
-    )
+    ).print_slice_timing()
