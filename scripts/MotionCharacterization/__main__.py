@@ -295,7 +295,7 @@ class CharacterizeIntraVolumeMotion:
         GRAPH DISPLACEMENT AND PARAMETER RESULTS 
         =======================================================
         """
-        plot_path: str = os.path.join(output_directory, "output-plot.html")
+        plot_path: str = os.path.join(output_directory, "parameter-plot.html")
         print(f"Plotting results to: {plot_path}")
         GraphTransformDirectory(
             transform_directory=output_transform_directory,
