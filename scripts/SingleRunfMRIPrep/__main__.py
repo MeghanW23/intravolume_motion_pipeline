@@ -283,7 +283,7 @@ class StartSingleRunfMRIPrep:
             """
             dcm2niix_module: DicomToNifti = DicomToNifti(
                 dicom_directory=decompression_directory,
-                output_directory=os.path.join(working_directory, "func_images"),
+                output_directory=working_directory,
                 dcm2niix_path=self.dcm2niix_path,
             )
             func_nifti_image_path: str = dcm2niix_module.return_nifti_image() # pyright: ignore[reportAssignmentType]
@@ -356,18 +356,18 @@ class StartSingleRunfMRIPrep:
             """
             dcm2niix_module: DicomToNifti = DicomToNifti(
                 dicom_directory=decompression_directory,
-                output_directory=os.path.join(working_directory, "anat_images"),
+                output_directory=working_directory,
                 dcm2niix_path=self.dcm2niix_path,
                 return_multiple_ok=True
             )
             anat_t1w_nifti_image_path, anat_t1w_json_file_path = self.find_anat_nifti_paths(
-                parent_directory=os.path.join(working_directory, "anat_images"), anat_type="t1w"
+                parent_directory=working_directory, anat_type="t1w"
             ) # type: ignore
             print(f"T1W NIFTI Image: {anat_t1w_nifti_image_path}")
             print(f"T1W JSON Path: {anat_t1w_json_file_path}")
 
             anat_t2w_nifti_image_path, anat_t2w_json_file_path = self.find_anat_nifti_paths(
-                parent_directory=os.path.join(working_directory, "anat_images"), anat_type="t2w"
+                parent_directory=working_directory, anat_type="t2w"
             )
             print(f"T2W NIFTI Image: {anat_t2w_nifti_image_path}")
             print(f"T2W JSON Path: {anat_t2w_json_file_path}")
