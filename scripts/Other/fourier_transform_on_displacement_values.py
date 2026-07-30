@@ -9,7 +9,7 @@ from scipy.signal import find_peaks
 from  plotly import graph_objects as go
 class FourierTransform:
 
-    def __init__(self, transform_directory, nifti_image_path, json_file_path, output_file_path, transform_suffix = ".tfm", input_rotation_unit = "versor"):
+    def __init__(self, transform_directory, nifti_image_path, json_file_path, output_file_path, transform_suffix = ".tfm", input_rotation_unit = "versor", also_save_png_file = True):
         
         """
         1. Load Input Data 
@@ -102,6 +102,16 @@ class FourierTransform:
         fig.write_html(output_file_path)
 
         print(f"Output Graph at: {output_file_path}")
+
+        if also_save_png_file:
+        
+            fig.write_image(
+                output_file_path.replace(".html", ".png"),
+                width=1400,
+                height=900, 
+                scale=2)
+
+            print(f"\nOutput .png Plot At: {output_file_path.replace('.html', '.png')}")
 
     
     def find_transform_paths(self, transform_directory, transform_suffix):
@@ -230,6 +240,7 @@ if __name__ == "__main__":
     parser.add_argument("--nifti_image_path", required=True)
     parser.add_argument("--json_file_path", required=True)
     parser.add_argument("--output_file_path", required=False, default="fourier_transform.html", help="Default: 'fourier_transform.html'")
+    parser.add_argument("--also_save_png_file", action="store_true", help="Save a .png file in addition to the .html file.")
     args = parser.parse_args()
 
     FourierTransform(

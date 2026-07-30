@@ -35,7 +35,8 @@ class CarpetPlot:
                  reference_volume_image, transform_directory, displacement_threshold, 
                  output_directory = "outputs", transform_suffix = ".tfm", 
                  plot_title="Voxel Percent Signal Change Carpet Plot + Displacements",
-                 output_file_path="carpet_plot.html", slice_times_text_file = None):
+                 output_file_path="carpet_plot.html", slice_times_text_file = None,
+                 also_save_png_file = True):
         
         os.makedirs(output_directory, exist_ok=True)
 
@@ -278,7 +279,18 @@ class CarpetPlot:
         
         ## Write to file
         fig.write_html(output_file_path)
-        print(f"\nDone. Output Plot At: {output_file_path}")
+        print(f"\nOutput .html Plot At: {output_file_path}")
+
+        if also_save_png_file:
+
+            fig.write_image(
+                output_file_path.replace(".html", ".png"),
+                width=1400,
+                height=900, 
+                scale=2)
+
+            print(f"\nOutput .png Plot At: {output_file_path.replace('.html', '.png')}")
+
     
     
     def get_slice_timing(self, json_path, slice_times_text_file):
@@ -559,8 +571,11 @@ if __name__ == "__main__":
         required=False,
         default="carpet_plot.html",
         help="Default:'carpet_plot.html'"
-
-
+    )
+    parser.add_argument(
+        "--also_save_png_file",
+        action="store_true",
+        help="Save a .png file in addition to the .html file."
     )
     args = parser.parse_args()
 
@@ -576,5 +591,6 @@ if __name__ == "__main__":
         output_file_path=os.path.abspath(args.output_plot_path),
         slice_times_text_file=\
             os.path.abspath(args.slice_times_text_file) 
-            if args.slice_times_text_file else None
+            if args.slice_times_text_file else None,
+        also_save_png_file=args.also_save_png_file
     )
