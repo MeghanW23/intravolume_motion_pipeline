@@ -1,0 +1,11 @@
+name: intravolume_motion_pipeline_env
+channels:
+  - conda-forge
+dependencies:
+  - simpleitk
+  - nibabel
+  - nilearn
+  - matplotlib
+  - pydicom
+prefix: 
+  /lab-share/Neuro-Cohen-e2/Public/environment/conda/intravolume_motion_pipeline_env
