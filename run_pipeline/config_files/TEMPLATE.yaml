@@ -22,8 +22,8 @@ RUN_MOTION_CORRECTION: true
 RUN_FMRIPREP: true
 
 # We will make these directories for you: 
-WORKING_DIRECTORY_PATH: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline_v2/participant_runs/sub-04_ses-04_task-NFB2/working/"
-OUTPUT_DIRECTORY_PATH: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline_v2/participant_runs/sub-04_ses-04_task-NFB2/outputs/"
+WORKING_DIRECTORY_PATH: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline/participant_runs/sub-04_ses-04_task-NFB2/working/"
+OUTPUT_DIRECTORY_PATH: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline/participant_runs/sub-04_ses-04_task-NFB2/outputs/"
     
 
 # Input a path for either:
@@ -104,13 +104,13 @@ SMS_MI_REG_RUN_ENVIRONMENT: "local"
 
 # If SMS_MI_REG_RUN_ENVIRONMENT = "singularity":
 # please also provide the Singularity .sif path via: SMS_MI_REG_SINGULARITY_IMAGE_PATH
-SMS_MI_REG_SINGULARITY_IMAGE_PATH: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline_v2/scripts/MotionCharacterization/sms-mi-reg/build/sms-mi-reg.sif"
+SMS_MI_REG_SINGULARITY_IMAGE_PATH: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline/scripts/MotionCharacterization/sms-mi-reg/build/sms-mi-reg.sif"
 
 # If SMS_MI_REG_RUN_ENVIRONMENT = "local":
 # please also provide the path to the compiled CPP code via: SMS_MI_REG_EXECUTABLE_PATH.
 # This path is outputted by compiling sms-mi-reg.cpp:
 # https://github.com/ComputationalRadiology/sms-mi-reg/blob/main/sms-mi-reg.cpp 
-SMS_MI_REG_EXECUTABLE_PATH: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline_v2/scripts/MotionCharacterization/sms-mi-reg/build/sms-mi-reg"
+SMS_MI_REG_EXECUTABLE_PATH: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline/scripts/MotionCharacterization/sms-mi-reg/build/sms-mi-reg"
 
 # A file matching MCORR_OUTPUT_FILENAME_PATTERN is created when displacement > MOTION_THRESHOLD.
 # If displacement < MOTION_THRESHOLD, it will run fmriprep on the original, raw data.
@@ -132,6 +132,6 @@ FSLDIR_PATH: "/lab-share/Neuro-Cohen-e2/Public/software/fsl"
 # fMRIPrep Paths and settings
 FMRIPREP_CONTAINER_PATH: "/lab-share/Neuro-Cohen-e2/Public/containers/fmriprep-23.1.3.simg"
 FMRIPREP_TEMPLATEFLOW_DIRECTORY: "/lab-share/Neuro-Cohen-e2/Public/templateflow/"
-FMRIPREP_LICENSE_PATH: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline_v2/scripts/SingleRunfMRIPrep/license.txt"
+FMRIPREP_LICENSE_PATH: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline/scripts/SingleRunfMRIPrep/license.txt"
 OMP_NTHREADS: 8
 MEM_MB: 24000
