@@ -9,8 +9,8 @@ This project was developed in collaboration with the [Computational Radiology La
 
 ### How to Run The Pipeline
 
-1. Create a config file for your data by making a copy of [run_pipeline/config_files/TEMPLATE.yaml](https://github.com/MeghanW23/intravolume_motion_pipeline_v2/blob/main/run_pipeline/config_files/TEMPLATE.yaml). These config files are used to point to the input data and pipeline configurations. For additional information on how to use a config file, there are notes in the TEMPLATE.yaml file.
-2. [run_pipeline/submit_job.sh](https://github.com/MeghanW23/intravolume_motion_pipeline_v2/blob/main/run_pipeline/submit_job.sh) starts the pipeline. It receives one or more config files as command line inputs. Pass the config file(s) to submit_job.sh and start a slurm job like this:
+1. Create a config file for your data by making a copy of [run_pipeline/config_files/TEMPLATE.yaml](https://github.com/MeghanW23/intravolume_motion_pipeline_v2/blob/main/run_pipeline/config_files/TEMPLATE.yaml). These config files are used to tell the pipeline what data to use, what steps to run, and what configurations to use. For additional information on how to use a config file, there are notes in the TEMPLATE.yaml file.
+2. [run_pipeline/submit_job.sh](https://github.com/MeghanW23/intravolume_motion_pipeline_v2/blob/main/run_pipeline/submit_job.sh) starts the pipeline as a [Slurm](https://slurm.schedmd.com/overview.html) batch job. It receives one config file as a command line input. Pass the config file to submit_job.sh and start a slurm job like this:
 ```
 sbatch submit_job.sh <your config file(s)>
 ```
