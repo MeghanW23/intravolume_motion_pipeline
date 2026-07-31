@@ -14,3 +14,8 @@ This project was developed in collaboration with the [Computational Radiology La
 ```
 sbatch submit_job.sh <your config file>
 ```
+
+This project has submodules. To clone the project with submodules, given you have acecss to them, run:
+```
+git clone --recurse-submodules git@github.com:MeghanW23/intravolume_motion_pipeline_v2.git
+```
