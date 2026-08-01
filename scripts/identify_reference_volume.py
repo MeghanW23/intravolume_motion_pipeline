@@ -1,464 +1,477 @@
-#!/usr/bin/env python3
-"""
-Title: identify_reference_volume.py
-
-Description:
-Identify suitable 3D image volume from a 4D nifti file to use as a reference volume for motion characterization.
-Reference volume must be free of intra-volume motion when compared to the subsequent volume acquisition.
-
-The presence of intra-volume motion is determined by computing the normalized cross-correlation (NCC) between slice groups in each volume.
-
-Author: Joshua Auger (joshua.auger@childrens.harvard.edu), Computational Radiology Lab, Boston Children's Hospital
-Date of creation: June 22, 2026
-"""
-
-import os
+import os 
 import json
-import warnings
-from collections import defaultdict
-import nibabel as nib
+import statistics
 import numpy as np
-import matplotlib.pyplot as plt
-from pathlib import Path
-import logging
-import sys
-import csv
+import SimpleITK as sitk 
+from collections import OrderedDict
+from joblib import Parallel, delayed
+from plotly import graph_objects as go
+from plotly.subplots import make_subplots
 
 class IdentifyReferenceVolume:
     def __init__(self, 
-                 nifti_file_path, 
-                 json_file_path, 
-                 threshold_ncc = 0.995,
-                 plot = True,
-                 save = True, 
-                 verbose = True,
-                 padding = 5,
-                 output_directory = None) -> None:
+                 nifti_image_path: str , 
+                 json_file_path: str, 
+                 n_jobs: int = -1, 
+                 output_directory: str | None = None) -> None:
 
         if output_directory:
             os.makedirs(output_directory, exist_ok=True)
-        base_name = Path(nifti_file_path).stem
-        if base_name.endswith(".nii"):  # Handle .nii.gz correctly
-            base_name = Path(base_name).stem
 
-        handlers = [logging.StreamHandler(sys.stdout)]
-        if save:
-            handlers.append(logging.FileHandler(
-                os.path.join(output_directory, f"{base_name}_refVolCalibration.log"), 
-                mode="w"))
+        # Load data
+        nifti_image: sitk.Image = sitk.ReadImage(nifti_image_path)
+        dimensions: tuple[float, float, float] = nifti_image.GetSize()
+        print(f"Input Image Dimensions: {dimensions}")
 
-        logging.basicConfig(level=logging.INFO, format="%(message)s", handlers=handlers,)
+        if len(dimensions) != 4:
+            raise ValueError("Your Input NiFTI Image must be 4D.")
 
-        protocol_name, slice_timing = self.load_metadata(json_file_path)
-        logging.info(f"\nProtocol name: {protocol_name}")
+        slice_timing: OrderedDict[float, list[int]] = self.get_slice_timing(json_file_path)
+        print(f"Slice Timing: {slice_timing}")
 
-        slice_groups = self.build_slice_groups(slice_timing)
-        logging.info(f"Detected {len(slice_groups)} slice groups in SliceTiming metadata")
+        # Get all MI values 
+        """results: list[dict[int, list[float]]] = Parallel(
+            n_jobs=n_jobs, return_as="list")(
+            delayed(self.compare_volumes)(
+                volume_num1=i - 1,
+                volume_num2=i,
+                nifti_image_path=nifti_image_path,
+                slice_timing=slice_timing
+            )
+            for i in range(1, dimensions[-1])
+        ) # pyright: ignore[reportAssignmentType]
+        mutual_info_dict: dict[int, list[float]] = {}
+        for result in results:
+            mutual_info_dict[list(result.keys())[0]] = list(result.values())[0] # pyright: ignore[reportOptionalMemberAccess]"""
 
-        img = nib.load(nifti_file_path)
-        data = img.get_fdata(dtype=np.float32) # pyright: ignore[reportAttributeAccessIssue]
-        if data.ndim != 4:
-            raise RuntimeError("Expected 4D nifti input.")
+        mutual_info_dict: dict[int, list[float]] = {}
+        with open("/Users/meghan/motion_fmri/intravolume_motion_pipeline_v2/scripts/testing/all_mi_values.json", mode='r') as file:
+            mutual_info_dict = json.load(file)
 
-        nx, ny, nz, nt = data.shape
-        logging.info(f"Shape = {data.shape}\n")
 
-        candidate_volumes = []
-        comparison_stats = []
-        slice_group_comparison_results = []
+        # Save files to output directory 
+        if output_directory:
+            # Save to JSON file
+            output_json_path: str = os.path.join(output_directory, "mutual_info_values.json")
+            with open(output_json_path, mode='w') as file:
+                json.dump(
+                    mutual_info_dict,
+                    fp=file
+                )
+            print(f"Saved Mutual Info Values to: {output_json_path}")
 
-        logging.info(f"Comparing volume slices with NCC threshold = {threshold_ncc:.4f}...")
-
-        for vol_idx in range(nt - 1):
-            volume_a = data[:, :, :, vol_idx]
-            volume_b = data[:, :, :, vol_idx + 1]
-
-            (passed, min_ncc, mean_ncc, range_ncc, group_results) = self.compare_volumes(volume_a, volume_b, slice_groups, threshold_ncc)
-
-            comparison_stats.append(
-                {
-                    "volume": vol_idx,
-                    "passed": passed,
-                    "min_ncc": min_ncc,
-                    "mean_ncc": mean_ncc,
-                    "range_ncc": range_ncc
-                }
+            self.plot_all_mutual_info_values(
+                mutual_info_dict=mutual_info_dict,
+                output_directory=output_directory,
+                slice_timing=slice_timing,
+                num_volumes=dimensions[-1],
+                nifti_image_path=nifti_image_path
             )
 
-            logging.info(f"\nVolume {vol_idx} vs Volume {vol_idx + 1}")
-            status = ""
-            for group_time, value in group_results.items():
-                passed_group = value >= threshold_ncc
-                status = "PASS" if passed_group else "FAIL"
-                if verbose:
-                    logging.info(f"  Group {group_time:.4f}   NCC={value:.4f}   {status}")
+        mi_means_per_volume: list[float] = [
+            statistics.mean(volume_mi_list)
+            for volume_mi_list in list(mutual_info_dict.values())
+        ]      
+        mi_min_per_volume: list[float] = [
+            min(mi_list_in_volume)
+            for mi_list_in_volume in list(mutual_info_dict.values())
+        ]
+        mi_range_per_volume: list[float] = [
+            max(mi_list_in_volume) - min(mi_list_in_volume)
+            for mi_list_in_volume in list(mutual_info_dict.values())
+        ]
 
-                slice_group_comparison_results.append({
-                    "volume": vol_idx,
-                    "next_volume": vol_idx + 1,
-                    "slice_timing": group_time,
-                    "ncc": value,
-                    "threshold": threshold_ncc,
-                    "passed": int(passed_group)
-                })
+        if output_directory:
+            output_min_per_vol_path: str = os.path.join(output_directory, "mutual_info_minimum_per_volume.txt")
+            with open(output_min_per_vol_path, mode='w') as file:
+                for value in mi_min_per_volume:
+                    file.write(str(value) + '\n')
+            print(f"Miniumum Mutual Info Per Volume Saved to: {output_min_per_vol_path}")
 
-            logging.info(f"  Min NCC   = {min_ncc:.4f}")
-            logging.info(f"  Mean NCC  = {mean_ncc:.4f}")
-            logging.info(f"  Range NCC = {range_ncc:.4f}")
-            if passed:
-                candidate_volumes.append(vol_idx)
-                logging.info(f"  Reference candidate {vol_idx}: {status}")
+            output_range_per_vol_path: str = os.path.join(output_directory, "mutual_info_range_per_volume.txt")
+            with open(output_range_per_vol_path, mode='w') as file:
+                for value in mi_range_per_volume:
+                    file.write(str(value) + '\n')
+            print(f"Mutual Info Range Per Volume Saved to: {output_range_per_vol_path}")
 
-        self.print_summary(comparison_stats, candidate_volumes)
+            self.plot_min_and_range(
+                output_directory=output_directory,
+                nifti_image_path=nifti_image_path,
+                num_volumes=dimensions[-1],
+                mins=mi_min_per_volume,
+                ranges=mi_range_per_volume
+            )
 
+        average_mean_per_volume: float = statistics.mean(mi_means_per_volume) 
+        print(f"Average Mean of Mutual Info per Volume: {average_mean_per_volume}")
+
+        min_num_volumes: int = 11
+        threshold_mean: float = average_mean_per_volume  * 2
+        while True:
+            print(f"Threshold Value: {threshold_mean}")
+
+            running_volumes: list[int] = []
+            running_ranges: list[float] = []
+
+            all_passing_volume_lists: list[list[int]]= []
+            for volume_num, mi_mean in enumerate(mi_means_per_volume):
+                if mi_mean >= threshold_mean:
+                    running_volumes.append(volume_num)
+                    running_ranges.append(mi_mean)
+                else:
+                    if running_volumes != []:
+                        all_passing_volume_lists.append(running_volumes)
+                    running_volumes: list[int] = []
+                    running_ranges: list[float] = []
+            
+                    if running_volumes != []:
+                        all_passing_volume_lists.append(running_volumes)
+
+            if all(len(passing_volume_list) < min_num_volumes for passing_volume_list in all_passing_volume_lists): 
+                print("Not enough consecutive passing volumes.")
+                threshold_mean: float = threshold_mean - (average_mean_per_volume * 0.1)
+                print(f"Changing Threshold Value to: {threshold_mean}")
+                continue
+
+            largest_passing_list_of_volumes: list[int] = []
+            largest_num_volumes: int = 0
+            for volume_list in all_passing_volume_lists:
+                if len(volume_list) > largest_num_volumes:
+                    largest_num_volumes: int = len(volume_list)
+                    largest_passing_list_of_volumes: list[int] = volume_list
+            print(f"Volumes Selected: {largest_passing_list_of_volumes}")
+
+            self.reference_volume_index: int = int((largest_passing_list_of_volumes[-1] - largest_passing_list_of_volumes[0]) / 2) + largest_passing_list_of_volumes[0]
+            print(f"Selected Reference Volume: {self.reference_volume_index}")
+            break
+
+        if output_directory:
+            self.plot_selected_volume_graph(
+                output_directory=output_directory,
+                nifti_image_path=nifti_image_path,
+                num_volumes=dimensions[-1],
+                threshold_mean=threshold_mean,
+                average_mean_per_volume=average_mean_per_volume,
+                largest_passing_list_of_volumes=largest_passing_list_of_volumes,
+                mi_means_per_volume=mi_means_per_volume
+            )
+            
+
+    def get_slice_timing(self, json_path: str) -> OrderedDict[float, list[int]]:
+
+        def find_matching_indexes(numbers: list[float]) -> dict[float, list[int]]:
+            
+            num_index_map: dict[float, list[int]] = {}
         
-        if save:
-            self.save_slice_group_csv(
-                os.path.join(output_directory, f"{base_name}_refVolCalibration.csv"), 
-                slice_group_comparison_results)
+            for index, number in enumerate(numbers):
+                if number in num_index_map:
+                    num_index_map[number].append(index)
+                else:
+                    num_index_map[number] = [index]
+        
+            return {group_num: indexes for group_num, (number, indexes) in enumerate(num_index_map.items()) if len(indexes) > 1}
 
-        if plot:
-            self.plot_results(
-                comparison_stats,
-                protocol_name,
-                threshold_ncc,
-                save_filename=\
-                    os.path.join(output_directory, f"{base_name}_refVolCalibration.png") 
-                    if save else None
+        slice_timing: list[float] = []
+        with open(json_path) as f:
+            slice_timing: list[float] = json.load(f)['SliceTiming']
+        
+        return OrderedDict(sorted(find_matching_indexes(slice_timing).items()))
+
+
+    def extract_single_volume(self, 
+                                volume_num: int, 
+                                input_nifti_image_path: str,) -> sitk.Image:
+        
+            # cannot parallelize if passing a sitk.Image, must pass the path and load image
+            input_nifti_image: sitk.Image = sitk.ReadImage(input_nifti_image_path)
+            
+            timeseries_dimensions: tuple[int, int, int, int] = input_nifti_image.GetSize()
+    
+            extractor: sitk.ExtractImageFilter = sitk.ExtractImageFilter()
+            extractor.SetSize([
+                timeseries_dimensions[0],
+                timeseries_dimensions[1],
+                timeseries_dimensions[2],
+                0
+            ])
+            extractor.SetIndex([0, 0, 0, volume_num])
+    
+            return extractor.Execute(input_nifti_image)
+
+
+    def extract_single_slice(self,
+                             slice_num: int, 
+                             input_nifti_image: sitk.Image) -> sitk.Image:
+        
+        volume_dimensions: tuple[int, int, int] = input_nifti_image.GetSize()
+        
+        return sitk.RegionOfInterest(
+            input_nifti_image,
+            size=[volume_dimensions[0], volume_dimensions[1], 1],
+            index=[0, 0, slice_num]
+        )
+
+    
+    def get_mutual_info(self, 
+                        ref_data: np.ndarray, 
+                        target_data: np.ndarray, 
+                        nbins=64) -> float:
+            """
+            Function based off of: 
+            https://matthew-brett.github.io/teaching/mutual_information.html
+            """
+    
+            hist_2d, _, _ = np.histogram2d(
+                ref_data.ravel(),
+                target_data.ravel(),
+                bins=nbins)
+    
+            # Convert bin counts in the joint hisogram to probability values
+            # by dividing each bin count by the total number of samples 
+            prob_xy: np.ndarray = hist_2d / float(np.sum(hist_2d))
+    
+            # A marginal distribution is the distribution of one variable ignoring the other
+            # Compute the marginal for x over y
+            prob_x: np.ndarray = np.sum(prob_xy, axis=1)
+            # Compute the marginal for y over x
+            prob_y: np.ndarray = np.sum(prob_xy, axis=0)
+    
+            # Compute the product of marginals
+            # This is what the joint distribution would be if X and Y were independent.
+            px_py: np.ndarray = prob_x[:, None] * prob_y[None, :]
+    
+            nzs: np.ndarray = prob_xy > 0 # Only non-zero pxy values contribute to the sum
+    
+            # prob_xy[nzs] -> gets the nonzero joint probabilities 
+            # px_py[nzs] -> gets the matching independent joint probabilities
+            return np.sum(prob_xy[nzs] * np.log(prob_xy[nzs] / px_py[nzs]))
+
+
+    def compare_volumes(self, 
+                        volume_num1: int, 
+                        volume_num2: int,
+                        nifti_image_path: str, 
+                        slice_timing: OrderedDict[float, list[int]]
+                        ) -> dict[int, list[float]]:
+        
+        volume_1: sitk.Image = self.extract_single_volume(volume_num1, nifti_image_path) 
+        volume_2: sitk.Image = self.extract_single_volume(volume_num2, nifti_image_path) 
+
+        all_mutual_info_values: list[float] = []
+        for slice_group_num, slice_group_slice_nums in enumerate(slice_timing.values()):
+
+            slice_group_mutual_info_values:  list[float] = []
+            for slice_num in slice_group_slice_nums:
+                slice_1: sitk.Image = self.extract_single_slice(
+                    slice_num=slice_num,
+                    input_nifti_image=volume_1
+                )
+                slice_2: sitk.Image = self.extract_single_slice(
+                    slice_num=slice_num,
+                    input_nifti_image=volume_2
+                )
+                mutual_information: float = self.get_mutual_info(
+                    ref_data=sitk.GetArrayFromImage(slice_1),
+                    target_data=sitk.GetArrayFromImage(slice_2)
+                )
+                print(f"Vol {volume_num1} vs. Vol {volume_num2} Slice Group {slice_group_num + 1} of {len(slice_timing)}: {mutual_information}")
+                slice_group_mutual_info_values.append(mutual_information)
+            all_mutual_info_values.append(statistics.mean(slice_group_mutual_info_values))
+
+        return {volume_num1: all_mutual_info_values}
+
+
+    def plot_all_mutual_info_values(self, 
+                                    mutual_info_dict: dict[int, list[float]], 
+                                    output_directory: str, 
+                                    slice_timing: OrderedDict[float, list[int]], 
+                                    num_volumes: int,
+                                    nifti_image_path: str):
+
+        output_plot_path: str = os.path.join(output_directory, "mutual_info_plot.html")
+        mi_means_per_volume: list[float] = [
+            statistics.mean(volume_mi_list)
+            for volume_mi_list in list(mutual_info_dict.values())
+        ]
+        formatted_mi_means_per_volume: list[float] = []
+        for mean_val in mi_means_per_volume:
+            formatted_mi_means_per_volume.extend([mean_val] * len(slice_timing))
+
+        formatted_volume_nums: list[float] = []
+        for volume_num in range(num_volumes - 1):
+            formatted_volume_nums.extend([volume_num] * len(slice_timing))
+
+        fig = go.Figure()
+        fig.update_layout(
+            title=f"All Mutual Information Values: {os.path.basename(nifti_image_path)}",
+            xaxis_title="Aquisition Num",
+            yaxis_title="Mutual Information"
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=list(range((num_volumes - 1) * len(slice_timing))),
+                y=[
+                    mi_val for volume_mi_list in list(mutual_info_dict.values()) for mi_val in volume_mi_list
+                ],
+                name="Slice Group Mutual Information",
+                line=dict(color='lightblue'),
+                customdata=np.column_stack([formatted_volume_nums]),
+                hovertemplate=(
+                    "<b>Aquisition Number</b>: %{x}<br>"
+                    "<b>Mutual Information in Volume</b>: %{y}<br>"
+                    "<b>In Volume Number</b>: %{customdata[0]}"
+                )
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=list(range((num_volumes - 1) * len(slice_timing))),
+                y=formatted_mi_means_per_volume,
+                name="Average Mutual Information Value in Volume",
+                line=dict(color='blue'),
+                customdata=np.column_stack([formatted_volume_nums]),
+                hovertemplate=(
+                    "<b>Volume Number</b>: %{customdata[0]}<br>"
+                    "<b>Average Mutual Information in Volume</b>: %{y}"
+                )
+            )
+        )
+        fig.write_html(output_plot_path)
+        print(f"Mutual Info Plot Saved to: {output_plot_path}")
+
+
+    def plot_min_and_range(self, output_directory: str, nifti_image_path: str, num_volumes: int, mins: list[float], ranges: list[float]):
+        # plot 2 subplots with min and range mi per volume 
+        output_plot_path: str = os.path.join(output_directory, "min_and_range_mi_vals.html")
+        fig = make_subplots(
+            rows=2,
+            cols=1,
+            subplot_titles=[
+                f"Minimum Mutual Info Value per Volume in {os.path.basename(nifti_image_path)}", 
+                f"Range of Mutual Info Values per Volume in {os.path.basename(nifti_image_path)}"],
+            shared_xaxes=True,
+            vertical_spacing=0.1
+        )
+        fig.update_layout(showlegend=False)
+        fig.add_trace(
+            go.Scatter(
+                x=list(range(num_volumes - 1)),
+                y=mins,
+                name="Minimum Mutual Info Values per Volume"
+            ),
+            row=1,
+            col=1
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=list(range(num_volumes - 1)),
+                y=ranges,
+                name="Range of Mutual Info Values per Volume"
+            ),
+            row=2,
+            col=1
+        )
+        fig.update_xaxes(title_text="Volume Number", row=2)
+        fig.update_yaxes(title_text="Mutual Information", row=1, col=1)
+        fig.update_yaxes(title_text="Mutual Information", row=2, col=1)
+        fig.write_html(output_plot_path)
+        print(f"Plot Min and Range of Mutual Info Values per Volume: {output_plot_path}")
+
+
+    def plot_selected_volume_graph(self, 
+                                   output_directory: str,
+                                   nifti_image_path: str,
+                                   num_volumes: int, 
+                                   threshold_mean: float, 
+                                   average_mean_per_volume: float, 
+                                   largest_passing_list_of_volumes: list[int], 
+                                   mi_means_per_volume: list[float]):
+        output_plot_path: str = os.path.join(output_directory, "ref-vol-selection-plot.html")
+        fig = go.Figure()
+        fig.update_layout(
+            title=f"All Mutual Info Values per Volume vs. Selected Volume: {os.path.basename(nifti_image_path)}",
+            xaxis_title="Volume Number",
+            yaxis_title="Mutual Information"
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=list(range(num_volumes - 1)),
+                y=[threshold_mean] * len(list(range(num_volumes - 1))), 
+                name=f"Threshold: {average_mean_per_volume}",
+                mode='lines',
+                line=dict(color="black", dash="dash")
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=list(range(num_volumes - 1)),
+                y=mi_means_per_volume,
+                name="Mean Mutual Info Value in a Volume",
+                mode="lines+markers",
+                hoverinfo="skip",
+                line=dict(color="gray")
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=largest_passing_list_of_volumes,
+                y=[mi_means_per_volume[volume_num] for volume_num in largest_passing_list_of_volumes],
+                name="Selected Passing Volumes",
+                mode="lines+markers",
+                line=dict(color="black")
+            )
+        )
+        fig.add_trace(
+            go.Scatter(
+                x=[self.reference_volume_index],
+                y=[mi_means_per_volume[self.reference_volume_index]],
+                name=f"Selected Reference Volume: {self.reference_volume_index}",
+                mode="lines+markers",
+                line=dict(color="red")
                 
             )
-        
-        self.reference_volume_index, resulting_padding = self.select_reference_volume(comparison_stats, padding)
-        
-        if plot:
-            # plot again with selected reference volume
-            self.plot_results(
-                comparison_stats,
-                protocol_name,
-                threshold_ncc,
-                save_filename=\
-                    os.path.join(output_directory, f"{base_name}_refVolCalibration_withAddedRefVol.png") 
-                    if save else None,
-                ref_vol_index=self.reference_volume_index,
-                padding=resulting_padding
-            )
+        )
+        fig.write_html(output_plot_path)
+        print(f"Reference Volume Selection Plot At: {output_plot_path}")
 
-        
-        
-    def load_metadata(self, json_file):
-        """
-        Load sequence metadata file (.json).
-        """
-        with open(json_file, "r") as f:
-            metadata = json.load(f)
-
-        # Extract protocol name and slice timing array
-        protocol_name = metadata.get("ProtocolName", "UNKNOWN")
-        slice_timing = metadata.get("SliceTiming")
-
-        if slice_timing is None:
-            raise RuntimeError("SliceTiming field not found.")
-
-        return protocol_name, slice_timing
-
-
-    def build_slice_groups(self, slice_timing):
-        """
-        Group slices acquired simultaneously.
-        """
-        groups = defaultdict(list)
-
-        for slice_idx, timing in enumerate(slice_timing):
-            groups[timing].append(slice_idx)
-
-        return dict(sorted(groups.items()))
-
-
-    def normalized_cross_correlation(self, a, b):
-        """
-        Compute normalized cross-correlation (NCC) between two groups of image slices.
-        """
-        a = a.astype(np.float64)
-        b = b.astype(np.float64)
-
-        a = a.ravel()
-        b = b.ravel()
-
-        a_mean = np.mean(a)
-        b_mean = np.mean(b)
-
-        a -= a_mean
-        b -= b_mean
-
-        numerator = np.sum(a * b)
-
-        denominator = np.sqrt(np.sum(a * a) * np.sum(b * b))
-
-        if denominator < 1e-12:
-            return 0.0
-
-        return numerator / denominator
-
-
-    def compute_group_ncc(self, volume_a, volume_b, slice_groups):
-        """
-        Compute NCC for every slice group between two image volumes.
-        """
-        results = {}
-
-        for group_time, slice_indices in slice_groups.items():
-            group_a = volume_a[:, :, slice_indices]
-            group_b = volume_b[:, :, slice_indices]
-            results[group_time] = self.normalized_cross_correlation(group_a, group_b)
-
-        return results
-
-
-    def compare_volumes(self, volume_a, volume_b, slice_groups, threshold):
-        """
-        Compare all slice group NCC values between two volumes (i, i+1) to determine if volume i passes threshold for intra-volume motion.
-        """
-        group_results = self.compute_group_ncc(volume_a, volume_b, slice_groups)
-
-        group_values = np.array(list(group_results.values()))
-        min_ncc = np.min(group_values)
-        mean_ncc = np.mean(group_values)
-        range_ncc = np.max(group_values) - np.min(group_values)
-
-        passed = min_ncc >= threshold
-
-        return (passed, min_ncc, mean_ncc, range_ncc, group_results)
-
-
-    def print_summary(self, comparison_stats, candidate_volumes):
-        """
-        Print summary of candidate reference volumes, first stable volume pair, and most stable volume pair.
-        """
-        logging.info("")
-        logging.info("=" * 70)
-        logging.info("SUMMARY")
-        logging.info("=" * 70)
-
-        if len(candidate_volumes) == 0:
-            logging.info("No volume pair passed all slice-group tests.")
-            return
-
-        candidate_str = ", ".join(str(v) for v in candidate_volumes)
-        logging.info(f"Candidate reference volumes: {candidate_str}")
-
-        first = next(stat for stat in comparison_stats if stat["passed"])
-
-        logging.info("\nFirst stable volume pair:")
-        logging.info(f"  Volume {first['volume']} vs Volume {first['volume'] + 1}")
-        logging.info(f"  Min NCC   = {first['min_ncc']:.4f}")
-        logging.info(f"  Mean NCC  = {first['mean_ncc']:.4f}")
-        logging.info(f"  Range NCC = {first['range_ncc']:.4f}")
-
-        best = min(comparison_stats, key=lambda x: x["range_ncc"])
-
-        logging.info("\nMost stable volume pair (smallest NCC range):")
-        logging.info(f"  Volume {best['volume']} vs Volume {best['volume'] + 1}")
-        logging.info(f"  Min NCC   = {best['min_ncc']:.4f}")
-        logging.info(f"  Mean NCC  = {best['mean_ncc']:.4f}")
-        logging.info(f"  Range NCC = {best['range_ncc']:.4f}")
-
-
-    def save_slice_group_csv(self, filename, slice_group_comparison_results):
-        """
-        Save slice-group NCC comparison results to CSV.
-        """
-        with open(filename, "w", newline="") as csvfile:
-            writer = csv.DictWriter(
-                csvfile,
-                fieldnames=[
-                    "volume",
-                    "next_volume",
-                    "slice_timing",
-                    "ncc",
-                    "threshold",
-                    "passed",
-                ],
-            )
-            writer.writeheader()
-            writer.writerows(slice_group_comparison_results)
-
-        logging.info(f"\nSlice group comparison results saved as: {filename}")
-
-
-    def plot_results(self, comparison_stats, protocol_name, threshold, save_filename=None, show=False, ref_vol_index=None, padding=None):
-        """
-        Plot minimum slice group NCC and range of NCC values for each adjacent volume comparison.
-        """
-        volume_indices = [stat["volume"] for stat in comparison_stats]
-        min_ncc_values = [stat["min_ncc"] for stat in comparison_stats]
-        range_ncc_values = [stat["range_ncc"] for stat in comparison_stats]
-
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
-
-        # Minimum NCC
-        ax1.plot(volume_indices, min_ncc_values, marker="o")
-        ax1.axhline(y=threshold, linestyle="--", color="black", label=f"Threshold = {threshold:.3f}")
-        ax1.set_ylabel("Minimum slice group NCC")
-        ax1.grid(True)
-        
-
-        # NCC Range
-        ax2.plot(volume_indices, range_ncc_values,marker="s")
-        ax2.set_ylabel("Range slice group NCC")
-        ax2.set_xlabel("Volume Comparison Index")
-        ax2.grid(True)
-
-        
-        # Mark Reference Volume if it exists
-        if ref_vol_index != None:
-            ax1.scatter(
-                ref_vol_index,
-                comparison_stats[ref_vol_index]['min_ncc'],
-                color='red',
-                label=f"Selected Reference Volume: Volume {ref_vol_index}, Min NCC: {round(comparison_stats[ref_vol_index]['min_ncc'], 3)}",
-                s=20,
-                zorder=100
-            )
-
-            ax2.scatter(
-                ref_vol_index,
-                comparison_stats[ref_vol_index]['range_ncc'],
-                color='red',
-                s=20,
-                label=f"Selected Reference Volume: Volume {ref_vol_index}, NCC Range: {round(comparison_stats[ref_vol_index]['range_ncc'], 3)}",
-                zorder=100
-            )
-
-            if padding: 
-                # plot pre-volume volumes in within padding num volumes
-                for i, comparison_dict in enumerate(comparison_stats[max(0, ref_vol_index - padding):ref_vol_index]):
-                    ax1.scatter(
-                        comparison_dict['volume'],
-                        comparison_dict['min_ncc'],
-                        color='black',
-                        s=20,
-                        zorder=99,
-                        label=\
-                            f"Motion-free volume within {padding} volumes of the reference volume"
-                            if i == 0
-                            else None
-                    )
-
-                    ax2.scatter(
-                        comparison_dict['volume'],
-                        comparison_dict['range_ncc'],
-                        color='black',
-                        s=20,
-                        zorder=99,
-                        label=\
-                            f"Motion-free volume within {padding} volumes of the reference volume"
-                            if i == 0
-                            else None
-                    )
-                # plot post-volume volumes in within padding num volumes
-                for comparison_dict in comparison_stats[ref_vol_index + 1 : min(len(comparison_stats), ref_vol_index + padding + 1)]:
-                    ax1.scatter(
-                        comparison_dict['volume'],
-                        comparison_dict['min_ncc'],
-                        color='black',
-                        s=20,
-                        zorder=99
-                    )
-
-                    ax2.scatter(
-                        comparison_dict['volume'],
-                        comparison_dict['range_ncc'],
-                        color='black',
-                        s=20,
-                        zorder=99
-                    )
-            ax2.legend()
-        ax1.legend()
-
-        plt.suptitle(f"{protocol_name}\nSlice Group Normalized Cross-Correlation (NCC)")
-        plt.tight_layout()
-        if save_filename:
-            fig.savefig(save_filename, dpi=300, bbox_inches="tight")
-            logging.info(f"Plot saved as: {save_filename}")
-        if show:
-            plt.show()
-
-    def select_reference_volume(self, comparison_stats, padding = 5):
-        logging.info("Selecting a good reference volume...")
-
-        while True:
-            for volume_num, comparison_dict in enumerate(comparison_stats):
-                logging.info(f"\nChecking volume {volume_num}")
-                if comparison_dict['passed']:
-                    logging.info(f"Volume {volume_num}: passed.")
-                                
-                    if all(
-                        comparison_dict['passed'] for comparison_dict in 
-                        comparison_stats[
-                            max(0, volume_num - padding):volume_num
-                        ]
-                    ):
-                        logging.info(f"Volume {volume_num}: The previous {padding} volumes passed.")
-                    else:
-                        logging.info(f"Volume {volume_num}: Not all of the following {padding} volumes passed.")
-                        logging.info(f"Volume {volume_num}: Will not be selected as the reference volume.")
-                        continue 
-
-                    if all(
-                        comparison_dict['passed']
-                        for comparison_dict in comparison_stats[
-                            volume_num + 1 : min(len(comparison_stats), volume_num + padding + 1)
-                        ]
-                    ):
-                        logging.info(f"Volume {volume_num}: The following {padding} volumes passed.")
-                    else:
-                        logging.info(f"Volume {volume_num}: Not all of the following {padding} volumes passed.")
-                        logging.info(f"Volume {volume_num}: Will not be selected as the reference volume.")
-                        continue 
-                    
-                    logging.info(f"\n\nThe following volume index is a good reference volume: {volume_num} " + \
-                                 f"(when the padding is {padding} volumes).\n\n")
-                    return volume_num, padding
-
-                else:
-                    logging.info(f"Volume {volume_num}: failed.")
-            
-            padding -= 1
-            if padding < 0:
-                raise ValueError(
-                    "No good reference volume found at the given threshold. "
-                    "Please lower your threshold NCC value and try again."
-                )
-            else:
-                warnings.warn(
-                    message=(
-                        "No good reference volume found when when the number " + \
-                        f"of required surrounding motion-free volumes is set to {padding + 1}. " + \
-                        f"Setting padding to {padding}. It is reccomended that you lower the threshold."),
-                    category=UserWarning
-                )
-            
-    def return_reference_volume_index(self):
+    def return_selected_reference_volume_index(self) -> int:
         return self.reference_volume_index
     
 if __name__ == "__main__":
     import argparse
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--nii", required=True, help="Input 4D nifti scan data file (.nii or .nii.gz)")
-    parser.add_argument("--json",required=True,help="Sequence metadata file (.json)")
-    parser.add_argument("--threshold",type=float,default=0.995,help="Minimum NCC required to pass")
-    parser.add_argument("--plot",action="store_true",help="Plot min NCC and range NCC for all volume comparisons")
-    parser.add_argument("--save",action="store_true",help="Save log file (.log), slice group comparison results (.csv), and comparison plot (.png) to current working directory")
-    parser.add_argument("--verbose",action="store_true",help="Enable verbose logging of every slice group comparison")
-    parser.add_argument("--output_directory",required=False,default='outputs',help='If saving, input an output directory here.')
-    args = parser.parse_args()
+    parser: argparse.ArgumentParser = argparse.ArgumentParser(
+        description = \
+            "Identify a motion-free reference volume via comparing " \
+            "the mutual information of slice groups across sequential volumes."
+    )
+    parser.add_argument(
+        "--nifti_image_path",
+        required=True,
+        help="Must be 4D."
+    )
+    parser.add_argument(
+        "--json_file_path",
+        required=True
+    )
+    parser.add_argument(
+        "--n_jobs",
+        required=False,
+        type=int,
+        default=-1,
+        help="Default = -1 (All CPU Cores)."
+    )
+    parser.add_argument(
+        "--output_directory",
+        required=False,
+        default=None,
+        help="If None, no output files will be created."
+    )
+    args: argparse.Namespace = parser.parse_args()
     IdentifyReferenceVolume(
-        nifti_file_path=os.path.abspath(args.nii),
-        json_file_path=os.path.abspath(args.json),
-        threshold_ncc=args.threshold,
-        plot=args.plot,
-        save=args.save,
-        verbose=args.verbose,
-        output_directory=os.path.abspath(args.output_directory)
+        nifti_image_path=os.path.abspath(args.nifti_image_path),
+        json_file_path=os.path.abspath(args.json_file_path),
+        output_directory=\
+            os.path.abspath(args.output_directory) 
+            if args.output_directory else None,
+        n_jobs=args.n_jobs
     )
