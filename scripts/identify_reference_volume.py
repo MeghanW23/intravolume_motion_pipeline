@@ -30,7 +30,7 @@ class IdentifyReferenceVolume:
         print(f"Slice Timing: {slice_timing}")
 
         # Get all MI values 
-        """results: list[dict[int, list[float]]] = Parallel(
+        results: list[dict[int, list[float]]] = Parallel(
             n_jobs=n_jobs, return_as="list")(
             delayed(self.compare_volumes)(
                 volume_num1=i - 1,
@@ -42,12 +42,7 @@ class IdentifyReferenceVolume:
         ) # pyright: ignore[reportAssignmentType]
         mutual_info_dict: dict[int, list[float]] = {}
         for result in results:
-            mutual_info_dict[list(result.keys())[0]] = list(result.values())[0] # pyright: ignore[reportOptionalMemberAccess]"""
-
-        mutual_info_dict: dict[int, list[float]] = {}
-        with open("/Users/meghan/motion_fmri/intravolume_motion_pipeline_v2/scripts/testing/all_mi_values.json", mode='r') as file:
-            mutual_info_dict = json.load(file)
-
+            mutual_info_dict[list(result.keys())[0]] = list(result.values())[0] # pyright: ignore[reportOptionalMemberAccess]
 
         # Save files to output directory 
         if output_directory:
