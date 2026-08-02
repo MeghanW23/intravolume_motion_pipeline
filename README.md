@@ -12,11 +12,12 @@ This project directly addresses the motion confound using this novel slice-by-sl
 ----
 
 ## Set up the Pipeline
+#### This pipeline is memory-intensive and long-running, so it is important to run on an [HPC](https://www.intel.com/content/www/us/en/learn/what-is-hpc.html) instead of locally.
 
 ***Note to Cohen Lab Researchers**: This repository is already existing and configured on E3 at: `/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline`. You will need access to the Neurofeedback project PHI folder (`Groups/P00049401`) to access the repo.*
 
+#### 1. Clone the Repository
 
-#### Clone the Repository
 This project has submodules. *You will need to request access to any submodules that are currently private*.
 To clone the project with submodules, given you have access to them, run:
 ```
@@ -27,17 +28,15 @@ git clone --recurse-submodules git@github.com:MeghanW23/intravolume_motion_pipel
 git clone --recurse-submodules https://github.com/MeghanW23/intravolume_motion_pipeline_v2.git
 ```
 
-#### Edit TEMPLATE.yaml software paths
-You will also need to edit the various software paths in the [run_pipeline/config_files/TEMPLATE.yaml](https://github.com/MeghanW23/intravolume_motion_pipeline_v2/blob/main/run_pipeline/config_files/TEMPLATE.yaml) file so that it points to the correct paths on your system.
+#### 2. Edit TEMPLATE.yaml software paths
+You will need to edit the various software paths in the [run_pipeline/config_files/TEMPLATE.yaml](https://github.com/MeghanW23/intravolume_motion_pipeline_v2/blob/main/run_pipeline/config_files/TEMPLATE.yaml) file so that it points to the correct paths on your system.
 
-#### Ensure you are running on an HPC
-2. This pipeline is memory-intensive and long-running, so it is important to run on an [HPC](https://www.intel.com/content/www/us/en/learn/what-is-hpc.html) instead of locally.
-
-#### Create the Conda environment
-3. You will need to create a Conda (or potentially Python) environment to install the necessary packages. There is a environment.yml file you can use at `run_pipeline/environment.yml`. Once you have created the environment, don't forget to edit the following paths in your .yaml file(s):
-  CONDA_ENV_NAME
-  CONDA_INIT_PATH
-  CONDA_ENV_PYTHON_PATH
+#### 3. Create the Conda environment
+You will need to create a Conda (or potentially Python) environment to install the necessary packages. There is a environment.yml file you can use at `run_pipeline/environment.yml`. Once you have created the environment, don't forget to edit the following paths in your .yaml file(s):
+<br>
+<br>CONDA_ENV_NAME<br>
+<br>CONDA_INIT_PATH<br>
+<br>CONDA_ENV_PYTHON_PATH
 
 ----
 
