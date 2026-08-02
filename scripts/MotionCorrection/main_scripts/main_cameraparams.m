@@ -9,7 +9,7 @@
 % abruptmotion_fname  = '/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/mw_motion_pipeline/testing_data/p004-ses-04_outputs/recon_abruptmotion.nii.gz';
 % sms_fac=4; 
 
-function main = main_cameraparams(data_path, fmri_fname, fmri_fname_bgremoved, OutputMotionParams, abruptmotion_fname, main_script_dir, directliftandunliftcodes_dir, operators_dir, sms_fac, thresh_forscrub, slice_timing)
+function main = main_cameraparams(data_path, fmri_fname, fmri_fname_bgremoved, OutputMotionParams, abruptmotion_fname, main_script_dir, directliftandunliftcodes_dir, operators_dir, sms_fac, thresh_forscrub, slice_timing, n_jobs)
 
 	% Add Python module directory to MATLAB Python path
 	% Add main script directory to Python path
@@ -59,6 +59,8 @@ function main = main_cameraparams(data_path, fmri_fname, fmri_fname_bgremoved, O
 	disp(" ")
 	disp("Slice Timing:")
 	disp(slice_timing)
+	disp("N Jobs:")
+	disp(n_jobs)
 	disp("----------------------------------------------------------------")
 	disp("----------------------------------------------------------------")
 
@@ -74,6 +76,9 @@ function main = main_cameraparams(data_path, fmri_fname, fmri_fname_bgremoved, O
 
 	% convert input slice_timing string to row vector
 	slice_timing = str2num(slice_timing);
+
+	% convert input n_jobs str to double
+	n_jobs = str2double(n_jobs)
 
 	[~,f,~] = fileparts(fmri_fname);
 	[~,g,~] = fileparts(f);
@@ -188,7 +193,7 @@ function main = main_cameraparams(data_path, fmri_fname, fmri_fname_bgremoved, O
 	opt.ft = 50;%75;% filter size. Determines the size of Hankel matrix formed at every voxel.
 	opt.overall_maxIter = 20;%15; % Maximum number of iterations for the algorithm
 	opt.maxIter = 6;% Maximum number of iterations for the x-subproblem
-	opt.Njobs = -1;% Uses all cores when the python codes corresponding to the z-subproblem are executed
+	opt.Njobs = n_jobs;
 	opt.timepoint1 = 116819;% For display purposes. time series corresponding to it is displayed
 	opt.timepoint2 = 104879;% For display purposes. time series corresponding to it is displayed
 	opt.ts_start  = 1; % Starting point for downsampling the reconstructed time series
