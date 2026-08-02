@@ -22,9 +22,7 @@ To clone the project with submodules, given you have access to them, run:
 ```
 # If connecting to GitHub with SSH 
 git clone --recurse-submodules git@github.com:MeghanW23/intravolume_motion_pipeline_v2.git
-```
-or 
-```
+
 # If connecting to GitHub over HTTPS
 git clone --recurse-submodules https://github.com/MeghanW23/intravolume_motion_pipeline_v2.git
 ```
