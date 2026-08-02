@@ -106,8 +106,9 @@ class CharacterizeIntraVolumeMotion:
         """
         slice_timing_module: GetSliceTiming = GetSliceTiming(
             json_data=json_file_path, # pyright: ignore[reportArgumentType]
-            output_json_timing_path=os.path.join(output_directory, "slice_timing.json")
-        )
+            output_json_timing_path=os.path.join(output_directory, "slice_timing.json"),
+            output_txt_timing_path=os.path.join(output_directory, "slice_aquisition_times.txt")
+        ) 
         slice_timing_module.print_slice_timing()
         slice_timing: OrderedDict[float, list[int]] = slice_timing_module.return_slice_timing()
         
@@ -133,13 +134,11 @@ class CharacterizeIntraVolumeMotion:
         if reference_volume_index == None:
             print("\nSelecting a Motion Free Reference Volume...")
             reference_volume_index: int = IdentifyReferenceVolume(
-                nifti_file_path=nifti_image_path,
-                json_file_path=json_file_path,
-                plot=True,
-                save=True,
-                verbose=True,
-                output_directory=os.path.join(output_directory, "reference_volume_script_outputs")
-            ).return_reference_volume_index()
+                nifti_image_path=nifti_image_path, # pyright: ignore[reportArgumentType]
+                json_file_path=json_file_path, # pyright: ignore[reportArgumentType]
+                output_directory=os.path.join(output_directory, "reference_volume_script_outputs"),
+                n_jobs=n_jobs # pyright: ignore[reportArgumentType]
+            ).return_selected_reference_volume_index()
             print(f"We will use reference volume index: {reference_volume_index}")
 
         """
