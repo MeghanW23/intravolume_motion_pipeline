@@ -36,7 +36,7 @@ FUNCTIONAL_JSON_FILE_PATH:
 
 # Enter the series name (ex. "func-bold_task-NFB2")
 # Required if:
-#   you are entering a FUNCTIONAL_DICOM_DIRECTORY 
+#   you are entering a mutli-run FUNCTIONAL_DICOM_DIRECTORY 
 #   or 
 #   if you are running fMRIPrep
 SERIES_NAME: "func-bold_task-NFB2"
