@@ -2,7 +2,6 @@
 
 # Whatever environment you use to run this script, make sure it has
 # ITK installed, as it is required to compile sms-mi-reg.cpp
-conda activate rsfMRI_SMC_mc_env
 
 mkdir -p sms-mi-reg/build
 cd sms-mi-reg/build 
