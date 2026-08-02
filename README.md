@@ -50,7 +50,7 @@ Create a config file for your data by making a copy of [run_pipeline/config_file
 ```
 sbatch submit_job.sh config_files/<your config file>
 ```
-or you can run the main python script interactively (on a system with high memory / CPU requirements) using the main pipeline script: 
+or you can run the pipeline wrapper script (on a system with high memory / CPU requirements) using the main pipeline script: 
 
 ```
 python run_pipeline.py --configuration_file config_files/<your config file>
