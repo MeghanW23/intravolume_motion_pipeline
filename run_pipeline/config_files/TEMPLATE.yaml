@@ -22,6 +22,7 @@ RUN_MOTION_CORRECTION: true
 RUN_FMRIPREP: true
 
 # We will make these directories for you: 
+# Note: Please make sure these paths end with a '/'
 WORKING_DIRECTORY_PATH: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline/participant_runs/sub-04_ses-04_task-NFB2/working/"
 OUTPUT_DIRECTORY_PATH: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline/participant_runs/sub-04_ses-04_task-NFB2/outputs/"
     
