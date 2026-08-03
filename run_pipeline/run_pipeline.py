@@ -144,7 +144,8 @@ class RunPipeline:
                 motion_threshold=configurations.MOTION_THRESHOLD,
                 dcmdjpeg_path=configurations.DCMDJPEG_PATH,
                 dcm2niix_path=configurations.DCM2NIIX_PATH,
-                matlab_path=configurations.MATLAB_INSTALLATION_PATH
+                matlab_path=configurations.MATLAB_INSTALLATION_PATH,
+                n_jobs=configurations.N_JOBS
             )
         """
         ========================================

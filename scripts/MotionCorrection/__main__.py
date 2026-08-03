@@ -25,7 +25,8 @@ class StartMotionCorrection:
                  motion_threshold: int = 10,
                  dcmdjpeg_path: str = 'dcmdjpeg',
                  dcm2niix_path: str = 'dcm2niix',
-                 matlab_path: str = 'matlab'):
+                 matlab_path: str = 'matlab',
+                 n_jobs: int = - 1):
 
         print(f"\n========== Starting Intravolume Motion Correction ========== ")
         print(f"Radian Parameters Text File: {radian_parameters_path}")
@@ -39,6 +40,7 @@ class StartMotionCorrection:
         print(f"dcmdjpeg Path/Command: {dcmdjpeg_path}")
         print(f"dcm2niix Path/Command: {dcm2niix_path}")
         print(f"MATLAB Path/Command: {matlab_path}")
+        print(f"Number of Jobs: {n_jobs}")
         print("======================================================================\n")
         print(
             "NOTE: The motion correction step requires quite a bit of memory. If your "
@@ -182,7 +184,8 @@ class StartMotionCorrection:
                 '{operators_dir}', \
                 '{str(sms_factor)}', \
                 '{str(threshold_in_mm)}', \
-                '{', '.join([str(val) for val in slice_timing])}'); \
+                '{', '.join([str(val) for val in slice_timing])}', \
+                '{str(n_jobs)}'); \
             exit;" 
         ])
 
