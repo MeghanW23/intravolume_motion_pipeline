@@ -88,13 +88,13 @@ class RunPipeline:
                 func_json_file_path: str = dcm2niix_module.return_json_file() # pyright: ignore[reportAssignmentType]
 
         # copy raw data into output directory
-        if os.path.dirname(func_nifti_image_path) != configurations.OUTPUT_DIRECTORY_PATH:
+        if not os.path.basename(func_nifti_image_path) in configurations.OUTPUT_DIRECTORY_PATH:
             print(f"Copying Raw NiFTI Data into Output Directory: {configurations.OUTPUT_DIRECTORY_PATH}")
             shutil.copy(
                 src=func_nifti_image_path,
                 dst=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, os.path.basename(func_nifti_image_path))
             )
-        if os.path.dirname(func_json_file_path) != configurations.OUTPUT_DIRECTORY_PATH:
+        if not os.path.basename(func_json_file_path) in configurations.OUTPUT_DIRECTORY_PATH:
             print(f"Copying Raw JSON File into Output Directory: {configurations.OUTPUT_DIRECTORY_PATH}")
             shutil.copy(
                     src=func_json_file_path,
