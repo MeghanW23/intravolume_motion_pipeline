@@ -1,162 +1,149 @@
-import os 
+import os
 import json
-import statistics
+import subprocess 
 import numpy as np
 import SimpleITK as sitk 
 from collections import OrderedDict
-from joblib import Parallel, delayed
-from plotly import graph_objects as go
-from plotly.subplots import make_subplots
 
 class IdentifyReferenceVolume:
+
     def __init__(self, 
-                 nifti_image_path: str , 
-                 json_file_path: str, 
-                 n_jobs: int = -1, 
-                 output_directory: str | None = None) -> None:
+                 nifti_image_path, 
+                 json_file_path, 
+                 working_directory = 'working',
+                 threshold_as_percent_of_voxel = 10,
+                 reference_volume_spacing = (1.236, 1.236, 1.236)):
+        
+        print("\n-----")
+        print(f"Nifti Image Path: {nifti_image_path}")
+        print(f"JSON File Path: {json_file_path}")
+        print(f"Working Directory: {working_directory}")
+        print(f"Threshold as Percent of Voxel: {threshold_as_percent_of_voxel}%")
+        print(f"Reference Volume Spacing: {reference_volume_spacing}")
+        print("-----\n")
 
-        if output_directory:
-            os.makedirs(output_directory, exist_ok=True)
+        os.makedirs(working_directory, exist_ok=True)
+        
+        # 1. Get Motion Threshold Based on Voxel Spacing
+        threshold_in_mm = self.get_threshold_in_mm(json_file_path, threshold_as_percent_of_voxel)
+        print(f"Threshold in mm: {threshold_in_mm}mm")
 
-        # Load data
-        nifti_image: sitk.Image = sitk.ReadImage(nifti_image_path)
-        dimensions: tuple[float, float, float] = nifti_image.GetSize()
-        print(f"Input Image Dimensions: {dimensions}")
+        # 2. Make Sure the Volume is 4D 
+        num_volumes = sitk.ReadImage(nifti_image_path).GetSize()[3]
+        print(f"Number of Volumes: {num_volumes}")
+        if num_volumes <= 0:
+            print(f"\nERROR: Input NiFTI Image Must Be 4D.")
+            print(f"Your NiFTI's Dimensions:\n{sitk.ReadImage(nifti_image_path).GetSize()}")
+            exit(0)
 
-        if len(dimensions) != 4:
-            raise ValueError("Your Input NiFTI Image must be 4D.")
-
-        slice_timing: OrderedDict[float, list[int]] = self.get_slice_timing(json_file_path)
+        # 3. Extract Slice Timing from JSON File 
+        slice_timing = self.get_slice_timing(json_file_path)
         print(f"Slice Timing: {slice_timing}")
+        
+        # 4. Calculate Slice Group, Aquisiton Info 
+        num_slice_groups_per_volume = len(slice_timing)
+        print(f"Number of Slice Groups Per Volume: {num_slice_groups_per_volume}")
+        num_aquisitions = num_slice_groups_per_volume * num_volumes
+        print(f"Total Number of Aquisition: {num_aquisitions}")
 
-        # Get all MI values 
-        results: list[dict[int, list[float]]] = Parallel(
-            n_jobs=n_jobs, return_as="list")(
-            delayed(self.compare_volumes)(
-                volume_num1=i - 1,
-                volume_num2=i,
-                nifti_image_path=nifti_image_path,
-                slice_timing=slice_timing
+        # 5. Extract 3D Volumes from 4D Input NiFTI Image
+        volume_paths = self.extract_volumes(nifti_image_path, working_directory)
+        print(f"Extracted {len(volume_paths)} 3D Volumes")
+        if len(volume_paths) != num_volumes:
+            print(f"\nERROR: len(volume_paths) ({len(volume_paths)}) != num_volumes ({num_volumes})")
+            exit(0)
+        
+        # 6. Iterate Through Each 3D Volume 
+        for volume_num, volume_path in enumerate(volume_paths):
+            
+            # 7. Extract 2D Slices from the 3D Volume
+            slice_paths = self.extract_slices(volume_path, volume_num, working_directory)
+            print(f"\nExtracted {len(slice_paths)} Slices from Volume {volume_num + 1} of {len(volume_paths)}")
+
+            # 8. Upsample the 3D Volume 
+            upsampled_volume_path = self.upsample_reference_volume(
+                volume_path,
+                reference_volume_spacing,
+                working_directory
             )
-            for i in range(1, dimensions[-1])
-        ) # pyright: ignore[reportAssignmentType]
-        mutual_info_dict: dict[int, list[float]] = {}
-        for result in results:
-            mutual_info_dict[list(result.keys())[0]] = list(result.values())[0] # pyright: ignore[reportOptionalMemberAccess]
+            print(f"Upsampled Volume {volume_num + 1} of {len(volume_paths)}")
 
-        # Save files to output directory 
-        if output_directory:
-            # Save to JSON file
-            output_json_path: str = os.path.join(output_directory, "mutual_info_values.json")
-            with open(output_json_path, mode='w') as file:
-                json.dump(
-                    mutual_info_dict,
-                    fp=file
+            # 9. Extract Identity Transform, Center of Rotation from the Upsampled 3D Volume
+            identity_transform_path = self.make_identity_transform(upsampled_volume_path, working_directory)
+            print(f"Identity Transform Path: {identity_transform_path}")
+
+            rotation_center = self.get_rotation_center(identity_transform_path)
+            print(f"Rotation Center: {rotation_center}")
+
+            # 10. Iterate Through Slice Groups 
+            transform_paths = [identity_transform_path]
+            for slice_group_num, slice_nums in enumerate(slice_timing.values()):
+                print(
+                    "\n" +
+                    f"Aligning Slice Group {'{:03d}'.format(slice_group_num + 1)} of {'{:03d}'.format(num_slice_groups_per_volume)} " +
+                    f"in Volume {'{:04d}'.format(volume_num + 1)} of {'{:04d}'.format(len(volume_paths))}"
                 )
-            print(f"Saved Mutual Info Values to: {output_json_path}")
+                output_label = '{:04d}'.format(volume_num) + '-' + '{:04d}'.format(slice_group_num)
 
-            self.plot_all_mutual_info_values(
-                mutual_info_dict=mutual_info_dict,
-                output_directory=output_directory,
-                slice_timing=slice_timing,
-                num_volumes=dimensions[-1],
-                nifti_image_path=nifti_image_path
-            )
+                # 11. Align Each Slice Group to the First Slice Group of the Volume (First Slice Group Aligns to Identity)
+                self.sms_mi_reg(
+                    working_directory=working_directory,
+                    reference_volume_path=upsampled_volume_path,
+                    input_transform_path=identity_transform_path if slice_group_num == 0 else transform_paths[1],
+                    output_transform_label=output_label,
+                    input_slice_paths=[
+                        os.path.join(working_directory, f"slice_outputs-{'{:04d}'.format(volume_num)}-{'{:03d}'.format(slice_num)}.nii")
+                        for slice_num in slice_nums
+                    ]
+                )
 
-        mi_means_per_volume: list[float] = [
-            statistics.mean(volume_mi_list)
-            for volume_mi_list in list(mutual_info_dict.values())
-        ]      
-        mi_min_per_volume: list[float] = [
-            min(mi_list_in_volume)
-            for mi_list_in_volume in list(mutual_info_dict.values())
-        ]
-        mi_range_per_volume: list[float] = [
-            max(mi_list_in_volume) - min(mi_list_in_volume)
-            for mi_list_in_volume in list(mutual_info_dict.values())
-        ]
-
-        if output_directory:
-            output_min_per_vol_path: str = os.path.join(output_directory, "mutual_info_minimum_per_volume.txt")
-            with open(output_min_per_vol_path, mode='w') as file:
-                for value in mi_min_per_volume:
-                    file.write(str(value) + '\n')
-            print(f"Miniumum Mutual Info Per Volume Saved to: {output_min_per_vol_path}")
-
-            output_range_per_vol_path: str = os.path.join(output_directory, "mutual_info_range_per_volume.txt")
-            with open(output_range_per_vol_path, mode='w') as file:
-                for value in mi_range_per_volume:
-                    file.write(str(value) + '\n')
-            print(f"Mutual Info Range Per Volume Saved to: {output_range_per_vol_path}")
-
-            self.plot_min_and_range(
-                output_directory=output_directory,
-                nifti_image_path=nifti_image_path,
-                num_volumes=dimensions[-1],
-                mins=mi_min_per_volume,
-                ranges=mi_range_per_volume
-            )
-
-        average_mean_per_volume: float = statistics.mean(mi_means_per_volume) 
-        print(f"Average Mean of Mutual Info per Volume: {average_mean_per_volume}")
-
-        min_num_volumes: int = 11
-        threshold_mean: float = average_mean_per_volume  * 2
-        while True:
-            print(f"Threshold Value: {threshold_mean}")
-
-            running_volumes: list[int] = []
-            running_ranges: list[float] = []
-
-            all_passing_volume_lists: list[list[int]]= []
-            for volume_num, mi_mean in enumerate(mi_means_per_volume):
-                if mi_mean >= threshold_mean:
-                    running_volumes.append(volume_num)
-                    running_ranges.append(mi_mean)
-                else:
-                    if running_volumes != []:
-                        all_passing_volume_lists.append(running_volumes)
-                    running_volumes: list[int] = []
-                    running_ranges: list[float] = []
+                # 12. Get Created Transform Path, Add to List 
+                output_transform_path = os.path.join(working_directory, "alignTransform_" + output_label + ".tfm")
+                transform_paths.append(output_transform_path)
             
-                    if running_volumes != []:
-                        all_passing_volume_lists.append(running_volumes)
+            # 13. Calculate the Displacements Between the Transform of First Slice Group of the Volume with Each Other Transform
+            displacements = []
+            for i, _ in enumerate(transform_paths):
+                if i <= 1:
+                    continue 
+                else: 
+                    displacement = self.calculate_displacements(
+                        transform_path_1=transform_paths[1],
+                        transform_path_2=transform_paths[i],
+                        rotation_center=rotation_center
+                    )
+                    displacements.append(displacement)
+                    print(f"Displacement: {displacement} mm")
 
-            if all(len(passing_volume_list) < min_num_volumes for passing_volume_list in all_passing_volume_lists): 
-                print("Not enough consecutive passing volumes.")
-                threshold_mean: float = threshold_mean - (average_mean_per_volume * 0.1)
-                print(f"Changing Threshold Value to: {threshold_mean}")
-                continue
+            print(f"\nAll Displacements at Volume {volume_num + 1} of {len(volume_paths)}:")
+            print(', '.join([str(value) for value in displacements]))
 
-            largest_passing_list_of_volumes: list[int] = []
-            largest_num_volumes: int = 0
-            for volume_list in all_passing_volume_lists:
-                if len(volume_list) > largest_num_volumes:
-                    largest_num_volumes: int = len(volume_list)
-                    largest_passing_list_of_volumes: list[int] = volume_list
-            print(f"Volumes Selected: {largest_passing_list_of_volumes}")
-
-            self.reference_volume_index: int = int((largest_passing_list_of_volumes[-1] - largest_passing_list_of_volumes[0]) / 2) + largest_passing_list_of_volumes[0]
-            print(f"Selected Reference Volume: {self.reference_volume_index}")
-            break
-
-        if output_directory:
-            self.plot_selected_volume_graph(
-                output_directory=output_directory,
-                nifti_image_path=nifti_image_path,
-                num_volumes=dimensions[-1],
-                threshold_mean=threshold_mean,
-                average_mean_per_volume=average_mean_per_volume,
-                largest_passing_list_of_volumes=largest_passing_list_of_volumes,
-                mi_means_per_volume=mi_means_per_volume
+            # 14. Write Displacement Values At This Volume to a .txt File
+            displacements_file = os.path.join(working_directory, f"displacements-at-volume-{'{:04d}'.format(volume_num)}.txt")
+            self.write_displacements_to_file(
+                displacements=displacements,
+                file_path=displacements_file
             )
+            print(f"Displacement Values Written To: {displacements_file}")
             
+            # 15. If Any Displacement Values Exceed/Equal the mm Threshold, Continue To the Next Volume 
+            if any(displacement_value >= threshold_in_mm for displacement_value in displacements):
+                print(f"At Least One Displacement Value >= {threshold_in_mm}mm")
+                self.reference_volume_index = volume_num
 
-    def get_slice_timing(self, json_path: str) -> OrderedDict[float, list[int]]:
-
-        def find_matching_indexes(numbers: list[float]) -> dict[float, list[int]]:
+            # 15. If All of the Displacement Values Are Under the mm Threshold, Exit the Script 
+            else:
+                print(f"All Displacement Values < {threshold_in_mm}mm")
+                print(f"Reference Volume Selected: {upsampled_volume_path}")
+                exit(0)
             
-            num_index_map: dict[float, list[int]] = {}
+        print(f"NO GOOD REFERENCE VOLUME FOUND.")
+
+    def get_slice_timing(self, json_path):
+
+        def find_matching_indexes(numbers):
+            
+            num_index_map = {}
         
             for index, number in enumerate(numbers):
                 if number in num_index_map:
@@ -164,309 +151,356 @@ class IdentifyReferenceVolume:
                 else:
                     num_index_map[number] = [index]
         
-            return {group_num: indexes for group_num, (number, indexes) in enumerate(num_index_map.items()) if len(indexes) > 1}
+            return {number: indexes for number, indexes in num_index_map.items() if len(indexes) > 1}
 
-        slice_timing: list[float] = []
         with open(json_path) as f:
-            slice_timing: list[float] = json.load(f)['SliceTiming']
-        
-        return OrderedDict(sorted(find_matching_indexes(slice_timing).items()))
+            json_data = json.load(f)
+            if not 'SliceTiming' in json_data:
+                print(f"'SliceTiming' Key Not In JSON File.")
+                exit(0)
+            else:
+               return OrderedDict(sorted(find_matching_indexes(json_data['SliceTiming']).items()))
 
 
-    def extract_single_volume(self, 
-                                volume_num: int, 
-                                input_nifti_image_path: str,) -> sitk.Image:
+    def get_threshold_in_mm(self, json_path, threshold_as_percent_of_voxel, round_digits = 4):
+        with open(json_path) as f:
+            json_data = json.load(f)
+            if not 'SpacingBetweenSlices' in json_data:
+                print(f"'SpacingBetweenSlices' Key Not In JSON File.")
+                exit(0) 
+            else:
+                return round(json_data['SpacingBetweenSlices'] * (threshold_as_percent_of_voxel / 100), round_digits)
         
-            # cannot parallelize if passing a sitk.Image, must pass the path and load image
-            input_nifti_image: sitk.Image = sitk.ReadImage(input_nifti_image_path)
+    
+    def extract_volumes(self, nifti_image_path, working_directory):
+
+        nifti_image = sitk.ReadImage(nifti_image_path)
+        nifti_dimensions = nifti_image.GetSize()
+        
+        volume_paths = []
+
+        for volume_num in range(0, nifti_dimensions[3]):
+
+            extract = sitk.ExtractImageFilter()
+            extract.SetSize(
+                (nifti_dimensions[0], nifti_dimensions[1], nifti_dimensions[2], 0)
+            )
+            extract.SetIndex(
+                (0, 0, 0, volume_num)
+            )
+
+            volume_path = os.path.join(working_directory, f"volume_outputs-{'{:04d}'.format(volume_num)}.nii")
+            sitk.WriteImage(
+                extract.Execute(nifti_image),
+                volume_path
+            )
+            volume_paths.append(volume_path)
+
+        return volume_paths
+
+
+    def extract_slices(self, volume_path, volume_num, working_directory):
+        
+        volume_img = sitk.ReadImage(volume_path)
+        volume_dimensions = volume_img.GetSize()
+
+        slice_paths = []
+        
+        for slice_num in range(0, volume_dimensions[2]):
             
-            timeseries_dimensions: tuple[int, int, int, int] = input_nifti_image.GetSize()
-    
-            extractor: sitk.ExtractImageFilter = sitk.ExtractImageFilter()
-            extractor.SetSize([
-                timeseries_dimensions[0],
-                timeseries_dimensions[1],
-                timeseries_dimensions[2],
-                0
-            ])
-            extractor.SetIndex([0, 0, 0, volume_num])
-    
-            return extractor.Execute(input_nifti_image)
-
-
-    def extract_single_slice(self,
-                             slice_num: int, 
-                             input_nifti_image: sitk.Image) -> sitk.Image:
+            slice_img = sitk.RegionOfInterest(
+                volume_img,
+                (volume_dimensions[0], volume_dimensions[1], 1),
+                (0, 0, slice_num)
+            )
+            
+            slice_path = os.path.join(
+                working_directory, 
+                f"slice_outputs-{'{:04d}'.format(volume_num)}-{'{:03d}'.format(slice_num)}.nii"
+            )
+            sitk.WriteImage(
+                slice_img,
+                slice_path
+            )
+            slice_paths.append(slice_path)
         
-        volume_dimensions: tuple[int, int, int] = input_nifti_image.GetSize()
-        
-        return sitk.RegionOfInterest(
-            input_nifti_image,
-            size=[volume_dimensions[0], volume_dimensions[1], 1],
-            index=[0, 0, slice_num]
-        )
-
+        return slice_paths
     
-    def get_mutual_info(self, 
-                        ref_data: np.ndarray, 
-                        target_data: np.ndarray, 
-                        nbins=64) -> float:
-            """
-            Function based off of: 
-            https://matthew-brett.github.io/teaching/mutual_information.html
-            """
-    
-            hist_2d, _, _ = np.histogram2d(
-                ref_data.ravel(),
-                target_data.ravel(),
-                bins=nbins)
-    
-            # Convert bin counts in the joint hisogram to probability values
-            # by dividing each bin count by the total number of samples 
-            prob_xy: np.ndarray = hist_2d / float(np.sum(hist_2d))
-    
-            # A marginal distribution is the distribution of one variable ignoring the other
-            # Compute the marginal for x over y
-            prob_x: np.ndarray = np.sum(prob_xy, axis=1)
-            # Compute the marginal for y over x
-            prob_y: np.ndarray = np.sum(prob_xy, axis=0)
-    
-            # Compute the product of marginals
-            # This is what the joint distribution would be if X and Y were independent.
-            px_py: np.ndarray = prob_x[:, None] * prob_y[None, :]
-    
-            nzs: np.ndarray = prob_xy > 0 # Only non-zero pxy values contribute to the sum
-    
-            # prob_xy[nzs] -> gets the nonzero joint probabilities 
-            # px_py[nzs] -> gets the matching independent joint probabilities
-            return np.sum(prob_xy[nzs] * np.log(prob_xy[nzs] / px_py[nzs]))
 
+    def make_identity_transform(self, reference_volume_path, working_directory):
 
-    def compare_volumes(self, 
-                        volume_num1: int, 
-                        volume_num2: int,
-                        nifti_image_path: str, 
-                        slice_timing: OrderedDict[float, list[int]]
-                        ) -> dict[int, list[float]]:
-        
-        volume_1: sitk.Image = self.extract_single_volume(volume_num1, nifti_image_path) 
-        volume_2: sitk.Image = self.extract_single_volume(volume_num2, nifti_image_path) 
+        reference_volume = sitk.ReadImage(reference_volume_path)
 
-        all_mutual_info_values: list[float] = []
-        for slice_group_num, slice_group_slice_nums in enumerate(slice_timing.values()):
-
-            slice_group_mutual_info_values:  list[float] = []
-            for slice_num in slice_group_slice_nums:
-                slice_1: sitk.Image = self.extract_single_slice(
-                    slice_num=slice_num,
-                    input_nifti_image=volume_1
-                )
-                slice_2: sitk.Image = self.extract_single_slice(
-                    slice_num=slice_num,
-                    input_nifti_image=volume_2
-                )
-                mutual_information: float = self.get_mutual_info(
-                    ref_data=sitk.GetArrayFromImage(slice_1),
-                    target_data=sitk.GetArrayFromImage(slice_2)
-                )
-                print(f"Vol {volume_num1} vs. Vol {volume_num2} Slice Group {slice_group_num + 1} of {len(slice_timing)}: {mutual_information}")
-                slice_group_mutual_info_values.append(mutual_information)
-            all_mutual_info_values.append(statistics.mean(slice_group_mutual_info_values))
-
-        return {volume_num1: all_mutual_info_values}
-
-
-    def plot_all_mutual_info_values(self, 
-                                    mutual_info_dict: dict[int, list[float]], 
-                                    output_directory: str, 
-                                    slice_timing: OrderedDict[float, list[int]], 
-                                    num_volumes: int,
-                                    nifti_image_path: str):
-
-        output_plot_path: str = os.path.join(output_directory, "mutual_info_plot.html")
-        mi_means_per_volume: list[float] = [
-            statistics.mean(volume_mi_list)
-            for volume_mi_list in list(mutual_info_dict.values())
-        ]
-        formatted_mi_means_per_volume: list[float] = []
-        for mean_val in mi_means_per_volume:
-            formatted_mi_means_per_volume.extend([mean_val] * len(slice_timing))
-
-        formatted_volume_nums: list[float] = []
-        for volume_num in range(num_volumes - 1):
-            formatted_volume_nums.extend([volume_num] * len(slice_timing))
-
-        fig = go.Figure()
-        fig.update_layout(
-            title=f"All Mutual Information Values: {os.path.basename(nifti_image_path)}",
-            xaxis_title="Aquisition Num",
-            yaxis_title="Mutual Information"
+        image_center = reference_volume.TransformContinuousIndexToPhysicalPoint(
+            [(index-1)/2.0 for index in reference_volume.GetSize()] 
         )
-        fig.add_trace(
-            go.Scatter(
-                x=list(range((num_volumes - 1) * len(slice_timing))),
-                y=[
-                    mi_val for volume_mi_list in list(mutual_info_dict.values()) for mi_val in volume_mi_list
-                ],
-                name="Slice Group Mutual Information",
-                line=dict(color='lightblue'),
-                customdata=np.column_stack([formatted_volume_nums]),
-                hovertemplate=(
-                    "<b>Aquisition Number</b>: %{x}<br>"
-                    "<b>Mutual Information in Volume</b>: %{y}<br>"
-                    "<b>In Volume Number</b>: %{customdata[0]}"
-                )
-            )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=list(range((num_volumes - 1) * len(slice_timing))),
-                y=formatted_mi_means_per_volume,
-                name="Average Mutual Information Value in Volume",
-                line=dict(color='blue'),
-                customdata=np.column_stack([formatted_volume_nums]),
-                hovertemplate=(
-                    "<b>Volume Number</b>: %{customdata[0]}<br>"
-                    "<b>Average Mutual Information in Volume</b>: %{y}"
-                )
-            )
-        )
-        fig.write_html(output_plot_path)
-        print(f"Mutual Info Plot Saved to: {output_plot_path}")
-
-
-    def plot_min_and_range(self, output_directory: str, nifti_image_path: str, num_volumes: int, mins: list[float], ranges: list[float]):
-        # plot 2 subplots with min and range mi per volume 
-        output_plot_path: str = os.path.join(output_directory, "min_and_range_mi_vals.html")
-        fig = make_subplots(
-            rows=2,
-            cols=1,
-            subplot_titles=[
-                f"Minimum Mutual Info Value per Volume in {os.path.basename(nifti_image_path)}", 
-                f"Range of Mutual Info Values per Volume in {os.path.basename(nifti_image_path)}"],
-            shared_xaxes=True,
-            vertical_spacing=0.1
-        )
-        fig.update_layout(showlegend=False)
-        fig.add_trace(
-            go.Scatter(
-                x=list(range(num_volumes - 1)),
-                y=mins,
-                name="Minimum Mutual Info Values per Volume"
-            ),
-            row=1,
-            col=1
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=list(range(num_volumes - 1)),
-                y=ranges,
-                name="Range of Mutual Info Values per Volume"
-            ),
-            row=2,
-            col=1
-        )
-        fig.update_xaxes(title_text="Volume Number", row=2)
-        fig.update_yaxes(title_text="Mutual Information", row=1, col=1)
-        fig.update_yaxes(title_text="Mutual Information", row=2, col=1)
-        fig.write_html(output_plot_path)
-        print(f"Plot Min and Range of Mutual Info Values per Volume: {output_plot_path}")
-
-
-    def plot_selected_volume_graph(self, 
-                                   output_directory: str,
-                                   nifti_image_path: str,
-                                   num_volumes: int, 
-                                   threshold_mean: float, 
-                                   average_mean_per_volume: float, 
-                                   largest_passing_list_of_volumes: list[int], 
-                                   mi_means_per_volume: list[float]):
-        output_plot_path: str = os.path.join(output_directory, "ref-vol-selection-plot.html")
-        fig = go.Figure()
-        fig.update_layout(
-            title=f"All Mutual Info Values per Volume vs. Selected Volume: {os.path.basename(nifti_image_path)}",
-            xaxis_title="Volume Number",
-            yaxis_title="Mutual Information"
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=list(range(num_volumes - 1)),
-                y=[threshold_mean] * len(list(range(num_volumes - 1))), 
-                name=f"Threshold: {average_mean_per_volume}",
-                mode='lines',
-                line=dict(color="black", dash="dash")
-            )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=list(range(num_volumes - 1)),
-                y=mi_means_per_volume,
-                name="Mean Mutual Info Value in a Volume",
-                mode="lines+markers",
-                hoverinfo="skip",
-                line=dict(color="gray")
-            )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=largest_passing_list_of_volumes,
-                y=[mi_means_per_volume[volume_num] for volume_num in largest_passing_list_of_volumes],
-                name="Selected Passing Volumes",
-                mode="lines+markers",
-                line=dict(color="black")
-            )
-        )
-        fig.add_trace(
-            go.Scatter(
-                x=[self.reference_volume_index],
-                y=[mi_means_per_volume[self.reference_volume_index]],
-                name=f"Selected Reference Volume: {self.reference_volume_index}",
-                mode="lines+markers",
-                line=dict(color="red")
                 
-            )
-        )
-        fig.write_html(output_plot_path)
-        print(f"Reference Volume Selection Plot At: {output_plot_path}")
+        transform = sitk.AffineTransform(3)
+        transform.SetIdentity()
+        transform.SetCenter(image_center)
 
-    def return_selected_reference_volume_index(self) -> int:
-        return self.reference_volume_index
+        transform_path = os.path.join(
+            working_directory, 
+            f"{os.path.basename(reference_volume_path).replace('.nii.gz', '').replace('.nii', '')}_identity-centered.tfm"
+        )
+
+        sitk.WriteTransform(
+            transform,
+            transform_path
+
+        )
+        return transform_path
+
+
+    def get_rotation_center(self, identity_transform_path):
+        with open(identity_transform_path, mode='r') as f:
+            for line in f: 
+                if 'FixedParameters' in line:
+                    return [
+                        float(param_str.strip())
+                        for param_str in line.split(' ')[1:]
+                    ]
+                
+
+    def upsample_reference_volume(self, reference_volume_path, spacing, working_directory):
+        
+        def resample_img(img, spacing, sz, interpolator = sitk.sitkLinear):
+            # interpolator could be sitk.sitkLinear
+            # interpolator could be sitk.sitkBSpline
+            r = sitk.ResampleImageFilter()
+            r.SetInterpolator(interpolator)
+            r.SetOutputPixelType( img.GetPixelID() )
+            r.SetDefaultPixelValue(0)
+            r.SetOutputOrigin(img.GetOrigin())
+            r.SetOutputSpacing(spacing)
+            r.SetOutputDirection(img.GetDirection())
+            r.SetSize(sz)
+            return r.Execute(img)
+
+        
+        def resample_img_new_spacing(img, new_spacing):
+            spacing = np.array(img.GetSpacing())
+            sz = np.array(img.GetSize())
+            new_sz = np.floor(spacing / new_spacing * sz).astype(np.uint32)
+            new_sz = 2*np.floor((new_sz+1)/2).astype(np.uint32)
+            return resample_img(img, new_spacing, new_sz.tolist())
+
+
+        upsampled_image = resample_img_new_spacing(
+            sitk.ReadImage(reference_volume_path),
+            new_spacing=spacing
+        )
+        image_path = os.path.join(working_directory, f"UPSAMPLED_{os.path.basename(reference_volume_path)}")
+        sitk.WriteImage(
+            upsampled_image,
+            image_path
+        )
+        return image_path
+
+
+    def run_command(self, command, verbose = False):
+        if verbose:
+            print(f"Running Command: {command}")
+        
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True
+        )
+        if result.returncode != 0:
+            print(f"Command returned non-zero return code: {result.returncode}")
+            print(f"stdout:{result.stdout}")
+            print(f"stderr: {result.stderr}")
+            exit(0)
+        elif verbose:
+            print(f"Command ran sucessfully.")
+            
+
+    def sms_mi_reg(self, working_directory, reference_volume_path, input_transform_path, output_transform_label, input_slice_paths):
+        """
+        Usage: sms-mi-reg [--help] [--version] [--optimizer VAR] [--maxiter VAR] referenceVolume inputTransform outputTransformLabel inputSlices
+
+        Positional arguments:
+        referenceVolume       The volume that is moving to be aligned to the slices.
+        inputTransform        The transform to initialize the alignment.
+        outputTransformLabel  Name phrase used in the construction of the output transform file name.
+        inputSlices           The list of file names of the fixed target slices. [nargs: 1 or more]
+
+        Optional arguments:
+        -h, --help            shows help message and exits
+        -v, --version         prints version information and exits
+        --optimizer           Choice of optimizer (LN_COBYLA, LN_BOBYQA, LN_NELDERMEAD, LN_SBPLX). Default is LN_SBPLX. [default: "LN_SBPLX"]
+        --maxiter             Maximum number of optimizer iterations. Default is 1000. [default: 1000]
+        """
+
+        self.run_command(
+            command=[
+                "docker", "run", "--rm",
+                "-v", f"{working_directory}:/data",
+                "crl/sms-mi-reg", "sms-mi-reg",
+                os.path.basename(reference_volume_path),
+                os.path.basename(input_transform_path),
+                output_transform_label
+            ] + [os.path.basename(slice_path)
+                 for slice_path in input_slice_paths
+            ] + [
+                "--optimizer", "LN_SBPLX"
+            ],
+            verbose=True
+        )
+
+    
+    def calculate_displacements(self, transform_path_1, transform_path_2, rotation_center, radius = 50):
+
+        parameters1 = [0, 0, 0, 0, 0, 0]
+        parameters2 = [0, 0, 0, 0, 0, 0]
+
+        if not 'identity-centered' in os.path.basename(transform_path_1):        
+            parameters1 = self.extract_parameters(transform_path_1)
+
+        if not 'identity-centered' in os.path.basename(transform_path_2):    
+            parameters2 = self.extract_parameters(transform_path_2)
+
+        print(f"Comparing:\n{parameters1}\nVS\n{parameters2}")
+
+        transform1 = self.create_euler_transform(parameters1, rotation_center)
+        transform2 = self.create_euler_transform(parameters2, rotation_center)
+
+        A0 = np.asarray(transform2.GetMatrix()).reshape(3, 3)
+        c0 = np.asarray(transform2.GetCenter())
+        t0 = np.asarray(transform2.GetTranslation())
+
+        A1 = np.asarray(transform1.GetInverse().GetMatrix()).reshape(3, 3)
+        c1 = np.asarray(transform1.GetInverse().GetCenter())
+        t1 = np.asarray(transform1.GetInverse().GetTranslation())
+
+        combined_mat = np.dot(A0,A1)
+        combined_center = c1
+        combined_translation = np.dot(A0, t1+c1-c0) + t0+c0-c1
+
+        versorrigid3d = sitk.VersorRigid3DTransform()
+        versorrigid3d.SetCenter(combined_center)
+        versorrigid3d.SetTranslation(combined_translation)
+        versorrigid3d.SetMatrix(combined_mat.flatten())
+
+        euler3d = sitk.Euler3DTransform()
+        euler3d.SetCenter(combined_center)
+        euler3d.SetTranslation(combined_translation)
+        euler3d.SetMatrix(combined_mat.flatten())
+
+        # Compute displacement (Tisdall et al. 2012)
+        params = np.asarray( euler3d.GetParameters() )
+        theta = np.abs(np.arccos(0.5 * (-1 + np.cos(params[0]) * np.cos(params[1]) + \
+                                        np.cos(params[0]) * np.cos(params[2]) + \
+                                        np.cos(params[1]) * np.cos(params[2]) + \
+                                        np.sin(params[0]) * np.sin(params[1]) * np.sin(params[2]))))
+        drot = radius * np.sqrt((1 - np.cos(theta)) ** 2 + np.sin(theta) ** 2)
+        dtrans = np.linalg.norm(params[3:])
+        displacement = drot + dtrans
+
+        return displacement
+    
+
+    def extract_parameters(self, transform_path):
+        with open(transform_path, mode='r') as f:
+            for line in f: 
+                if 'Parameters' in line and 'Fixed' not in line:
+                    return [
+                        float(param_str.strip())
+                        for param_str in line.split(" ")[1:]
+                    ] 
+
+
+    def create_euler_transform(self, parameters, rotation_center):
+
+        # Create a VersorTransform to interpret the versor
+        versor_transform = sitk.VersorRigid3DTransform()
+        versor_transform.SetParameters(parameters)
+        versor_transform.SetCenter(rotation_center)
+
+        # Extract Euler angles (in radians) from the VersorTransform
+        euler_angles = versor_transform.GetMatrix()
+        euler_angles = np.array(euler_angles).reshape(3, 3)  # Convert to 3x3 matrix
+
+        # Convert rotation matrix to Euler angles (ZYX convention)
+        sy = np.sqrt(euler_angles[0, 0] ** 2 + euler_angles[1, 0] ** 2)
+        singular = sy < 1e-6
+
+        if not singular:
+            x = np.arctan2(euler_angles[2, 1], euler_angles[2, 2])
+            y = np.arctan2(-euler_angles[2, 0], sy)
+            z = np.arctan2(euler_angles[1, 0], euler_angles[0, 0])
+        else:
+            x = np.arctan2(-euler_angles[1, 2], euler_angles[1, 1])
+            y = np.arctan2(-euler_angles[2, 0], sy)
+            z = 0
+
+        # Create the Euler3DTransform
+        euler_transform = sitk.Euler3DTransform()
+        euler_transform.SetRotation(x, y, z)  # Angles are in radians
+        euler_transform.SetTranslation(parameters[3:])
+        euler_transform.SetCenter(rotation_center)
+        
+        return euler_transform
+
+
+    def write_displacements_to_file(self, displacements, file_path):
+        with open(file_path, mode='w') as f:
+            for displacement in displacements:
+                f.write(str(displacement) + '\n')
+
+    
+    def return_reference_volume_index(self):
+        return self.reference_volume_index 
     
 if __name__ == "__main__":
-    import argparse
-    parser: argparse.ArgumentParser = argparse.ArgumentParser(
-        description = \
-            "Identify a motion-free reference volume via comparing " \
-            "the mutual information of slice groups across sequential volumes."
-    )
+    """
+        
+        python get_reference_volume.py \
+            --nifti_file_path ../data/sub-006_ses-02_task-prerifg.nii.gz \
+            --json_file_path ../data/sub-006_ses-02_task-prerifg.json \
+            --threshold_as_percent_of_voxel 10 \
+            --reference_volume_spacing 1.236 1.236 1.236
+    
+    """
+
+    import argparse 
+    parser = argparse.ArgumentParser(description="Select a Motion-Free Reference Volume")
     parser.add_argument(
-        "--nifti_image_path",
-        required=True,
-        help="Must be 4D."
+        "--nifti_file_path",
+        required=True
     )
     parser.add_argument(
         "--json_file_path",
         required=True
     )
     parser.add_argument(
-        "--n_jobs",
+        "--working_directory_path",
         required=False,
-        type=int,
-        default=-1,
-        help="Default = -1 (All CPU Cores)."
+        default='working',
+        help='Default: ./working'
     )
     parser.add_argument(
-        "--output_directory",
+        "--threshold_as_percent_of_voxel",
         required=False,
-        default=None,
-        help="If None, no output files will be created."
+        type=int,
+        default=10,
+        help="Default = 10 Percent"
     )
-    args: argparse.Namespace = parser.parse_args()
+    parser.add_argument(
+        "--reference_volume_spacing",
+        required=False,
+        type=float,
+        nargs=3,
+        default=(1.236, 1.236, 1.236),
+        help="Default: (1.236, 1.236, 1.236)"
+    )
+    
+    args = parser.parse_args()
     IdentifyReferenceVolume(
-        nifti_image_path=os.path.abspath(args.nifti_image_path),
+        nifti_image_path=os.path.abspath(args.nifti_file_path),
         json_file_path=os.path.abspath(args.json_file_path),
-        output_directory=\
-            os.path.abspath(args.output_directory) 
-            if args.output_directory else None,
-        n_jobs=args.n_jobs
+        working_directory=os.path.abspath(args.working_directory_path),
+        threshold_as_percent_of_voxel=args.threshold_as_percent_of_voxel,
+        reference_volume_spacing=args.reference_volume_spacing
     )

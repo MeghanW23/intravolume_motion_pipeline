@@ -48,9 +48,9 @@ class PowellMotionCharacterizationWrapper:
             reference_volume_index: int = IdentifyReferenceVolume(
                 nifti_image_path=nifti_image_path,
                 json_file_path=json_file_path,
-                n_jobs=n_jobs,
-                output_directory=os.path.join(output_directory_path, "reference_volume_selection_outputs")
-            ).return_selected_reference_volume_index()
+                working_directory=working_directory_path,
+                threshold_as_percent_of_voxel=10
+            ).return_reference_volume_index()
 
         """
         =======================================================

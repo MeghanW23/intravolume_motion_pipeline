@@ -136,9 +136,9 @@ class CharacterizeIntraVolumeMotion:
             reference_volume_index: int = IdentifyReferenceVolume(
                 nifti_image_path=nifti_image_path, # pyright: ignore[reportArgumentType]
                 json_file_path=json_file_path, # pyright: ignore[reportArgumentType]
-                output_directory=os.path.join(output_directory, "reference_volume_script_outputs"),
-                n_jobs=n_jobs # pyright: ignore[reportArgumentType]
-            ).return_selected_reference_volume_index()
+                working_directory=os.path.join(output_directory, "reference_volume_script_outputs"),
+                threshold_as_percent_of_voxel=motion_threshold,
+            ).return_reference_volume_index()
             print(f"We will use reference volume index: {reference_volume_index}")
 
         """
