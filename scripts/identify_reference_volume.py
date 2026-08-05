@@ -125,12 +125,14 @@ class IdentifyReferenceVolume:
             # 15. If Any Displacement Values Exceed/Equal the mm Threshold, Continue To the Next Volume 
             if any(displacement_value >= threshold_in_mm for displacement_value in displacements):
                 print(f"At Least One Displacement Value >= {threshold_in_mm}mm")
-                self.reference_volume_index = volume_num
+                
 
             # 15. If All of the Displacement Values Are Under the mm Threshold, Exit the Script 
             else:
                 print(f"All Displacement Values < {threshold_in_mm}mm")
                 print(f"Reference Volume Selected: {upsampled_volume_path}")
+                self.reference_volume_index = volume_num
+                self.reference_volume_path = upsampled_volume_path
                 exit(0)
             
         print(f"NO GOOD REFERENCE VOLUME FOUND.")
@@ -437,6 +439,9 @@ class IdentifyReferenceVolume:
     
     def return_reference_volume_index(self):
         return self.reference_volume_index 
+
+    def return_reference_volume_path(self):
+        return self.reference_volume_path
     
 if __name__ == "__main__":
     """
