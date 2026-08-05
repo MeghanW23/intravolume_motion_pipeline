@@ -133,7 +133,7 @@ class IdentifyReferenceVolume:
                 print(f"Reference Volume Selected: {upsampled_volume_path}")
                 self.reference_volume_index = volume_num
                 self.reference_volume_path = upsampled_volume_path
-                exit(0)
+                return 
             
         print(f"NO GOOD REFERENCE VOLUME FOUND.")
 
