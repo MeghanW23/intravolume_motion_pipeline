@@ -44,13 +44,16 @@ class PowellMotionCharacterizationWrapper:
         ) 
         slice_timing_module.print_slice_timing()
         slice_timing: OrderedDict[float, list[int]] = slice_timing_module.return_slice_timing()
-        if reference_volume_index is None:
-            reference_volume_index: int = IdentifyReferenceVolume(
-                nifti_image_path=nifti_image_path,
-                json_file_path=json_file_path,
-                working_directory=working_directory_path,
-                threshold_as_percent_of_voxel=10
-            ).return_reference_volume_index()
+
+        """"
+        =======================================================
+        GET MOTION THRESHOLD
+        =======================================================
+        """
+        mm_threshold: float = GetMotionThreshold(
+            nifti_image=nifti_image,
+            threshold_as_percent=10
+        ).return_mm_threshold()
 
         """
         =======================================================
@@ -62,9 +65,9 @@ class PowellMotionCharacterizationWrapper:
             reference_volume_index: int = IdentifyReferenceVolume(
                 nifti_image_path=nifti_image_path, # pyright: ignore[reportArgumentType]
                 json_file_path=json_file_path, # pyright: ignore[reportArgumentType]
-                output_directory=os.path.join(output_directory, "reference_volume_script_outputs"),
-                n_jobs=n_jobs # pyright: ignore[reportArgumentType]
-            ).return_selected_reference_volume_index()
+                working_directory=working_directory_path,
+                threshold_in_mm=mm_threshold
+            ).return_reference_volume_index()
             print(f"We will use reference volume index: {reference_volume_index}")
 
     
@@ -183,13 +186,9 @@ class PowellMotionCharacterizationWrapper:
 
         """"
         =======================================================
-        GET MOTION THRESHOLD
+        PLOT RESULTS
         =======================================================
         """
-        mm_threshold: float = GetMotionThreshold(
-            nifti_image=nifti_image,
-            threshold_as_percent=10
-        ).return_mm_threshold()
 
         GraphTransformDirectory(
             transform_directory=output_directory_path,

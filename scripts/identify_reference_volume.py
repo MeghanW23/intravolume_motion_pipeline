@@ -11,22 +11,18 @@ class IdentifyReferenceVolume:
                  nifti_image_path, 
                  json_file_path, 
                  working_directory = 'working',
-                 threshold_as_percent_of_voxel = 10,
+                 threshold_in_mm: float = 10,
                  reference_volume_spacing = (1.236, 1.236, 1.236)):
         
         print("\n-----")
         print(f"Nifti Image Path: {nifti_image_path}")
         print(f"JSON File Path: {json_file_path}")
         print(f"Working Directory: {working_directory}")
-        print(f"Threshold as Percent of Voxel: {threshold_as_percent_of_voxel}%")
+        print(f"Threshold in mm: {threshold_in_mm}%")
         print(f"Reference Volume Spacing: {reference_volume_spacing}")
         print("-----\n")
 
         os.makedirs(working_directory, exist_ok=True)
-        
-        # 1. Get Motion Threshold Based on Voxel Spacing
-        threshold_in_mm = self.get_threshold_in_mm(json_file_path, threshold_as_percent_of_voxel)
-        print(f"Threshold in mm: {threshold_in_mm}mm")
 
         # 2. Make Sure the Volume is 4D 
         num_volumes = sitk.ReadImage(nifti_image_path).GetSize()[3]
@@ -160,17 +156,6 @@ class IdentifyReferenceVolume:
                 exit(0)
             else:
                return OrderedDict(sorted(find_matching_indexes(json_data['SliceTiming']).items()))
-
-
-    def get_threshold_in_mm(self, json_path, threshold_as_percent_of_voxel, round_digits = 4):
-        with open(json_path) as f:
-            json_data = json.load(f)
-            if not 'SpacingBetweenSlices' in json_data:
-                print(f"'SpacingBetweenSlices' Key Not In JSON File.")
-                exit(0) 
-            else:
-                return round(json_data['SpacingBetweenSlices'] * (threshold_as_percent_of_voxel / 100), round_digits)
-        
     
     def extract_volumes(self, nifti_image_path, working_directory):
 
@@ -481,11 +466,9 @@ if __name__ == "__main__":
         help='Default: ./working'
     )
     parser.add_argument(
-        "--threshold_as_percent_of_voxel",
-        required=False,
-        type=int,
-        default=10,
-        help="Default = 10 Percent"
+        "--threshold_in_mm",
+        required=True,
+        type=float
     )
     parser.add_argument(
         "--reference_volume_spacing",
@@ -501,6 +484,6 @@ if __name__ == "__main__":
         nifti_image_path=os.path.abspath(args.nifti_file_path),
         json_file_path=os.path.abspath(args.json_file_path),
         working_directory=os.path.abspath(args.working_directory_path),
-        threshold_as_percent_of_voxel=args.threshold_as_percent_of_voxel,
+        threshold_in_mm=args.threshold_in_mm,
         reference_volume_spacing=args.reference_volume_spacing
     )

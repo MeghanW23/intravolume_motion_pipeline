@@ -128,6 +128,22 @@ class CharacterizeIntraVolumeMotion:
 
         """
         =======================================================
+        GET DISPLACEMENT THRESHOLD IN MM 
+        =======================================================
+        """
+        print(
+            "Calculating the motion threshold in mm from " + \
+            "the threshold as a percentage of the diagonal " + \
+            f"of a single voxel: {motion_threshold}% "
+        )
+        mm_motion_threshold: float = GetMotionThreshold(
+            nifti_image=nifti_image_path, # pyright: ignore[reportArgumentType]
+            threshold_as_percent=motion_threshold
+        ).return_mm_threshold()
+
+
+        """
+        =======================================================
         FIND A REFERENCE_VOLUME
         =======================================================
         """
@@ -137,7 +153,7 @@ class CharacterizeIntraVolumeMotion:
                 nifti_image_path=nifti_image_path, # pyright: ignore[reportArgumentType]
                 json_file_path=json_file_path, # pyright: ignore[reportArgumentType]
                 working_directory=os.path.join(output_directory, "reference_volume_script_outputs"),
-                threshold_as_percent_of_voxel=motion_threshold,
+                threshold_in_mm=mm_motion_threshold
             ).return_reference_volume_index()
             print(f"We will use reference volume index: {reference_volume_index}")
 
@@ -274,21 +290,6 @@ class CharacterizeIntraVolumeMotion:
             output_rotation_unit='degrees'
         )
         
-        """
-        =======================================================
-        GET DISPLACEMENT THRESHOLD IN MM 
-        =======================================================
-        """
-        print(
-            "Calculating the motion threshold in mm from " + \
-            "the threshold as a percentage of the diagonal " + \
-            f"of a single voxel: {motion_threshold}% "
-        )
-        mm_motion_threshold: float = GetMotionThreshold(
-            nifti_image=nifti_image_path, # pyright: ignore[reportArgumentType]
-            threshold_as_percent=motion_threshold
-        ).return_mm_threshold()
-
         """
         =======================================================
         GRAPH DISPLACEMENT AND PARAMETER RESULTS 
