@@ -65,10 +65,10 @@ class RunAlignments:
 
        self.run_command([
             self.smsmireg_executable_path,
-            "--movingVolume", os.path.basename(self.reference_volume_path),
-            "--fixedVolume", os.path.basename(self.target_volume_path),
-            "--outputtransformfile", "alignTransform_" + self.output_transform_label + ".tfm",
-            "--initialtransform", os.path.basename(self.initial_transform_path),
+            "--movingVolume", self.reference_volume_path,
+            "--fixedVolume", self.target_volume_path,
+            "--outputtransformfile", os.path.join(self.working_directory, "alignTransform_" + self.output_transform_label + ".tfm"),
+            "--initialtransform", self.initial_transform_path,
             "--activeSlices"] + self.target_slice_indices + [
             "--activeParameters", "111111",
             "--histogramPVAOff",
