@@ -6,6 +6,7 @@ from typing import Any
 import SimpleITK as sitk 
 from collections import OrderedDict
 
+from run_alignment import RunAlignments
 class IdentifyReferenceVolume:
 
     def __init__(self, 
@@ -13,7 +14,10 @@ class IdentifyReferenceVolume:
                  json_file_path: str, 
                  working_directory: str = 'working',
                  threshold_in_mm: float = 10,
-                 reference_volume_spacing: tuple[float, float, float] = (1.236, 1.236, 1.236)):
+                 reference_volume_spacing: tuple[float, float, float] = (1.236, 1.236, 1.236),
+                 run_environment: str = "docker",
+                 smsmireg_executable_path: str | None = None,
+                 singularity_image_file: str | None = None):
         
         print("\n-----")
         print(f"Nifti Image Path: {nifti_image_path}")
@@ -21,6 +25,9 @@ class IdentifyReferenceVolume:
         print(f"Working Directory: {working_directory}")
         print(f"Threshold in mm: {threshold_in_mm}%")
         print(f"Reference Volume Spacing: {reference_volume_spacing}")
+        print(f"Run Environment: {run_environment}")
+        print(f"Executable Path: {smsmireg_executable_path}")
+        print(f"Singularity Path: {singularity_image_file}")
         print("-----\n")
 
         os.makedirs(working_directory, exist_ok=True)
@@ -85,19 +92,19 @@ class IdentifyReferenceVolume:
                 output_label = '{:04d}'.format(volume_num) + '-' + '{:04d}'.format(slice_group_num)
 
                 # 10. Align Each Slice Group to the First Slice Group of the Volume (First Slice Group Aligns to Identity)
-                self.sms_mi_reg(
-                    working_directory=working_directory,
+                output_transform_path: str = RunAlignments(
                     reference_volume_path=upsampled_volume_path,
-                    input_transform_path=identity_transform_path if slice_group_num == 0 else transform_paths[1],
+                    target_volume_path=upsampled_volume_path,
+                    target_slice_indices=slice_nums,
+                    initial_transform_path=identity_transform_path,
+                    working_directory=working_directory,
                     output_transform_label=output_label,
-                    input_slice_paths=[
-                        os.path.join(working_directory, f"slice_outputs-{'{:04d}'.format(volume_num)}-{'{:03d}'.format(slice_num)}.nii")
-                        for slice_num in slice_nums
-                    ]
-                )
+                    run_environment=run_environment,
+                    smsmireg_executable_path=smsmireg_executable_path,
+                    singularity_image_file=singularity_image_file
+                ).return_output_transform_path()
 
                 # 11. Get Created Transform Path, Add to List 
-                output_transform_path: str = os.path.join(working_directory, "alignTransform_" + output_label + ".tfm")
                 transform_paths.append(output_transform_path)
             
             # 12. Calculate the Displacements Between the Transform of First Slice Group of the Volume with Each Other Transform
@@ -495,12 +502,51 @@ if __name__ == "__main__":
         default=(1.236, 1.236, 1.236),
         help="Default: (1.236, 1.236, 1.236)"
     )
-    
+    parser.add_argument(
+        "--run_environment",
+        required=False,
+        choices=[
+            "docker",
+            "singularity",
+            "local"
+        ],
+        default="docker",
+        help=\
+            "Sms-Mi-Reg can be run in a Docker image, a Singularity image " + \
+            "or locally. Please enter one of the following options: " + \
+            "'docker', 'singularity', or 'local'. " + \
+            "Default: 'docker'"
+    )
+    parser.add_argument(
+        "--smsmireg_executable_path",
+        required=False,
+        default=None,
+        help=\
+            "To run locally, please provide the executable " + \
+            "Sms-Mi-Reg path on your local machine. This path is outputted " + \
+            "by compiling sms-mi-reg.cpp: " + \
+            "https://github.com/ComputationalRadiology/sms-mi-reg/blob/main/sms-mi-reg.cpp. "
+    )
+    parser.add_argument(
+        "--singularity_image_file",
+        required=False,
+        default=None,
+        help=\
+            "To run in a Singularity image, please provide the path " + \
+            "to the '.sif' image file."
+    )
     args = parser.parse_args()
     IdentifyReferenceVolume(
         nifti_image_path=os.path.abspath(args.nifti_file_path),
         json_file_path=os.path.abspath(args.json_file_path),
         working_directory=os.path.abspath(args.working_directory_path),
         threshold_in_mm=args.threshold_in_mm,
-        reference_volume_spacing=args.reference_volume_spacing
+        reference_volume_spacing=args.reference_volume_spacing,
+        run_environment=args.run_environment,
+        smsmireg_executable_path=\
+            os.path.abspath(args.smsmireg_executable_path)
+            if args.smsmireg_executable_path else None,
+        singularity_image_file=\
+            os.path.abspath(args.singularity_image_file)
+            if args.singularity_image_file else None
     )
