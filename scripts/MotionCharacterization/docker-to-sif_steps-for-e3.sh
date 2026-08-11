@@ -40,4 +40,4 @@ ch246081@e3-login2.tch.harvard.edu:/lab-share/Neuro-Cohen-e2/Groups/IRB-P0004940
 singularity build sms-mi-reg.sif docker-archive://sms-mi-reg.tar
 
 # STEP EIGHT
-# Update the path in the config file: SMS_MI_REG_SINGULARITY_IMAGE_PATH
+# Update the path in the config file: OPTIMIZER_SINGULARITY_IMAGE_PATH

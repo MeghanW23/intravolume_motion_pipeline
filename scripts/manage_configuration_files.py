@@ -34,8 +34,8 @@ class Configurations(BaseModel):
         "docker",
         "local"
     ]
-    SMS_MI_REG_EXECUTABLE_PATH: str | None 
-    SMS_MI_REG_SINGULARITY_IMAGE_PATH: str | None
+    OPTIMIZER_EXECUTABLE_PATH: str | None 
+    OPTIMIZER_SINGULARITY_IMAGE_PATH: str | None
 
     MCORR_OUTPUT_FILENAME_PATTERN: str
     MCORR_ABRUPTMOTION_FILE_NAME: str 
@@ -160,16 +160,16 @@ class Configurations(BaseModel):
     @model_validator(mode='after')
     def validate_smsmireg_run_env(self):
         if self.SMS_MI_REG_RUN_ENVIRONMENT == "singularity":
-            if not self.SMS_MI_REG_SINGULARITY_IMAGE_PATH:
+            if not self.OPTIMIZER_SINGULARITY_IMAGE_PATH:
                 raise ValueError(
                     "If SMS_MI_REG_RUN_ENVIRONMENT = 'singularity': "
-                    "please also provide the singularity .sif path via: SMS_MI_REG_SINGULARITY_IMAGE_PATH"
+                    "please also provide the singularity .sif path via: OPTIMIZER_SINGULARITY_IMAGE_PATH"
                 )
         elif self.SMS_MI_REG_RUN_ENVIRONMENT == 'local':
-            if not self.SMS_MI_REG_EXECUTABLE_PATH:
+            if not self.OPTIMIZER_EXECUTABLE_PATH:
                 raise ValueError(
                     "If SMS_MI_REG_RUN_ENVIRONMENT =  'local': "
-                    "please also provide the path to the compiled CPP code via: SMS_MI_REG_EXECUTABLE_PATH"
+                    "please also provide the path to the compiled CPP code via: OPTIMIZER_EXECUTABLE_PATH"
                 )
         return self
 
