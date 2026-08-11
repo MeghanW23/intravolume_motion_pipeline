@@ -109,9 +109,9 @@ SMS_MI_REG_SINGULARITY_IMAGE_PATH: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P000494
 
 # If SMS_MI_REG_RUN_ENVIRONMENT = "local":
 # please also provide the path to the compiled CPP code via: SMS_MI_REG_EXECUTABLE_PATH.
-# This path is outputted by compiling sms-mi-reg.cpp:
-# https://github.com/ComputationalRadiology/sms-mi-reg/blob/main/sms-mi-reg.cpp 
-SMS_MI_REG_EXECUTABLE_PATH: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline/scripts/MotionCharacterization/sms-mi-reg/build/sms-mi-reg"
+# This path is outputted by compiling retro-motion-measurement.cxx:
+# https://github.com/ComputationalRadiology/sms-mi-reg/blob/main/retro-motion-measurement.cxx
+SMS_MI_REG_EXECUTABLE_PATH: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline/scripts/MotionCharacterization/sms-mi-reg/build/retro-motion-measurement"
 
 # A file matching MCORR_OUTPUT_FILENAME_PATTERN is created when displacement > MOTION_THRESHOLD.
 # If displacement < MOTION_THRESHOLD, it will run fmriprep on the original, raw data.
