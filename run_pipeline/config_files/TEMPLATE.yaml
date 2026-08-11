@@ -105,7 +105,7 @@ SMS_MI_REG_RUN_ENVIRONMENT: "local"
 
 # If SMS_MI_REG_RUN_ENVIRONMENT = "singularity":
 # please also provide the Singularity .sif path via: OPTIMIZER_SINGULARITY_IMAGE_PATH
-OPTIMIZER_SINGULARITY_IMAGE_PATH: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline/scripts/MotionCharacterization/sms-mi-reg/build/sms-mi-reg.sif"
+OPTIMIZER_SINGULARITY_IMAGE_PATH: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline/scripts/MotionCharacterization/sms-mi-reg/build/sms-mi-reg_amd64.sif"
 
 # If SMS_MI_REG_RUN_ENVIRONMENT = "local":
 # please also provide the path to the compiled CPP code via: OPTIMIZER_EXECUTABLE_PATH.
