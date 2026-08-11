@@ -374,17 +374,10 @@ class CharacterizeIntraVolumeMotion:
                 f"\nProcessing Slice Group {slice_group + 1} of {len(slice_timing)} " + \
                 f"in Volume {volume_num + 1} of {num_volumes}."   
             )
-            slice_paths = [
-                os.path.join(
-                    working_directory, 
-                    f"slice_outputs-{'{:04d}'.format(volume_num)}-{'{:03d}'.format(slice_num)}.nii"
-                )
-                for slice_num in slice_indices_list 
-            ]
-
             output_transform_path: str = RunAlignments(
-                target_slice_group_paths=slice_paths,
                 reference_volume_path=reference_volume_path,
+                target_volume_path=volume_path,
+                target_slice_indices=slice_indices_list,
                 initial_transform_path=transform_paths[-1],
                 working_directory=working_directory,
                 output_transform_label=f"{'{:04d}'.format(volume_num)}-{'{:04d}'.format(slice_group)}",
@@ -443,6 +436,16 @@ if __name__ == "__main__":
             "Please enter either a value for --dicom_directory OR " + \
             " a value for BOTH: --nifti_image_file_path and --json_file_path.",
         default=None
+    )
+    parser.add_argument(
+        "--reference_volume_index",
+        type=int,
+        required=False,
+        default=None,
+        help=\
+            "The index to the 3D reference volume within the input 4D timeseries. " \
+            "Leave the default value of 'None' if you want the script to run an analysis to " \
+            "select a reference volume. "
     )
     parser.add_argument(
         "--output_directory_path",
@@ -527,5 +530,6 @@ if __name__ == "__main__":
                 os.path.abspath(args.singularity_image_path)
                 if args.singularity_image_path else None,
         n_jobs=args.n_jobs,
-        motion_threshold=args.motion_threshold
+        motion_threshold=args.motion_threshold,
+        reference_volume_index=args.reference_volume_index
     )

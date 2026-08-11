@@ -3,29 +3,32 @@ import subprocess
 
 class RunAlignments:
     def __init__(self,
-                 target_slice_group_paths: list[str],
                  reference_volume_path: str,
+                 target_volume_path: str, 
+                 target_slice_indices: list[int],
                  initial_transform_path: str,
                  working_directory: str = 'working',
                  output_transform_label: str = 'transform',
                  run_environment: str = 'docker',
                  smsmireg_executable_path: str | None = None,
-                 singularity_image_file: str | None = None) -> None:
+                 singularity_image_file: str | None = None,
+                 optimizer: str = 'retro-motion-measurement') -> None:
 
-        self.target_slice_group_paths: list[str] =  target_slice_group_paths
         self.reference_volume_path: str = reference_volume_path
+        self.target_volume_path: str = target_volume_path
+        self.target_slice_indices: list[str] =  [str(index) for index in target_slice_indices]
         self.initial_transform_path: str = initial_transform_path
         self.working_directory: str = working_directory
         self.output_transform_label: str = output_transform_label
         self.run_environment: str = run_environment.strip().lower()
         self.smsmireg_executable_path: str | None = smsmireg_executable_path
         self.singularity_image_file: str | None = singularity_image_file
+        self.optimizer: str = optimizer
 
         os.makedirs(self.working_directory, exist_ok=True)
 
         print(f"\nYour Inputs to {os.path.basename(__file__)}:")
-        print("Slice Group Paths:")
-        print('\n'.join(self.target_slice_group_paths))
+        print(f"Slice Group Indices: {self.target_slice_indices}")
         print(f"Reference Volume Path: {self.reference_volume_path}")
         print(f"Initial Transform Path: {self.initial_transform_path}")
         print(f"Working Directory Path: {self.working_directory}")
@@ -62,39 +65,56 @@ class RunAlignments:
 
        self.run_command([
             self.smsmireg_executable_path,
-            self.reference_volume_path,             # referenceVolume
-            self.initial_transform_path,            # inputTransform
-            self.output_transform_label] +          # outputTransformLabel
-            self.target_slice_group_paths + [       # inputSlices
-            "--optimizer", "LN_SBPLX"               # optimizer
-            ],                                                               
+            "--movingVolume", os.path.basename(self.reference_volume_path),
+            "--fixedVolume", os.path.basename(self.target_volume_path),
+            "--outputtransformfile", "alignTransform_" + self.output_transform_label + ".tfm",
+            "--initialtransform", os.path.basename(self.initial_transform_path),
+            "--activeSlices"] + self.target_slice_indices + [
+            "--activeParameters", "111111",
+            "--histogramPVAOff",
+            "--optimizer", "LN_SBPLX"
+            ],
             verbose=True
-        ) 
+        )
+
 
 
     def run_with_docker(self):
+        """
+        Usage: retro-motion-measurement [--help] [--version] --movingVolume VAR --fixedVolume VAR --outputtransformfile VAR [--initialtransform VAR] [--activeSlices VAR...] [--activeParameters VAR] [--histogramPVAOff] [--optimizer VAR]
 
-        all_input_paths: list[str] = [
-            self.reference_volume_path,
-            self.initial_transform_path
-        ] + self.target_slice_group_paths
+        Optional arguments:
+        -h, --help             shows help message and exits
+        -v, --version          prints version information and exits
+        -m, --movingVolume     The 3D reference volume to be aligned to the slices. [required]
+        -f, --fixedVolume      The 3D volume that will be matched. [required]
+        --outputtransformfile  Name of file to write transform. [required]
+        --initialtransform     Name of transform file for initialization.
+        --activeSlices         List of integer slice indexes to align with. [nargs: 0 or more]
+        --activeParameters     Indicate which parameters to optimize with binary string. [default: "111111"]
+        --histogramPVAOff      Turn off histogram partial volume updates.
+        --optimizer            The name of the optimizer algorithm: (LN_COBYLA, LN_BOBYQA, LN_NELDERMEAD, LN_SBPLX). Default is LN_BOBYQA [default: "LN_BOBYQA"]
+        """
 
         mount_args: list[str] = []
-        for path in all_input_paths:
+        for path in [self.reference_volume_path, self.initial_transform_path]:
             mount_args += ["-v", f"{path}:/data/{os.path.basename(path)}"]
+
 
         self.run_command([
             "docker", "run", "--rm",
             *mount_args,
             "-v", f"{self.working_directory}:/data",
-            "crl/sms-mi-reg", "sms-mi-reg",
-            os.path.basename(self.reference_volume_path),
-            os.path.basename(self.initial_transform_path),
-            self.output_transform_label] +
-            [
-                os.path.basename(slice_path)
-                for slice_path in self.target_slice_group_paths
-            ] + ["--optimizer", "LN_SBPLX"],
+            "crl/sms-mi-reg", self.optimizer,
+            "--movingVolume", os.path.basename(self.reference_volume_path),
+            "--fixedVolume", os.path.basename(self.target_volume_path),
+            "--outputtransformfile", "alignTransform_" + self.output_transform_label + ".tfm",
+            "--initialtransform", os.path.basename(self.initial_transform_path),
+            "--activeSlices"] + self.target_slice_indices + [
+            "--activeParameters", "111111",
+            "--histogramPVAOff",
+            "--optimizer", "LN_SBPLX"
+            ],
             verbose=True
         )
 
@@ -106,13 +126,8 @@ class RunAlignments:
                 "file using the 'singularity_image_file' argument."
             )
 
-        all_input_paths: list[str] = [
-            self.reference_volume_path,
-            self.initial_transform_path
-        ] + self.target_slice_group_paths
-
         mount_args: list[str] = []
-        for path in all_input_paths:
+        for path in [self.reference_volume_path, self.initial_transform_path]:
             mount_args += ["--bind", f"{path}:/data/{os.path.basename(path)}"]
 
         # bind working_directory to a writable output dir inside the container
@@ -122,14 +137,17 @@ class RunAlignments:
             "singularity", "run",
             *mount_args,
             "--pwd", "/data/out",
-            self.singularity_image_file, "sms-mi-reg",
-            f"/data/{os.path.basename(self.reference_volume_path)}",
-            f"/data/{os.path.basename(self.initial_transform_path)}",
-            self.output_transform_label] +
-            [
-                f"/data/{os.path.basename(slice_path)}"
-                for slice_path in self.target_slice_group_paths
-            ] + ["--optimizer", "LN_SBPLX"],
+            self.singularity_image_file, self.optimizer,
+            "crl/sms-mi-reg", self.optimizer,
+            "--movingVolume", os.path.basename(self.reference_volume_path),
+            "--fixedVolume", os.path.basename(self.target_volume_path),
+            "--outputtransformfile", "alignTransform_" + self.output_transform_label + ".tfm",
+            "--initialtransform", os.path.basename(self.initial_transform_path),
+            "--activeSlices"] + self.target_slice_indices + [
+            "--activeParameters", "111111",
+            "--histogramPVAOff",
+            "--optimizer", "LN_SBPLX"
+            ],
             verbose=True
         )
 
@@ -179,20 +197,26 @@ if __name__ == "__main__":
     import argparse
     parser: argparse.ArgumentParser = argparse.ArgumentParser(
         description=\
-            "Align the reference volume to a slice group using mutual information." + \
+            "Align the reference volume to a slice group using mutual information. " + \
             "See: https://github.com/ComputationalRadiology/sms-mi-reg/ for more " + \
-            "on how the optimizer, Sms-Mi-Reg, works."
-    )
-    parser.add_argument(
-        "--target_slice_group_paths",
-        required=True,
-        nargs="+",
-        help="The paths to the 2D slices in the slice group."
+            "on how the optimizer works."
     )
     parser.add_argument(
         "--reference_volume_path",
         required=True,
         help="The 3D motion-free reference volume."
+    )
+    parser.add_argument(
+        "--target_volume_path",
+        required=True,
+        help="The 3D target volume."
+    )
+    parser.add_argument(
+        "--target_slice_indices",
+        required=True,
+        type=int,
+        nargs="+",
+        help="The indexes to the 2D slices in the slice group."
     )
     parser.add_argument(
         "--initial_transform_path",
@@ -250,11 +274,9 @@ if __name__ == "__main__":
     )
     args: argparse.Namespace = parser.parse_args()
     RunAlignments(
-        target_slice_group_paths=[
-            os.path.abspath(slice_path)
-            for slice_path in args.target_slice_group_paths
-        ],
         reference_volume_path=os.path.abspath(args.reference_volume_path),
+        target_volume_path=os.path.abspath(args.target_volume_path),
+        target_slice_indices=args.target_slice_indices,
         initial_transform_path=os.path.abspath(args.initial_transform_path),
         working_directory=os.path.abspath(args.working_directory),
         output_transform_label=args.output_transform_label,
