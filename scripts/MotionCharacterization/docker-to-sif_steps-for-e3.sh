@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # STEP ONE 
 # Get the architecture of the host (e3)
 # It should be: x86_64 / AMD64
