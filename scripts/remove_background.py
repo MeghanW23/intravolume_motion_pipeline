@@ -13,15 +13,21 @@ class RemoveBackground:
     """
     def __init__(self, 
                  nifti_file_path: str, 
-                 output_file_path: str | None = None):
+                 output_file_path: str | None = None,
+                 save_binary_mask: bool = True):
 
         self.output_file_path: str = output_file_path # pyright: ignore[reportAttributeAccessIssue]
         if not self.output_file_path:
-            self.output_file_path = os.path.join(
+            self.output_file_path: str = os.path.join(
                 os.path.dirname(nifti_file_path),
                 f"{os.path.basename(nifti_file_path).replace('.nii.gz', '').replace('.nii', '')}_bgremoved.nii.gz"
             )
             print(f"Output File Path Set to: {self.output_file_path}")
+        if save_binary_mask:
+            self.output_mask_file_path: str =  os.path.join(
+                os.path.dirname(self.output_file_path),
+                f"{os.path.basename(self.output_file_path).replace('.nii.gz', '_MASK.nii.gz')}"
+            )
         
         print(f"Reading Nifti image: {nifti_file_path} as a SimpleITK Image")
         sitk_fmri_image: sitk.Image = sitk.ReadImage(
@@ -48,6 +54,10 @@ class RemoveBackground:
             lower_cutoff=0.25,
             upper_cutoff=0.75
         ) # pyright: ignore[reportAssignmentType]
+        if save_binary_mask:
+            nib.save(mask, filename=self.output_mask_file_path) # pyright: ignore[reportPrivateImportUsage]
+            print(f"Saved Binary Mask to: {self.output_mask_file_path}")
+            
         masker = NiftiMasker(mask_img=mask)
         masker.fit()
 
@@ -110,12 +120,19 @@ if __name__ == '__main__':
         required=False, 
         help="Default is <nifti_file_path>_bgremoved.nii.gz"
     )
+    parser.add_argument(
+        "--save_binary_mask",
+        required=False,
+        action="store_true",
+        help="Will create a binary mask at: <bgremoved_nifti_file_path>_MASK.nii.gz"
+    )
     args = parser.parse_args()
     RemoveBackground(
         nifti_file_path=os.path.abspath(args.nifti_file_path),
         output_file_path=\
             os.path.abspath(args.output_file_path) 
-            if args.output_file_path else None
+            if args.output_file_path else None,
+        save_binary_mask=args.save_binary_mask
     )
 
 
