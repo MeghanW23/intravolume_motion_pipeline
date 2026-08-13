@@ -127,7 +127,7 @@ class SeedToVoxelCorrelation:
             seed_to_voxel_correlations_img,
             threshold=0.5,
             vmax=1,
-            cut_coords=seed_coords
+            cut_coords=seed_coords,
             title=f"Seed-to-voxel correlation (Seed Coordinates: {seed_coords})",
         ) # pyright: ignore[reportAssignmentType]
         display.add_markers(
