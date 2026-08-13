@@ -138,6 +138,19 @@ class SeedToVoxelCorrelation:
         print(f"Seed-To-Voxel Correlation Plot at: {output_plot_path}")
 
 
+        print("Fisher-z transforming the data")
+        seed_to_voxel_correlations_fisher_z: np.ndarray = np.arctanh(seed_to_voxel_correlations)
+        print(
+            "Seed-to-voxel correlation Fisher-z transformed: "
+            f"min = {seed_to_voxel_correlations_fisher_z.min():.3f}; "
+            f"max = {seed_to_voxel_correlations_fisher_z.max():.3f}f"
+        )
+        seed_to_voxel_correlations_fisher_z_img: nib.Nifti1Image = brain_masker.inverse_transform(seed_to_voxel_correlations_fisher_z.T) # pyright: ignore[reportPrivateImportUsage, reportAssignmentType]
+        output_image_path: str = os.path.join(output_directory_path, "seed_correlation_z.nii.gz")
+        seed_to_voxel_correlations_fisher_z_img.to_filename(output_image_path)
+        print(f"Done. Seed Correlation Z Map at: {output_image_path}")
+
+
     def get_repetition_time(self, json_file_path: str) -> float:
         with open(json_file_path, mode='r') as file:
             data: dict[str, Any] = json.load(file)
