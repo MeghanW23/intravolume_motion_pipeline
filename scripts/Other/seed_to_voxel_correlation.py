@@ -3,6 +3,7 @@ import json
 import numpy as np
 import nibabel as nib
 from typing import Any
+from nilearn.maskers import NiftiMasker
 from nilearn.maskers import NiftiSpheresMasker
 from nilearn.interfaces.fmriprep import load_confounds
 
@@ -45,13 +46,10 @@ class SeedToVoxelCorrelation:
         )
         
 
-        print("Extracting the time series from the functional imaging within the sphere")
+        print("Extracting the time series from the functional imaging within the sphere.")
         seed_masker: NiftiSpheresMasker = NiftiSpheresMasker(
             seeds=[seed_coords],
-
-            # Indicates, in millimeters, the radius for the sphere around the seed.
             radius=seed_radius,
-
             detrend=True,
             standardize_confounds=True,
             low_pass=0.1,
@@ -68,6 +66,25 @@ class SeedToVoxelCorrelation:
             img, 
             confounds=[confounds]
         )
+
+
+        print("Extract brain-wide voxel-wise time series.")
+        brain_masker: NiftiMasker = NiftiMasker(
+            smoothing_fwhm=6,
+            detrend=True,
+            standardize_confounds=True,
+            low_pass=0.1,
+            high_pass=0.01,
+            t_r=t_r,
+            memory="nilearn_cache",
+            memory_level=1,
+            verbose=1,
+        )
+        brain_time_series: np.ndarray = brain_masker.fit_transform(
+            img_dimensions, confounds=[confounds]
+        )
+
+        
 
     def get_repetition_time(self, json_file_path: str) -> float:
         with open(json_file_path, mode='r') as file:
