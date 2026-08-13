@@ -123,13 +123,13 @@ class SeedToVoxelCorrelation:
         )
         print("Plotting the seed-to-voxel correlation map")
         seed_to_voxel_correlations_img: nib.Nifti1Image = brain_masker.inverse_transform(seed_to_voxel_correlations.T) # pyright: ignore[reportPrivateImportUsage, reportAssignmentType]
-        display: OrthoSlicer = plot_stat_map(
+        display = plot_stat_map(
             seed_to_voxel_correlations_img,
             threshold=0.5,
             vmax=1,
-            cut_coords=seed_coords,
-            title=f"Seed-to-voxel correlation (Seed Coordinates: {seed_coords})",
-        ) # pyright: ignore[reportAssignmentType]
+            cut_coords=seed_coords[0],
+            title="Seed-to-voxel correlation (PCC seed)",
+        )
         display.add_markers(
             marker_coords=seed_coords, marker_color="g", marker_size=300
         )
