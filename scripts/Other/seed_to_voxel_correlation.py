@@ -127,7 +127,7 @@ class SeedToVoxelCorrelation:
             seed_to_voxel_correlations_img,
             threshold=0.5,
             vmax=1,
-            cut_coords=seed_coords[0],
+            cut_coords=seed_coords,
             title=f"Seed-to-voxel correlation (Seed Coordinates: {seed_coords})",
         ) # pyright: ignore[reportAssignmentType]
         display.add_markers(
@@ -135,7 +135,7 @@ class SeedToVoxelCorrelation:
         )
         output_plot_path: str = os.path.join(output_directory_path, "seed-to-voxel_correlation.png")
         plt.savefig(output_plot_path)
-        print(f"scripts/Other/seed_to_voxel_correlation.pySeed-To-Voxel Correlation Plot at: {output_plot_path}")
+        print(f"Seed-To-Voxel Correlation Plot at: {output_plot_path}")
 
 
     def get_repetition_time(self, json_file_path: str) -> float:
