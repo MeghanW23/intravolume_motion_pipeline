@@ -138,7 +138,6 @@ class RunAlignments:
             *mount_args,
             "--pwd", "/data/out",
             self.singularity_image_file, self.optimizer,
-            "crl/sms-mi-reg", self.optimizer,
             "--movingVolume", os.path.basename(self.reference_volume_path),
             "--fixedVolume", os.path.basename(self.target_volume_path),
             "--outputtransformfile", "alignTransform_" + self.output_transform_label + ".tfm",
