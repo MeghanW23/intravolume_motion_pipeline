@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 from nilearn.maskers import NiftiMasker
 from nilearn.plotting import plot_stat_map
 from nilearn.maskers import NiftiSpheresMasker
-from nilearn.plotting.displays import OrthoSlicer
 from nilearn.interfaces.fmriprep import load_confounds
 
 class SeedToVoxelCorrelation:
@@ -137,6 +136,13 @@ class SeedToVoxelCorrelation:
         plt.savefig(output_plot_path)
         print(f"Seed-To-Voxel Correlation Plot at: {output_plot_path}")
 
+
+        seed_to_voxel_correlations_fisher_z = np.arctanh(seed_to_voxel_correlations)
+        print(
+            "Seed-to-voxel correlation Fisher-z transformed: "
+            f"min = {seed_to_voxel_correlations_fisher_z.min():.3f}; "
+            f"max = {seed_to_voxel_correlations_fisher_z.max():.3f}f"
+        )
 
     def get_repetition_time(self, json_file_path: str) -> float:
         with open(json_file_path, mode='r') as file:
