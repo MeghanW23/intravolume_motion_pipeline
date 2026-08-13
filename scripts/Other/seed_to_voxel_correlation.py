@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from nilearn.maskers import NiftiMasker
 from nilearn.plotting import plot_stat_map
 from nilearn.maskers import NiftiSpheresMasker
+from nilearn.plotting.displays import OrthoSlicer
 from nilearn.interfaces.fmriprep import load_confounds
 
 class SeedToVoxelCorrelation:
@@ -122,27 +123,20 @@ class SeedToVoxelCorrelation:
         )
         print("Plotting the seed-to-voxel correlation map")
         seed_to_voxel_correlations_img: nib.Nifti1Image = brain_masker.inverse_transform(seed_to_voxel_correlations.T) # pyright: ignore[reportPrivateImportUsage, reportAssignmentType]
-        display = plot_stat_map(
+        display: OrthoSlicer = plot_stat_map(
             seed_to_voxel_correlations_img,
             threshold=0.5,
             vmax=1,
-            cut_coords=seed_coords[0],
-            title="Seed-to-voxel correlation (PCC seed)",
-        )
+            cut_coords=seed_coords
+            title=f"Seed-to-voxel correlation (Seed Coordinates: {seed_coords})",
+        ) # pyright: ignore[reportAssignmentType]
         display.add_markers(
-            marker_coords=seed_coords, marker_color="g", marker_size=300
+            marker_coords=[seed_coords], marker_color="g", marker_size=300
         )
         output_plot_path: str = os.path.join(output_directory_path, "seed-to-voxel_correlation.png")
         plt.savefig(output_plot_path)
         print(f"Seed-To-Voxel Correlation Plot at: {output_plot_path}")
 
-
-        seed_to_voxel_correlations_fisher_z = np.arctanh(seed_to_voxel_correlations)
-        print(
-            "Seed-to-voxel correlation Fisher-z transformed: "
-            f"min = {seed_to_voxel_correlations_fisher_z.min():.3f}; "
-            f"max = {seed_to_voxel_correlations_fisher_z.max():.3f}f"
-        )
 
     def get_repetition_time(self, json_file_path: str) -> float:
         with open(json_file_path, mode='r') as file:
