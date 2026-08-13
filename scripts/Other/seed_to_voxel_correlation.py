@@ -5,7 +5,9 @@ import nibabel as nib
 from typing import Any
 import matplotlib.pyplot as plt
 from nilearn.maskers import NiftiMasker
+from nilearn.plotting import plot_stat_map
 from nilearn.maskers import NiftiSpheresMasker
+from nilearn.plotting.displays import OrthoSlicer
 from nilearn.interfaces.fmriprep import load_confounds
 
 class SeedToVoxelCorrelation:
@@ -48,8 +50,6 @@ class SeedToVoxelCorrelation:
             motion="basic",
             wm_csf="basic",
         )
-        
-
         print("Extracting the time series from the functional imaging within the sphere.")
         seed_masker: NiftiSpheresMasker = NiftiSpheresMasker(
             seeds=[seed_coords],
@@ -63,15 +63,11 @@ class SeedToVoxelCorrelation:
             memory_level=1,
             verbose=1
         )
-
-
         print("Extracting the mean time series within seed region (while regressing out confounds).")
         seed_time_series: np.ndarray = seed_masker.fit_transform(
             img, 
             confounds=[confounds]
         )
-
-
         print("Extract brain-wide voxel-wise time series.")
         brain_masker: NiftiMasker = NiftiMasker(
             smoothing_fwhm=6,
@@ -88,6 +84,7 @@ class SeedToVoxelCorrelation:
             img, confounds=[confounds]
         )
 
+
         # Generate plots, statistics
         print(f"Seed time series shape: {seed_time_series.shape}")
         print(f"Brain time series shape: {brain_time_series.shape}")
@@ -96,7 +93,7 @@ class SeedToVoxelCorrelation:
         plt.figure(constrained_layout=True)
         plt.plot(seed_time_series)
         plt.title(f"Seed time series (Coordinates: {seed_coords})")
-        plt.xlabel("Scan number")
+        plt.xlabel("Volume number")
         plt.ylabel("Normalized signal")
         output_plot_path: str = os.path.join(output_directory_path, "seed_timeseries.png")
         plt.savefig(output_plot_path)
@@ -105,14 +102,40 @@ class SeedToVoxelCorrelation:
         plt.figure(constrained_layout=True)
         plt.plot(brain_time_series[:, [10, 45, 100, 5000, 10000]])
         plt.title("Time series from 5 random voxels")
-        plt.xlabel("Scan number")
+        plt.xlabel("Volume number")
         plt.ylabel("Normalized signal")
         output_plot_path: str = os.path.join(output_directory_path, "random-voxels_timeseries.png")
         plt.savefig(output_plot_path)
         print(f"Random Voxel Timeseries Plot at: {output_plot_path}")
 
 
-
+        print("Performing the seed-to-voxel correlation analysis.")
+        seed_to_voxel_correlations = (np.dot(brain_time_series.T, seed_time_series) / seed_time_series.shape[0])
+        print(
+            "Seed-to-voxel correlation shape: ({}, {})".format(
+                *seed_to_voxel_correlations.shape
+            )
+        )
+        print(
+            f"Seed-to-voxel correlation: "
+            f"min = {seed_to_voxel_correlations.min():.3f}; "
+            f"max = {seed_to_voxel_correlations.max():.3f}"
+        )
+        print("Plotting the seed-to-voxel correlation map")
+        seed_to_voxel_correlations_img: nib.Nifti1Image = brain_masker.inverse_transform(seed_to_voxel_correlations.T) # pyright: ignore[reportPrivateImportUsage, reportAssignmentType]
+        display: OrthoSlicer = plot_stat_map(
+            seed_to_voxel_correlations_img,
+            threshold=0.5,
+            vmax=1,
+            cut_coords=seed_coords[0],
+            title=f"Seed-to-voxel correlation (Seed Coordinates: {seed_coords})",
+        ) # pyright: ignore[reportAssignmentType]
+        display.add_markers(
+            marker_coords=seed_coords, marker_color="g", marker_size=300
+        )
+        output_plot_path: str = os.path.join(output_directory_path, "seed-to-voxel_correlation.png")
+        plt.savefig(output_plot_path)
+        print(f"scripts/Other/seed_to_voxel_correlation.pySeed-To-Voxel Correlation Plot at: {output_plot_path}")
 
 
     def get_repetition_time(self, json_file_path: str) -> float:
