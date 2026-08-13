@@ -12,7 +12,8 @@ class SeedToVoxelCorrelation:
                  nifti_image_path: str, 
                  json_file_path: str,
                  seed_coords: tuple[int, int, int] = (0, -52, 18),
-                 seed_radius: float = 8) -> None:
+                 seed_radius: float = 8,
+                 output_directory_path: str = "seed-to-voxel_outputs") -> None:
         """
         Producing single subject maps of seed-to-voxel correlation
         Implements: https://nilearn.github.io/dev/auto_examples/03_connectivity/plot_seed_to_voxel_correlation.html 
@@ -81,10 +82,10 @@ class SeedToVoxelCorrelation:
             verbose=1,
         )
         brain_time_series: np.ndarray = brain_masker.fit_transform(
-            img_dimensions, confounds=[confounds]
+            img, confounds=[confounds]
         )
 
-        
+
 
     def get_repetition_time(self, json_file_path: str) -> float:
         with open(json_file_path, mode='r') as file:
