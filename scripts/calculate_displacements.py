@@ -152,7 +152,7 @@ if __name__ == "__main__":
         default='displacements.txt',
         help=\
             "The file path to write the displacements to." + \
-            f"Default: '{os.path.abspath('displacements.txt')}'."
+            f" Default: '{os.path.abspath('displacements.txt')}'."
     )
     parser.add_argument(
         "--head_radius",
