@@ -13,6 +13,7 @@ from nilearn.interfaces.fmriprep import load_confounds
 class SeedToVoxelCorrelation:
     def __init__(self, 
                  nifti_image_path: str, 
+                 nifti_image_mask_path: str,
                  json_file_path: str,
                  seed_coords: tuple[int, int, int] = (0, -52, 18),
                  seed_radius: float = 8,
@@ -70,6 +71,7 @@ class SeedToVoxelCorrelation:
         )
         print("Extract brain-wide voxel-wise time series.")
         brain_masker: NiftiMasker = NiftiMasker(
+            mask_img=nifti_image_mask_path,
             smoothing_fwhm=6,
             detrend=True,
             standardize_confounds=True,
@@ -173,6 +175,11 @@ if __name__ == "__main__":
         help="Must be 4D and must be post-fMRIPrep."
     )
     parser.add_argument(
+        "--nifti_image_mask_path",
+        required=True,
+        help="The brain mask outputted by fMRIPrep"
+    )
+    parser.add_argument(
         "--json_file_path",
         required=True,
         help="Must have key: 'RepetitionTime'"
@@ -204,6 +211,7 @@ if __name__ == "__main__":
     args: argparse.Namespace = parser.parse_args()
     SeedToVoxelCorrelation(
         nifti_image_path=os.path.abspath(args.nifti_image_path),
+        nifti_image_mask_path=os.path.abspath(args.nifti_image_mask_path),
         json_file_path=os.path.abspath(args.json_file_path),
         seed_coords=tuple(args.seed_coords),
         seed_radius=args.seed_radius,
