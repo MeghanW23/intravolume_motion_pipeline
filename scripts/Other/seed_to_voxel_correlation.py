@@ -65,7 +65,7 @@ class SeedToVoxelCorrelation:
 
         print("Extracting the mean time series within seed region (while regressing out confounds).")
         seed_time_series: np.ndarray = seed_masker.fit_transform(
-            imgs=img, 
+            img, 
             confounds=[confounds]
         )
 
