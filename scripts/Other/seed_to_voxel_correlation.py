@@ -3,6 +3,7 @@ import json
 import numpy as np
 import nibabel as nib
 from typing import Any
+import matplotlib.pyplot as plt
 from nilearn.maskers import NiftiMasker
 from nilearn.maskers import NiftiSpheresMasker
 from nilearn.interfaces.fmriprep import load_confounds
@@ -23,7 +24,9 @@ class SeedToVoxelCorrelation:
         print(f"Input JSON File Path: {json_file_path}")
         print(f"ROI Seed Coordinates: {seed_coords}")
         print(f"ROI Seed Radius: {seed_radius} mm")
+        print(f"Output Directory Path: {output_directory_path}")
 
+        os.makedirs(output_directory_path, exist_ok=True)
 
         print(f"Loading NiFTI Image: {os.path.basename(nifti_image_path)}")
         img: nib.Nifti1Image = nib.load(nifti_image_path) # pyright: ignore[reportAssignmentType, reportPrivateImportUsage]
@@ -85,6 +88,31 @@ class SeedToVoxelCorrelation:
             img, confounds=[confounds]
         )
 
+        # Generate plots, statistics
+        print(f"Seed time series shape: {seed_time_series.shape}")
+        print(f"Brain time series shape: {brain_time_series.shape}")
+        print("Plotting voxel time series graphs.")
+
+        plt.figure(constrained_layout=True)
+        plt.plot(seed_time_series)
+        plt.title(f"Seed time series (Coordinates: {seed_coords})")
+        plt.xlabel("Scan number")
+        plt.ylabel("Normalized signal")
+        output_plot_path: str = os.path.join(output_directory_path, "seed_timeseries.png")
+        plt.savefig(output_plot_path)
+        print(f"Seed Timeseries Plot at: {output_plot_path}")
+
+        plt.figure(constrained_layout=True)
+        plt.plot(brain_time_series[:, [10, 45, 100, 5000, 10000]])
+        plt.title("Time series from 5 random voxels")
+        plt.xlabel("Scan number")
+        plt.ylabel("Normalized signal")
+        output_plot_path: str = os.path.join(output_directory_path, "random-voxels_timeseries.png")
+        plt.savefig(output_plot_path)
+        print(f"Random Voxel Timeseries Plot at: {output_plot_path}")
+
+
+
 
 
     def get_repetition_time(self, json_file_path: str) -> float:
@@ -131,12 +159,19 @@ if __name__ == "__main__":
         default=8,
         help="Indicates, in millimeters, the radius for the sphere around the seed. Default: 8mm"
     )
+    parser.add_argument(
+        "--output_directory_path",
+        required=False,
+        default="seed-to-voxel_outputs",
+        help=f"Default: {os.path.abspath('seed-to-voxel_outputs')}"
+    )
     args: argparse.Namespace = parser.parse_args()
     SeedToVoxelCorrelation(
         nifti_image_path=os.path.abspath(args.nifti_image_path),
         json_file_path=os.path.abspath(args.json_file_path),
         seed_coords=tuple(args.seed_coords),
-        seed_radius=args.seed_radius
+        seed_radius=args.seed_radius,
+        output_directory_path=os.path.abspath(args.output_directory_path)
     )
 
 
