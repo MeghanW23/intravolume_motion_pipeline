@@ -42,10 +42,8 @@ You will need to create a Conda (or potentially Python) environment to install t
 #### 4. Pull and/or Compile the Optimizer
 Our optimizer, [retro-motion-measurement](https://github.com/ComputationalRadiology/sms-mi-reg/blob/main/retro-motion-measurement.cxx), is used to determine the 6-dimension rigid body transform between a reference volume and each slice group acquisition. 
 You can access optimizer via (1) building or pulling the Docker image, (2) compiling the CPP code directly on the host machine, or (3) building the Singularity image (converted from the Docker image).
-
-**Build the Docker Image**
-
-The `crl/sms-mi-reg` docker image contains the all the optimizer software and it's dependencies.
+<br><br>
+**OPTION ONE: Build the Docker Image**: The `crl/sms-mi-reg` docker image contains the all the optimizer software and it's dependencies.
 
 Build the Docker container by running the [build-docker.sh](https://github.com/ComputationalRadiology/sms-mi-reg/blob/main/build-docker.sh) file:
 ```
@@ -55,10 +53,16 @@ sudo ./build-docker.sh
 ```
 
 You could also follow the steps listed in [scripts/MotionCharacterization/pull_docker_container.sh](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/scripts/MotionCharacterization/pull_docker_container.sh) to pull the container from the Computational Radiology Lab's Container Repository. You will need access to the Container Repository. Please ensure this image is the most recent version of the image.
+<br><br>
+**OPTION TWO: Compile the CPP code on directly on the host machine**: Follow the steps in the [scripts/MotionCharacterization/compile_sms-mi-reg.sh](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/scripts/MotionCharacterization/compile_sms-mi-reg.sh) script. You will need to have [ITK](https://docs.itk.org/en/latest/download.html) installed. 
+<br><br>
+**OPTION THREE: Build the Singularity image by converting the Docker image to a .sif file:**
+On many HPCs, including BCH's E3, you will not have `sudo` access. In these cases, many researchers opt to use Singularity, which does not require `sudo` privileges, instead of Docker. 
+The recommended workflow for getting the Singularity image includes (1) pulling the Docker container onto a machine where you have docker access (your local machine, another server etc.) and (2) converting the Docker image to a Singularity image on your HPC. Make sure you are pulling the Docker image with the architecture of the machine you want to run the singularity image on. 
 
-**Compile the CPP code on directly on the host machine**
+An example of this pipeline can be found at [scripts/MotionCharacterization/docker-to-sif_steps-for-e3.sh](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/scripts/MotionCharacterization/docker-to-sif_steps-for-e3.sh)
 
-Follow the steps in the [scripts/MotionCharacterization/compile_sms-mi-reg.sh](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/scripts/MotionCharacterization/compile_sms-mi-reg.sh) script. You will need to have [ITK](https://docs.itk.org/en/latest/download.html) installed. 
+It is recommended to run the Docker to Singularity conversion in a batch job / high-resource environment. An example of a Slurm batch script to use can be found at: [scripts/MotionCharacterization/docker-to-sif_batch-script.sh](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/scripts/MotionCharacterization/docker-to-sif_batch-script.sh)
 
 ----
 
