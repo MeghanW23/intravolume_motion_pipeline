@@ -36,8 +36,8 @@ You will need to create a Conda (or potentially Python) environment to install t
 <br>`CONDA_INIT_PATH`<br>
 <br>`CONDA_ENV_PYTHON_PATH`
 ### 4. Pull and/or Compile the Optimizer
-Our optimizer, [retro-motion-measurement](https://github.com/ComputationalRadiology/sms-mi-reg/blob/main/retro-motion-measurement.cxx), is used to determine the 6-dimension rigid body transform between a reference volume and each slice group acquisition. 
-You can access optimizer via (1) building or pulling the Docker image, (2) compiling the CPP code directly on the host machine, or (3) building the Singularity image (converted from the Docker image).
+Our optimizer, [retro-motion-measurement](https://github.com/ComputationalRadiology/sms-mi-reg/blob/main/retro-motion-measurement.cxx), characterizes the movement between a reference volume and each slice group acquisition via a [6-Dimension Rigid Body Transform](https://medium.com/@parkie0517/rigid-transformation-in-3d-space-translation-and-rotation-d701d8859ba8).
+You can install the optimizer via one of the three following options:
 
 - #### Option One - Build the Docker Image:
   - The `crl/sms-mi-reg` Docker image contains the all the optimizer software and it's dependencies. Build the Docker container by running the [build-docker.sh](https://github.com/ComputationalRadiology/sms-mi-reg/blob/main/build-docker.sh) file:
