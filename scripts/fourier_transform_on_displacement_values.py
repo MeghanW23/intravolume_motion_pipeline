@@ -7,6 +7,7 @@ import nibabel as nib
 import SimpleITK as sitk 
 from scipy.signal import find_peaks
 from  plotly import graph_objects as go
+
 class FourierTransform:
 
     def __init__(self, transform_directory, nifti_image_path, json_file_path, output_file_path, transform_suffix = ".tfm", input_rotation_unit = "versor", also_save_png_file = True):

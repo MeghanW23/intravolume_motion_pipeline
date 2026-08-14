@@ -21,6 +21,7 @@ from calculate_displacements import CalculateDisplacements
 from write_parameters_to_textfile import WriteParametersToTextFile
 from get_motion_threshold import GetMotionThreshold
 from graph_transform_directory import GraphTransformDirectory
+from fourier_transform_on_displacement_values import FourierTransform
 
 class CharacterizeIntraVolumeMotion:
     def __init__(self, 
@@ -105,10 +106,12 @@ class CharacterizeIntraVolumeMotion:
         GET SLICE TIMING 
         =======================================================
         """
+        slice_timing_dir: str = os.path.join(output_directory, "motion-char_slice-timing-info")
+        os.makedirs(slice_timing_dir, exist_ok=True)
         slice_timing_module: GetSliceTiming = GetSliceTiming(
             json_data=json_file_path, # pyright: ignore[reportArgumentType]
-            output_json_timing_path=os.path.join(output_directory, "slice_timing.json"),
-            output_txt_timing_path=os.path.join(output_directory, "slice_aquisition_times.txt")
+            output_json_timing_path=os.path.join(slice_timing_dir, "slice_timing.json"),
+            output_txt_timing_path=os.path.join(slice_timing_dir, "slice_aquisition_times.txt")
         ) 
         slice_timing_module.print_slice_timing()
         slice_timing: OrderedDict[float, list[int]] = slice_timing_module.return_slice_timing()
@@ -303,22 +306,43 @@ class CharacterizeIntraVolumeMotion:
             output_file_path=degree_param_file,
             output_rotation_unit='degrees'
         )
-        
+
+        graph_directory: str = os.path.join(output_transform_directory, "motion-char_graphs")
+        os.makedirs(graph_directory, exist_ok=True)
         """
         =======================================================
         GRAPH DISPLACEMENT AND PARAMETER RESULTS 
         =======================================================
         """
-        plot_path: str = os.path.join(output_directory, "parameter-plot.html")
-        print(f"Plotting results to: {plot_path}")
+        graph_plot_path: str = os.path.join(graph_directory, "parameter-plot.html")
+        print(f"Plotting results to: {graph_plot_path}")
         GraphTransformDirectory(
             transform_directory=output_transform_directory,
             json_path=json_file_path, # pyright: ignore[reportArgumentType]
-            output_file_path=plot_path,
+            output_file_path=graph_plot_path,
             input_rotation_unit="versor",
             threshold_in_mm=mm_motion_threshold
         )
-        print(f"Done. See Plot at: {plot_path}")
+        print(f"See Plot at: {graph_plot_path}")
+
+
+        """
+        =======================================================
+        DO FOURIER TRANSFORM ON DISPLACEMENT RESULTS
+        =======================================================
+        """
+        fourier_plot_path: str = os.path.join(graph_directory, "fourier-transform.html")
+        print(f"Creating Fourier Transform at: {fourier_plot_path}")
+        FourierTransform(
+            transform_directory=output_transform_directory,
+            nifti_image_path=nifti_image_path,
+            json_file_path=json_file_path,
+            output_file_path=fourier_plot_path,
+            transform_suffix='.tfm',
+            input_rotation_unit='versor',
+            also_save_png_file=True
+        )
+        print(f"See Fourier Transform at: {fourier_plot_path}")
         
 
     def validate_inputted_data(self,
