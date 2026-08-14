@@ -59,8 +59,8 @@ class RunAlignments:
            raise ValueError(
                 "To run locally, please provide the executable " + \
                 "Sms-Mi-Reg path on your local machine. This path is outputted " + \
-                "by compiling sms-mi-reg.cpp: " + \
-                "https://github.com/ComputationalRadiology/sms-mi-reg/blob/main/sms-mi-reg.cpp. "
+                "by compiling retro-motion-measurement.cxx: " + \
+                "https://github.com/ComputationalRadiology/sms-mi-reg/blob/main/retro-motion-measurement.cxx. "
             )
 
        self.run_command([
