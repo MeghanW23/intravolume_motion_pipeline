@@ -13,7 +13,15 @@
 # than JSON files
 # 
 # ==================================================
+# 
 # RUN-SPECIFIC CONFIGURATIONS
+# 
+#   Edit these paths based on:
+#     1. what steps you want to run
+#     2. where your data is stored
+#
+#   Please note that this pipeline takes in single
+#   subject, single run data.
 # ==================================================
 
 # These are the three main steps we can run 
@@ -36,10 +44,15 @@ FUNCTIONAL_NIFTI_IMAGE_PATH:
 FUNCTIONAL_JSON_FILE_PATH:
 
 # Enter the series name (ex. "func-bold_task-NFB2")
+#
 # Required if:
 #   you are entering a mutli-run FUNCTIONAL_DICOM_DIRECTORY 
 #   or 
 #   if you are running fMRIPrep
+# 
+# It will search for this value in the JSON file key: 
+#   'SeriesDescription'
+#
 SERIES_NAME: "func-bold_task-NFB2"
 
 
