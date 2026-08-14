@@ -1,6 +1,7 @@
 import os 
 import sys
 import shutil
+import warnings
 from typing import Sequence
 import SimpleITK as sitk 
 from collections import OrderedDict
@@ -153,7 +154,13 @@ class CharacterizeIntraVolumeMotion:
                 nifti_image_path=nifti_image_path, # pyright: ignore[reportArgumentType]
                 json_file_path=json_file_path, # pyright: ignore[reportArgumentType]
                 working_directory=os.path.join(output_directory, "reference_volume_script_outputs"),
-                threshold_in_mm=mm_motion_threshold
+                threshold_in_mm=mm_motion_threshold,
+                run_environment=run_environment,
+                smsmireg_executable_path=smsmireg_executable_path,
+                singularity_image_file=singularity_image_path,
+                voxel_intensity_lower_bound=voxel_intensity_lower_bound, # pyright: ignore[reportArgumentType]
+                voxel_intensity_upper_bound=voxel_intensity_upper_bound,  # pyright: ignore[reportArgumentType]
+                n_jobs=n_jobs # pyright: ignore[reportArgumentType]
             ).return_reference_volume_index()
             print(f"We will use reference volume index: {reference_volume_index}")
 
@@ -240,14 +247,20 @@ class CharacterizeIntraVolumeMotion:
         print(f"Copying All Transforms into the Output Directory at: {output_transform_directory}")
         
         for file_path in transform_paths[1:]:
-            new_file_name: str = os.path.dirname(file_path) + "_" + os.path.basename(file_path)
-            shutil.copy(
-                src=file_path,
-                dst=os.path.join(
-                    output_transform_directory,
-                    new_file_name
+            if not os.path.exists(file_path):
+                warnings.warn(
+                    message=\
+                        f"Could not find transform: {file_path}. " \
+                        "It will not be copied into the transform directory."
                 )
-            )
+            else:
+                shutil.copy(
+                    src=file_path,
+                    dst=os.path.join(
+                        output_transform_directory,
+                        os.path.basename(file_path)
+                    )
+                )
         print("All Transforms Copied.")
 
         """
