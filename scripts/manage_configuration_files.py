@@ -29,7 +29,7 @@ class Configurations(BaseModel):
     SESSION_NUM: int | None 
     RUN_NUM: int | None
 
-    SMS_MI_REG_RUN_ENVIRONMENT: Literal[
+    OPTIMIZER_RUN_ENVIRONMENT: Literal[
         "singularity",
         "docker",
         "local"
@@ -159,16 +159,16 @@ class Configurations(BaseModel):
 
     @model_validator(mode='after')
     def validate_smsmireg_run_env(self):
-        if self.SMS_MI_REG_RUN_ENVIRONMENT == "singularity":
+        if self.OPTIMIZER_RUN_ENVIRONMENT == "singularity":
             if not self.OPTIMIZER_SINGULARITY_IMAGE_PATH:
                 raise ValueError(
-                    "If SMS_MI_REG_RUN_ENVIRONMENT = 'singularity': "
+                    "If OPTIMIZER_RUN_ENVIRONMENT = 'singularity': "
                     "please also provide the singularity .sif path via: OPTIMIZER_SINGULARITY_IMAGE_PATH"
                 )
-        elif self.SMS_MI_REG_RUN_ENVIRONMENT == 'local':
+        elif self.OPTIMIZER_RUN_ENVIRONMENT == 'local':
             if not self.OPTIMIZER_EXECUTABLE_PATH:
                 raise ValueError(
-                    "If SMS_MI_REG_RUN_ENVIRONMENT =  'local': "
+                    "If OPTIMIZER_RUN_ENVIRONMENT =  'local': "
                     "please also provide the path to the compiled CPP code via: OPTIMIZER_EXECUTABLE_PATH"
                 )
         return self

@@ -69,11 +69,11 @@ It is recommended to run the Docker to Singularity conversion in a batch job / h
 <br>
 **Once you have pulled or built the optimizer, you will need to the following variables in your .yaml file(s)**
 <br>
-<br>SMS_MI_REG_RUN_ENVIRONMENT: Enter the optimizer option you have chosen. Input: 'singularity', 'docker', or 'local'.<br>
+<br>OPTIMIZER_RUN_ENVIRONMENT: Enter the optimizer option you have chosen. Input: 'singularity', 'docker', or 'local'.<br>
 <br>OPTIMIZER_SINGULARITY_IMAGE_PATH: If using a Singularity image, please provide the Singularity .sif path here.<br>
 <br>OPTIMIZER_EXECUTABLE_PATH: If using the compiled `retro-motion-measurement.cxx` program, please provide the path to the compiled CPP code here.
 
-If you are opting to use a Docker image, you will only need to set SMS_MI_REG_RUN_ENVIRONMENT to 'docker'.
+If you are opting to use a Docker image, you will only need to set OPTIMIZER_RUN_ENVIRONMENT to 'docker'.
 
 ----
 

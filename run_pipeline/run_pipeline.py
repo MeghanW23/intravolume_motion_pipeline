@@ -113,7 +113,7 @@ class RunPipeline:
                 json_file_path=func_json_file_path,
                 working_directory=configurations.WORKING_DIRECTORY_PATH,
                 output_directory=configurations.OUTPUT_DIRECTORY_PATH,
-                run_environment=configurations.SMS_MI_REG_RUN_ENVIRONMENT,
+                run_environment=configurations.OPTIMIZER_RUN_ENVIRONMENT,
                 smsmireg_executable_path=configurations.OPTIMIZER_EXECUTABLE_PATH,
                 singularity_image_path=configurations.OPTIMIZER_SINGULARITY_IMAGE_PATH,
                 n_jobs=configurations.N_JOBS,
