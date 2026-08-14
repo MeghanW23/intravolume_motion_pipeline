@@ -11,13 +11,12 @@ This project directly addresses the motion confound using this novel slice-by-sl
 
 ----
 
-## Set up the Pipeline
+## How to Set Up the Pipeline
 #### This pipeline is memory-intensive and long-running, so it is important to run on an [HPC](https://www.intel.com/content/www/us/en/learn/what-is-hpc.html) instead of locally.
 
 ***Note to Cohen Lab Researchers**: This repository is already existing and configured on E3 at: `/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline`. You will need access to the Neurofeedback project PHI folder (`Groups/P00049401`) to access the repo.*
 
-<br><br>
-#### 1. Clone the Repository
+### 1. Clone the Repository
 
 This project has submodules. *You will need to request access to any submodules that are currently private*.
 To clone the project with submodules, given you have access to them, run:
@@ -28,51 +27,46 @@ git clone --recurse-submodules git@github.com:MeghanW23/intravolume_motion_pipel
 # If connecting to GitHub over HTTPS
 git clone --recurse-submodules https://github.com/MeghanW23/intravolume_motion_pipeline_v2.git
 ```
-<br><br>
-#### 2. Edit TEMPLATE.yaml software paths
-You will need to edit the various software paths in the [run_pipeline/config_files/TEMPLATE.yaml](https://github.com/MeghanW23/intravolume_motion_pipeline_v2/blob/main/run_pipeline/config_files/TEMPLATE.yaml) file so that it points to the correct paths on your system.
-
-<br><br>
-#### 3. Create the Conda environment
+### 2. Edit TEMPLATE.yaml software paths
+You will need to edit the various software paths in the [run_pipeline/config_files/TEMPLATE.yaml](https://github.com/MeghanW23/intravolume_motion_pipeline_v2/blob/main/run_pipeline/config_files/TEMPLATE.yaml) file so that it points to the correct paths on your system. Currently, the paths are set up for E3.
+### 3. Create the Conda environment
 You will need to create a Conda (or potentially Python) environment to install the necessary packages. There is a environment.yml file you can use at `run_pipeline/environment.yml`. Once you have created the environment, don't forget to edit the following paths in your .yaml file(s):
 <br>
-<br>CONDA_ENV_NAME<br>
-<br>CONDA_INIT_PATH<br>
-<br>CONDA_ENV_PYTHON_PATH
-
-<br><br>
-#### 4. Pull and/or Compile the Optimizer
+<br>`CONDA_ENV_NAME`<br>
+<br>`CONDA_INIT_PATH`<br>
+<br>`CONDA_ENV_PYTHON_PATH`
+### 4. Pull and/or Compile the Optimizer
 Our optimizer, [retro-motion-measurement](https://github.com/ComputationalRadiology/sms-mi-reg/blob/main/retro-motion-measurement.cxx), is used to determine the 6-dimension rigid body transform between a reference volume and each slice group acquisition. 
 You can access optimizer via (1) building or pulling the Docker image, (2) compiling the CPP code directly on the host machine, or (3) building the Singularity image (converted from the Docker image).
-<br><br>
-**OPTION ONE: Build the Docker Image**: The `crl/sms-mi-reg` docker image contains the all the optimizer software and it's dependencies.
 
-Build the Docker container by running the [build-docker.sh](https://github.com/ComputationalRadiology/sms-mi-reg/blob/main/build-docker.sh) file:
-```
-cd scripts/MotionCharacterization/sms-mi-reg/
-sudo chmod +x build-docker.sh
-sudo ./build-docker.sh
-```
+- #### Option One - Build the Docker Image:
+  - The `crl/sms-mi-reg` Docker image contains the all the optimizer software and it's dependencies. Build the Docker container by running the [build-docker.sh](https://github.com/ComputationalRadiology/sms-mi-reg/blob/main/build-docker.sh) file:
+    ```
+    cd scripts/MotionCharacterization/sms-mi-reg/
+    sudo chmod +x build-docker.sh
+    sudo ./build-docker.sh
+    ```
+  - You could also follow the steps listed in [scripts/MotionCharacterization/pull_docker_container.sh](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/scripts/MotionCharacterization/pull_docker_container.sh) to pull the container from the Computational Radiology Lab's Container Repository.
+    - You will need access to the Container Repository.
+    - Please ensure this image is the most recent version of the image.
 
-You could also follow the steps listed in [scripts/MotionCharacterization/pull_docker_container.sh](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/scripts/MotionCharacterization/pull_docker_container.sh) to pull the container from the Computational Radiology Lab's Container Repository. You will need access to the Container Repository. Please ensure this image is the most recent version of the image.
-<br><br>
-**OPTION TWO: Compile the CPP code on directly on the host machine**: Follow the steps in the [scripts/MotionCharacterization/compile_sms-mi-reg.sh](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/scripts/MotionCharacterization/compile_sms-mi-reg.sh) script. You will need to have [ITK](https://docs.itk.org/en/latest/download.html) installed. 
-<br><br>
-**OPTION THREE: Build the Singularity image by converting the Docker image to a .sif file:**
-On many HPCs, including BCH's E3, you will not have `sudo` access. In these cases, many researchers opt to use Singularity, which does not require `sudo` privileges, instead of Docker. 
-The recommended workflow for getting the Singularity image includes (1) pulling the Docker container onto a machine where you have docker access (your local machine, another server etc.) and (2) converting the Docker image to a Singularity image on your HPC. Make sure you are pulling the Docker image with the architecture of the machine you want to run the singularity image on. 
+- #### Option Two - Compile the CPP Code on Directly on the Host Machine:
+  - Follow the steps in the [scripts/MotionCharacterization/compile_sms-mi-reg.sh](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/scripts/MotionCharacterization/compile_sms-mi-reg.sh) script.
+  - You will need to have [ITK](https://docs.itk.org/en/latest/download.html) installed. 
 
-An example of this pipeline can be found at [scripts/MotionCharacterization/docker-to-sif_steps-for-e3.sh](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/scripts/MotionCharacterization/docker-to-sif_steps-for-e3.sh)
+- #### Option Three - Build the Singularity Image by Converting the Docker Image to a `.sif` file:
+  - On many HPCs, including BCH's E3, you will not have `sudo` access. In these cases, many developers opt to use [Singularity](https://docs.sylabs.io/guides/2.6/user-guide/introduction.html), which does not require `sudo` privileges, instead of Docker.
+  - The recommended workflow for getting the Singularity image includes:
+    1. Pulling the Docker container onto a machine where you have docker access (your local machine, another server etc.), then
+    2. Converting the Docker image to a Singularity image on your HPC.
+  - An example of this pipeline can be found at [scripts/MotionCharacterization/docker-to-sif_steps-for-e3.sh](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/scripts/MotionCharacterization/docker-to-sif_steps-for-e3.sh)
+  - It is recommended to run the Docker to Singularity conversion in a batch job / high-resource environment. An example of a Slurm batch script to use can be found at: [scripts/MotionCharacterization/docker-to-sif_batch-script.sh](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/scripts/MotionCharacterization/docker-to-sif_batch-script.sh)
+  - *Make sure you are pulling the Docker image with the architecture of the machine you want to run the singularity image on.*
 
-It is recommended to run the Docker to Singularity conversion in a batch job / high-resource environment. An example of a Slurm batch script to use can be found at: [scripts/MotionCharacterization/docker-to-sif_batch-script.sh](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/scripts/MotionCharacterization/docker-to-sif_batch-script.sh)
-
-<br>
 **Once you have pulled or built the optimizer, you will need to the following variables in your .yaml file(s)**
-<br>
-<br>OPTIMIZER_RUN_ENVIRONMENT: Enter the optimizer option you have chosen. Input: 'singularity', 'docker', or 'local'.<br>
-<br>OPTIMIZER_SINGULARITY_IMAGE_PATH: If using a Singularity image, please provide the Singularity .sif path here.<br>
-<br>OPTIMIZER_EXECUTABLE_PATH: If using the compiled `retro-motion-measurement.cxx` program, please provide the path to the compiled CPP code here.
-
+- `OPTIMIZER_RUN_ENVIRONMENT`: Enter the optimizer option you have chosen. Input: 'singularity', 'docker', or 'local'.
+- `OPTIMIZER_SINGULARITY_IMAGE_PATH`: If using a Singularity image, please provide the Singularity .sif path here.
+- `OPTIMIZER_EXECUTABLE_PATH`: If using the compiled `retro-motion-measurement.cxx` program, please provide the path to the compiled CPP code here.
 If you are opting to use a Docker image, you will only need to set OPTIMIZER_RUN_ENVIRONMENT to 'docker'.
 
 ----
