@@ -8,6 +8,8 @@ from collections import OrderedDict
 
 from run_alignment import RunAlignments
 from limit_voxel_intensity_range import LimitVoxelIntensityRange
+
+
 class IdentifyReferenceVolume:
 
     def __init__(self, 
