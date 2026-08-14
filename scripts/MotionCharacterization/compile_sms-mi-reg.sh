@@ -6,4 +6,6 @@
 mkdir -p sms-mi-reg/build
 cd sms-mi-reg/build 
 cmake ..
+
+# if this command doesn't work, try running from the sms-mi-reg dir instead of the sms-mi-reg/build 
 make -j$(nproc)
