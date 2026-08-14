@@ -35,7 +35,7 @@ docker save \
 # STEP SIX
 # Send the image to host system 
 rsync -ahvzP sms-mi-reg.tar \
-ch246081@e3-login2.tch.harvard.edu:/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline/scripts/MotionCharacterization/sms-mi-reg/build
+<ch-id>@e3-login2.tch.harvard.edu:/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline/scripts/MotionCharacterization/sms-mi-reg/build
 
 # STEP SEVEN 
 # Convert the .tar image to a .sif image on the host system 
