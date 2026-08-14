@@ -37,15 +37,15 @@ class RunAlignments:
         print("\n")
 
         if self.run_environment == 'docker':
-            print("Running Sms-Mi-Reg with Docker")
+            print("Running Optimizer with Docker")
             self.run_with_docker()
 
         elif self.run_environment ==  'singularity':
-            print(f"Running Sms-Mi-Reg via Singularity image: {self.singularity_image_file}")
+            print(f"Running Optimizer via Singularity image: {self.singularity_image_file}")
             self.run_with_singularity()
 
         elif self.run_environment == 'local':
-            print(f"Running Sms-Mi-Reg locally with file: {self.smsmireg_executable_path}")
+            print(f"Running Optimizer locally with file: {self.smsmireg_executable_path}")
             self.run_locally() 
 
         else:
