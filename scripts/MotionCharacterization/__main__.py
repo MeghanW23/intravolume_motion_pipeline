@@ -153,7 +153,7 @@ class CharacterizeIntraVolumeMotion:
             reference_volume_index: int = IdentifyReferenceVolume(
                 nifti_image_path=nifti_image_path, # pyright: ignore[reportArgumentType]
                 json_file_path=json_file_path, # pyright: ignore[reportArgumentType]
-                working_directory=os.path.join(output_directory, "reference_volume_script_outputs"),
+                working_directory=os.path.join(working_directory, "reference_volume_script_outputs"),
                 threshold_in_mm=mm_motion_threshold,
                 run_environment=run_environment,
                 smsmireg_executable_path=smsmireg_executable_path,
