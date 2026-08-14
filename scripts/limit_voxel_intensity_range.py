@@ -7,7 +7,7 @@ class LimitVoxelIntensityRange:
     def __init__(self, 
                  nifti_image_paths: list[str],
                  output_directory: str = 'outputs',
-                 lower_bound: int = 10,
+                 lower_bound: int = 50,
                  upper_bound: int = 1000,
                  n_jobs: int = -1) -> None:
         
@@ -31,7 +31,7 @@ class LimitVoxelIntensityRange:
     def single_voxel_clamp(self, 
                            nifti_image_path: str, 
                            output_file_path: str,
-                           lower_bound: int  = 10, 
+                           lower_bound: int  = 50, 
                            upper_bound: int = 1000) -> None:
 
         nifti_image: sitk.Image = sitk.ReadImage(nifti_image_path)

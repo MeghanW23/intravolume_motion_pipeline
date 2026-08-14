@@ -77,7 +77,7 @@ MOTION_THRESHOLD: 10
 
 # For limiting the intensity of the voxels of the 3D volumes
 LIMIT_VOXEL_INTENSITY: True
-VOXEL_LOWER_BOUND: 10       # in AIU
+VOXEL_LOWER_BOUND: 50       # in AIU
 VOXEL_UPPER_BOUND: 1000     # in AIU
 
 # This is the index of a 3D volume in the input 4D NiFTI Image.

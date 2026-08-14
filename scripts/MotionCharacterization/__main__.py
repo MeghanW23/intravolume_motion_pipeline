@@ -37,7 +37,7 @@ class CharacterizeIntraVolumeMotion:
                  motion_threshold: int = 10,
                  reference_volume_index: int | None = None, # pyright: ignore[reportRedeclaration],
                  limit_voxel_intensity: bool = True,
-                 voxel_intensity_lower_bound: int | None = 10,
+                 voxel_intensity_lower_bound: int | None = 50,
                  voxel_intensity_upper_bound: int | None = 1000,
                  dcmdjpeg_path: str = 'dcmdjpeg',
                  dcm2niix_path: str = 'dcm2niix',
