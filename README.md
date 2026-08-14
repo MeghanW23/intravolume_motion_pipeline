@@ -16,6 +16,7 @@ This project directly addresses the motion confound using this novel slice-by-sl
 
 ***Note to Cohen Lab Researchers**: This repository is already existing and configured on E3 at: `/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline`. You will need access to the Neurofeedback project PHI folder (`Groups/P00049401`) to access the repo.*
 
+<br><br>
 #### 1. Clone the Repository
 
 This project has submodules. *You will need to request access to any submodules that are currently private*.
@@ -27,10 +28,11 @@ git clone --recurse-submodules git@github.com:MeghanW23/intravolume_motion_pipel
 # If connecting to GitHub over HTTPS
 git clone --recurse-submodules https://github.com/MeghanW23/intravolume_motion_pipeline_v2.git
 ```
-
+<br><br>
 #### 2. Edit TEMPLATE.yaml software paths
 You will need to edit the various software paths in the [run_pipeline/config_files/TEMPLATE.yaml](https://github.com/MeghanW23/intravolume_motion_pipeline_v2/blob/main/run_pipeline/config_files/TEMPLATE.yaml) file so that it points to the correct paths on your system.
 
+<br><br>
 #### 3. Create the Conda environment
 You will need to create a Conda (or potentially Python) environment to install the necessary packages. There is a environment.yml file you can use at `run_pipeline/environment.yml`. Once you have created the environment, don't forget to edit the following paths in your .yaml file(s):
 <br>
@@ -38,7 +40,7 @@ You will need to create a Conda (or potentially Python) environment to install t
 <br>CONDA_INIT_PATH<br>
 <br>CONDA_ENV_PYTHON_PATH
 
-
+<br><br>
 #### 4. Pull and/or Compile the Optimizer
 Our optimizer, [retro-motion-measurement](https://github.com/ComputationalRadiology/sms-mi-reg/blob/main/retro-motion-measurement.cxx), is used to determine the 6-dimension rigid body transform between a reference volume and each slice group acquisition. 
 You can access optimizer via (1) building or pulling the Docker image, (2) compiling the CPP code directly on the host machine, or (3) building the Singularity image (converted from the Docker image).
@@ -64,7 +66,7 @@ An example of this pipeline can be found at [scripts/MotionCharacterization/dock
 
 It is recommended to run the Docker to Singularity conversion in a batch job / high-resource environment. An example of a Slurm batch script to use can be found at: [scripts/MotionCharacterization/docker-to-sif_batch-script.sh](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/scripts/MotionCharacterization/docker-to-sif_batch-script.sh)
 
-<br><br>
+<br>
 **Once you have pulled or built the optimizer, you will need to the following variables in your .yaml file(s)**
 <br>
 <br>SMS_MI_REG_RUN_ENVIRONMENT: Enter the optimizer option you have chosen. Input: 'singularity', 'docker', or 'local'.<br>
