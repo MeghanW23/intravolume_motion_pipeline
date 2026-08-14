@@ -38,6 +38,28 @@ You will need to create a Conda (or potentially Python) environment to install t
 <br>CONDA_INIT_PATH<br>
 <br>CONDA_ENV_PYTHON_PATH
 
+
+#### 4. Pull and/or Compile the Optimizer
+Our optimizer, [retro-motion-measurement](https://github.com/ComputationalRadiology/sms-mi-reg/blob/main/retro-motion-measurement.cxx), is used to determine the 6-dimension rigid body transform between a reference volume and each slice group acquisition. 
+You can access optimizer via (1) building or pulling the Docker image, (2) compiling the CPP code directly on the host machine, or (3) building the Singularity image (converted from the Docker image).
+
+**Build the Docker Image**
+
+The `crl/sms-mi-reg` docker image contains the all the optimizer software and it's dependencies.
+
+Build the Docker container by running the [build-docker.sh](https://github.com/ComputationalRadiology/sms-mi-reg/blob/main/build-docker.sh) file:
+```
+cd scripts/MotionCharacterization/sms-mi-reg/
+sudo chmod +x build-docker.sh
+sudo ./build-docker.sh
+```
+
+You could also follow the steps listed in [scripts/MotionCharacterization/pull_docker_container.sh](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/scripts/MotionCharacterization/pull_docker_container.sh) to pull the container from the Computational Radiology Lab's Container Repository. You will need access to the Container Repository. Please ensure this image is the most recent version of the image.
+
+**Compile the CPP code on directly on the host machine**
+
+Follow the steps in the [scripts/MotionCharacterization/compile_sms-mi-reg.sh](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/scripts/MotionCharacterization/compile_sms-mi-reg.sh) script. You will need to have [ITK](https://docs.itk.org/en/latest/download.html) installed. 
+
 ----
 
 ## How to Run the Pipeline
