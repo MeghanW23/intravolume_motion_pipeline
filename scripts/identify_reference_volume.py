@@ -7,6 +7,7 @@ import SimpleITK as sitk
 from collections import OrderedDict
 
 from run_alignment import RunAlignments
+from limit_voxel_intensity_range import LimitVoxelIntensityRange
 class IdentifyReferenceVolume:
 
     def __init__(self, 
@@ -17,7 +18,10 @@ class IdentifyReferenceVolume:
                  reference_volume_spacing: tuple[float, float, float] = (1.236, 1.236, 1.236),
                  run_environment: str = "docker",
                  smsmireg_executable_path: str | None = None,
-                 singularity_image_file: str | None = None):
+                 singularity_image_file: str | None = None,
+                 voxel_intensity_lower_bound: int = 50,
+                 voxel_intensity_upper_bound: int = 1000,
+                 n_jobs: int = -1):
         
         print("\n-----")
         print(f"Nifti Image Path: {nifti_image_path}")
@@ -32,7 +36,7 @@ class IdentifyReferenceVolume:
 
         os.makedirs(working_directory, exist_ok=True)
 
-        # 1. Make Sure the Volume is 4D 
+        # Make Sure the Volume is 4D 
         num_volumes: int = sitk.ReadImage(nifti_image_path).GetSize()[3]
         print(f"Number of Volumes: {num_volumes}")
         if num_volumes <= 0:
@@ -41,32 +45,41 @@ class IdentifyReferenceVolume:
                 f"Your NiFTI's Dimensions:\n{sitk.ReadImage(nifti_image_path).GetSize()}"
             )
 
-        # 2. Extract Slice Timing from JSON File 
+        # Extract Slice Timing from JSON File 
         slice_timing: OrderedDict[float, list[int]] = self.get_slice_timing(json_file_path)
         print(f"Slice Timing: {slice_timing}")
         
-        # 3. Calculate Slice Group, Aquisiton Info 
+        # Calculate Slice Group, Aquisiton Info 
         num_slice_groups_per_volume: int = len(slice_timing)
         print(f"Number of Slice Groups Per Volume: {num_slice_groups_per_volume}")
         num_aquisitions: int = num_slice_groups_per_volume * num_volumes
         print(f"Total Number of Aquisition: {num_aquisitions}")
 
-        # 4. Extract 3D Volumes from 4D Input NiFTI Image
+        # Extract 3D Volumes from 4D Input NiFTI Image
         volume_paths: list[str] = self.extract_volumes(nifti_image_path, working_directory)
         print(f"Extracted {len(volume_paths)} 3D Volumes")
         if len(volume_paths) != num_volumes:
             raise ValueError(
                 f"len(volume_paths) ({len(volume_paths)}) != num_volumes ({num_volumes})"
             )
-            
-        # 5. Iterate Through Each 3D Volume 
+
+        # Limit the Intensity Range
+        volume_paths: list[str] = LimitVoxelIntensityRange(
+            nifti_image_paths=volume_paths,
+            output_directory=working_directory,
+            lower_bound=voxel_intensity_lower_bound,
+            upper_bound=voxel_intensity_upper_bound,
+            n_jobs=n_jobs
+        ).return_output_image_paths()
+
+        # Iterate Through Each 3D Volume 
         for volume_num, volume_path in enumerate(volume_paths):
             
-            # 6. Extract 2D Slices from the 3D Volume
+            # Extract 2D Slices from the 3D Volume
             slice_paths: list[str] = self.extract_slices(volume_path, volume_num, working_directory)
             print(f"\nExtracted {len(slice_paths)} Slices from Volume {volume_num + 1} of {len(volume_paths)}")
 
-            # 7. Upsample the 3D Volume 
+            # Upsample the 3D Volume 
             upsampled_volume_path: str = self.upsample_reference_volume(
                 volume_path,
                 reference_volume_spacing,
@@ -74,14 +87,14 @@ class IdentifyReferenceVolume:
             )
             print(f"Upsampled Volume {volume_num + 1} of {len(volume_paths)}")
 
-            # 8. Extract Identity Transform, Center of Rotation from the Upsampled 3D Volume
+            # Extract Identity Transform, Center of Rotation from the Upsampled 3D Volume
             identity_transform_path: str = self.make_identity_transform(upsampled_volume_path, working_directory)
             print(f"Identity Transform Path: {identity_transform_path}")
 
             rotation_center: list[float] = self.get_rotation_center(identity_transform_path)
             print(f"Rotation Center: {rotation_center}")
 
-            # 9. Iterate Through Slice Groups 
+            # Iterate Through Slice Groups 
             transform_paths: list[str] = [identity_transform_path]
             for slice_group_num, slice_nums in enumerate(slice_timing.values()):
                 print(
@@ -91,7 +104,7 @@ class IdentifyReferenceVolume:
                 )
                 output_label = '{:04d}'.format(volume_num) + '-' + '{:04d}'.format(slice_group_num)
 
-                # 10. Align Each Slice Group to the First Slice Group of the Volume (First Slice Group Aligns to Identity)
+                # Align Each Slice Group to the First Slice Group of the Volume (First Slice Group Aligns to Identity)
                 output_transform_path: str = RunAlignments(
                     reference_volume_path=upsampled_volume_path,
                     target_volume_path=upsampled_volume_path,
@@ -104,10 +117,10 @@ class IdentifyReferenceVolume:
                     singularity_image_file=singularity_image_file
                 ).return_output_transform_path()
 
-                # 11. Get Created Transform Path, Add to List 
+                # Get Created Transform Path, Add to List 
                 transform_paths.append(output_transform_path)
             
-            # 12. Calculate the Displacements Between the Transform of First Slice Group of the Volume with Each Other Transform
+            # Calculate the Displacements Between the Transform of First Slice Group of the Volume with Each Other Transform
             displacements: list[float] = []
             for i, _ in enumerate(transform_paths):
                 if i <= 1:
@@ -124,7 +137,7 @@ class IdentifyReferenceVolume:
             print(f"\nAll Displacements at Volume {volume_num + 1} of {len(volume_paths)}:")
             print(', '.join([str(value) for value in displacements]))
 
-            # 13. Write Displacement Values At This Volume to a .txt File
+            # Write Displacement Values At This Volume to a .txt File
             displacements_file: str = os.path.join(working_directory, f"displacements-at-volume-{'{:04d}'.format(volume_num)}.txt")
             self.write_displacements_to_file(
                 displacements=displacements,
@@ -132,12 +145,12 @@ class IdentifyReferenceVolume:
             )
             print(f"Displacement Values Written To: {displacements_file}")
             
-            # 14. If Any Displacement Values Exceed/Equal the mm Threshold, Continue To the Next Volume 
+            # If Any Displacement Values Exceed/Equal the mm Threshold, Continue To the Next Volume 
             if any(displacement_value >= threshold_in_mm for displacement_value in displacements):
                 print(f"At Least One Displacement Value >= {threshold_in_mm}mm")
                 
 
-            # 15. If All of the Displacement Values Are Under the mm Threshold, Exit the Script 
+            # If All of the Displacement Values Are Under the mm Threshold, Exit the Script 
             else:
                 print(f"All Displacement Values < {threshold_in_mm}mm")
                 print(f"Reference Volume Selected: {upsampled_volume_path}")
