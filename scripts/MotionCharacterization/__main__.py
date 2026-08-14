@@ -240,11 +240,12 @@ class CharacterizeIntraVolumeMotion:
         print(f"Copying All Transforms into the Output Directory at: {output_transform_directory}")
         
         for file_path in transform_paths[1:]:
+            new_file_name: str = os.path.dirname(file_path) + "_" + os.path.basename(file_path)
             shutil.copy(
                 src=file_path,
                 dst=os.path.join(
                     output_transform_directory,
-                    os.path.basename(file_path)
+                    new_file_name
                 )
             )
         print("All Transforms Copied.")
@@ -344,20 +345,6 @@ class CharacterizeIntraVolumeMotion:
             f"\n\n------ Processing Volume: {os.path.basename(volume_path)} " + \
             f"({volume_num + 1} of {num_volumes}) ------"
         )
-
-        """
-        =======================================================
-        EXTRACT 2D SLICES FROM 3D VOLUME
-        =======================================================
-        """
-        print("Extracting slices from the volume")
-        slice_paths: list[str] = ExtractNiFTIImage(
-            input_nifti_image_path=volume_path,
-            output_directory_path=working_directory,
-            file_prefix=f"slice_outputs-{'{:04d}'.format(volume_num)}",
-            n_jobs=n_jobs # type: ignore
-        ).return_images() 
-        print(f"Extracted {len(slice_paths)} Slices")
 
         """
         =======================================================
