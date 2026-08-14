@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Whatever environment you use to run this script, make sure it has
-# ITK installed, as it is required to compile sms-mi-reg.cpp
+# ITK installed, as it is required to compile the cpp/cxx files
 
 mkdir -p sms-mi-reg/build
 cd sms-mi-reg/build 
