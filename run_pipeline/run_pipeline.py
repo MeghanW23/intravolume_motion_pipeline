@@ -135,7 +135,7 @@ class RunPipeline:
         ========================================
         """
         if configurations.RUN_MOTION_CORRECTION:
-            StartMotionCorrection(
+            self.motion_correction_step = StartMotionCorrection(
                 radian_parameters_path=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "radian-parameters.txt"),
                 nifti_image_path=func_nifti_image_path,
                 json_file_path=func_json_file_path,
@@ -147,17 +147,16 @@ class RunPipeline:
                 matlab_path=configurations.MATLAB_INSTALLATION_PATH,
                 n_jobs=configurations.N_JOBS
             )
+            self.motion_corrected_image_path: str = self.motion_correction_step.corrected_image
         """
         ========================================
         STEP THREE: FMRIPREP
         ========================================
         """
         if configurations.RUN_FMRIPREP:
-            corrected_image: str = self.find_intravolume_corrected_data(configurations)
-
             StartSingleRunfMRIPrep(
                 func_data=[
-                    corrected_image, 
+                    self.motion_corrected_image_path, 
                     func_json_file_path],
                 anat_data=\
                     [configurations.ANATOMICAL_DICOM_DIRECTORY] if configurations.ANATOMICAL_DICOM_DIRECTORY
@@ -175,37 +174,7 @@ class RunPipeline:
                 n_jobs=configurations.N_JOBS,
                 omp_nthreads=configurations.OMP_NTHREADS, # pyright: ignore[reportArgumentType],
                 mem_mb=configurations.MEM_MB # pyright: ignore[reportArgumentType]
-            )
-
-    def find_intravolume_corrected_data(self, configurations: Configurations) -> str:
-        corrected_image: str = ""
-        matching_corrected_files: list[str] = glob(os.path.join(configurations.OUTPUT_DIRECTORY_PATH, configurations.MCORR_OUTPUT_FILENAME_PATTERN))
-        if len(matching_corrected_files) == 0:
-            corrected_image: str = os.path.join(configurations.OUTPUT_DIRECTORY_PATH, configurations.MCORR_ABRUPTMOTION_FILE_NAME) 
-            warnings.warn(
-                message=(
-                    f"Could not find scrubbed data matching pattern: {configurations.MCORR_OUTPUT_FILENAME_PATTERN}"
-                    f"Using file: {corrected_image}. "
-                    "If your data has no above-threshold motion, this is expected. "
-                    "If not, something has gone wrong. "
-                ),
-                category=UserWarning
-            )
-            return corrected_image
-
-        elif len(matching_corrected_files) > 1:
-            corrected_image: str = sorted(matching_corrected_files, key=os.path.getmtime)[-1]
-            warnings.warn(
-                message=(
-                    f"More than one scrubbed NiFTI Image Found: {matching_corrected_files}. "
-                    f"Using the most recently modified image: {corrected_image}"
-                ),
-                category=UserWarning
-            )
-            return corrected_image
-        
-        else:
-            return matching_corrected_files[0]        
+            )        
 
 
 if __name__ == "__main__":
