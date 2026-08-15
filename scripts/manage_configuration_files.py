@@ -69,7 +69,8 @@ class Configurations(BaseModel):
 
     OMP_NTHREADS: int | None
     MEM_MB: int | None
-    
+
+    RUN_POST_PIPELINE_ANALYSIS: bool
 
     @model_validator(mode='after')
     def validate_functional_inputs(self):

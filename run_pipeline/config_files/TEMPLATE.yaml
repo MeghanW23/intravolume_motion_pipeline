@@ -71,6 +71,9 @@ SUBJECT_ID: 4
 SESSION_NUM: 4
 RUN_NUM: 1
 
+# For running the extra graphing and analysis scripts at the end of the pipeline
+RUN_POST_PIPELINE_ANALYSIS: true
+
 
 # ==================================================
 # 
