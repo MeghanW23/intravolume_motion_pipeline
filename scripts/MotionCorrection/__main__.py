@@ -199,7 +199,7 @@ class StartMotionCorrection:
         """
         self.corrected_image: str = self.find_intravolume_corrected_data(
             output_directory_path=output_directory,
-            mcorr_output_filename_pattern=mcorr_abruptmotion_filename,
+            mcorr_output_filename_pattern=mcorr_output_filename_pattern,
             mcorr_abruptmotion_filename=mcorr_abruptmotion_filename
         )
         print(f"Intra-Volume Motion Corrected NiFTI Image: {self.corrected_image}")
