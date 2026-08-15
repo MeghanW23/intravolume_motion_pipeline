@@ -31,7 +31,7 @@ class GraphTransformDirectory:
 
         # Calculate Displacements
         self.displacements: list[float] = [0] + [
-            self.compute_displacement(
+            self.calculate_displacement(
                 transform1=transforms[i - 1], 
                 transform2=transforms[i]) 
             for i in range(self.num_aquisitions) 
@@ -369,37 +369,67 @@ class GraphTransformDirectory:
             math.degrees(z)
         ]
 
-    def compute_displacement(self, 
-                             transform1: sitk.VersorRigid3DTransform | sitk.Euler3DTransform, 
-                             transform2: sitk.VersorRigid3DTransform | sitk.Euler3DTransform, 
-                             radius: float = 50) -> float:
+    def calculate_displacement(self, 
+                                   transform1: sitk.VersorRigid3DTransform | sitk.Euler3DTransform, 
+                                   transform2: sitk.VersorRigid3DTransform | sitk.Euler3DTransform, 
+                                   head_radius: float = 50
+                                   ) -> float:
+        
+        composed_affine: sitk.AffineTransform = self.compose_transforms(transform1, transform2)
+        versorrigid3d: sitk.VersorRigid3DTransform = self.convert_affine_to_versorrigid(composed_affine)
+        
+        parms: np.ndarray = np.asarray( versorrigid3d.GetParameters() )
+        versormagsquared: float = parms[0]*parms[0] + parms[1]*parms[1] + parms[2]*parms[2]
+        versormag: float = math.sqrt(versormagsquared)
+        wsquared: float = 1 - versormagsquared
+        w : float = math.sqrt(wsquared)
+        angle: float = 2.0 * math.atan2( versormag, w )
+        deltarotationmm: float = float(head_radius) * float(angle)
+        deltatranslationsquared: float = abs(parms[3])*abs(parms[3]) + abs(parms[4])*abs(parms[4]) + abs(parms[5])*abs(parms[5])
+        deltatranslation: float = math.sqrt(deltatranslationsquared)
+        totalmotion: float = deltarotationmm + deltatranslation
 
-        A0: np.ndarray = np.asarray(transform2.GetMatrix()).reshape(3, 3)
-        c0: np.ndarray = np.asarray(transform2.GetCenter())
-        t0: np.ndarray = np.asarray(transform2.GetTranslation())
+        return totalmotion
+    
 
-        A1: np.ndarray = np.asarray(transform1.GetInverse().GetMatrix()).reshape(3, 3)
-        c1: np.ndarray = np.asarray(transform1.GetInverse().GetCenter())
-        t1: np.ndarray = np.asarray(transform1.GetInverse().GetTranslation())
+    def compose_transforms(self, 
+                            transform1: sitk.VersorRigid3DTransform | sitk.Euler3DTransform, 
+                            transform2: sitk.VersorRigid3DTransform | sitk.Euler3DTransform
+                            ) -> sitk.AffineTransform:
+            
+            transform1_inverse: sitk.VersorRigid3DTransform | sitk.Euler3DTransform = transform1.GetInverse()
 
-        combined_mat: np.ndarray = np.dot(A0,A1)
-        combined_center: np.ndarray = c1
-        combined_translation: np.ndarray = np.dot(A0, t1+c1-c0) + t0+c0-c1
+            A0: np.ndarray = np.asarray(transform2.GetMatrix()).reshape(3,3)
+            c0: np.ndarray = np.asarray(transform2.GetCenter())
+            t0: np.ndarray = np.asarray(transform2.GetTranslation())
 
-        euler3d: sitk.Euler3DTransform = sitk.Euler3DTransform()
-        euler3d.SetCenter(combined_center)
-        euler3d.SetTranslation(combined_translation)
-        euler3d.SetMatrix(combined_mat.flatten())
+            A1: np.ndarray = np.asarray(transform1_inverse.GetMatrix()).reshape(3,3)
+            c1: np.ndarray = np.asarray(transform1_inverse.GetCenter())
+            t1: np.ndarray = np.asarray(transform1_inverse.GetTranslation())
 
-        parms: np.ndarray = np.asarray(euler3d.GetParameters())
+            combined_mat: np.ndarray = np.dot(A0,A1)
+            combined_center: np.ndarray = c1
+            combined_translation: np.ndarray = np.dot(A0, t1+c1-c0) + t0+c0-c1
+            combined_affine: sitk.AffineTransform = sitk.AffineTransform(
+                combined_mat.flatten(), 
+                combined_translation, 
+                combined_center
+            )
 
-        return \
-            abs(parms[0]*radius) + \
-            abs(parms[1]*radius) + \
-            abs(parms[2]*radius) + \
-            abs(parms[3]) + \
-            abs(parms[4]) + \
-            abs(parms[5])
+            return combined_affine
+
+
+    def convert_affine_to_versorrigid(self, 
+                                        affinetransform: sitk.AffineTransform
+                                        ) -> sitk.VersorRigid3DTransform:
+        
+        versorrigid3d: sitk.VersorRigid3DTransform = sitk.VersorRigid3DTransform()
+        
+        versorrigid3d.SetCenter( affinetransform.GetCenter() )
+        versorrigid3d.SetTranslation( affinetransform.GetTranslation() )
+        versorrigid3d.SetMatrix( affinetransform.GetMatrix() )
+        
+        return versorrigid3d
 
     def get_num_slice_groups(self, json_path: str) -> int:
                 
