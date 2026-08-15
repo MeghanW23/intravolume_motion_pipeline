@@ -8,16 +8,17 @@ from seed_to_voxel_correlation import SeedToVoxelCorrelation
  
 class PostRunAnalysis:
     def __init__(self,
-                 json_file: str,
-                 anatomical_nifti_image: str,
-                 transform_directory: str,
-                 mm_displacement_threshold: float,
-                 brain_mask_path: str,
-                 reference_volume_path: str,
-                 raw_func_nifti_image: str | None = None,
-                 corrected_func_nifti_image: str | None = None,
-                 fmriprep_func_nifti_image: str | None = None,
-                 output_directory: str = "outputs"):
+                json_file: str,
+                anatomical_nifti_image: str,
+                transform_directory: str,
+                mm_displacement_threshold: float,
+                brain_mask_path: str,
+                reference_volume_path: str,
+                confounds_file_path: str,
+                raw_func_nifti_image: str | None = None,
+                corrected_func_nifti_image: str | None = None,
+                fmriprep_func_nifti_image: str | None = None,
+                output_directory: str = "outputs"):
 
         os.makedirs(output_directory, exist_ok=True)
 
@@ -35,7 +36,7 @@ class PostRunAnalysis:
                 displacement_threshold=mm_displacement_threshold,
                 transform_suffix=".tfm",
                 plot_title="Raw Data: Voxel Percent Signal Change Carpet Plot + Displacements",
-                output_directory=raw_data_output_dir,
+                output_directory=os.path.join(raw_data_output_dir, "segmentations"),
                 output_file_path=os.path.join(raw_data_output_dir, "raw_data_carpet_plot.html"),
                 also_save_png_file=True  
             )
@@ -48,11 +49,12 @@ class PostRunAnalysis:
                 plot_title="Raw Data: tSNR Plot"
             )
 
-            print(f"\nSeed to Voxel Correlation")
+            print(f"\nDoing Seed to Voxel Correlation")
             SeedToVoxelCorrelation(
                 nifti_image_path=raw_func_nifti_image,
                 nifti_image_mask_path=brain_mask_path,
                 json_file_path=json_file,
+                confounds_file_path=confounds_file_path,
                 output_directory_path=raw_data_output_dir,
                 plot_title="Raw Data: Seed to Voxel Correlation"
             )
@@ -62,7 +64,7 @@ class PostRunAnalysis:
             corrected_data_output_dir: str = os.path.join(output_directory, "motion_corrected_data_outputs")
             os.makedirs(corrected_data_output_dir, exist_ok=True)
 
-            print(f"\nCreating Raw Data Carpet Plot")
+            print(f"\nCreating Corrected Data Carpet Plot")
             CarpetPlot(
                 anatomical_image=anatomical_nifti_image,
                 functional_image=corrected_func_nifti_image,
@@ -72,7 +74,7 @@ class PostRunAnalysis:
                 displacement_threshold=mm_displacement_threshold,
                 transform_suffix=".tfm",
                 plot_title="Intravolume Motion Corrected Data: Voxel Percent Signal Change Carpet Plot + Displacements",
-                output_directory=corrected_data_output_dir,
+                output_directory=os.path.join(corrected_data_output_dir, "segmentations"),
                 output_file_path=os.path.join(corrected_data_output_dir, "corrected_data_carpet_plot.html"),
                 also_save_png_file=True   
             )
@@ -85,11 +87,12 @@ class PostRunAnalysis:
                 plot_title="Intravolume Motion Corrected Data: tSNR Plot"
             )
 
-            print(f"\nSeed to Voxel Correlation")
+            print(f"\nDoing Seed to Voxel Correlation")
             SeedToVoxelCorrelation(
                 nifti_image_path=corrected_func_nifti_image,
                 nifti_image_mask_path=brain_mask_path,
                 json_file_path=json_file,
+                confounds_file_path=confounds_file_path,
                 output_directory_path=corrected_data_output_dir,
                 plot_title="Intravolume Motion Corrected Data: Seed to Voxel Correlation"
             )
@@ -100,7 +103,7 @@ class PostRunAnalysis:
             os.makedirs(fmriprep_data_output_dir, exist_ok=True)
 
 
-            print(f"\nCreating Raw Data Carpet Plot")
+            print(f"\nCreating fMRIPrep Data Carpet Plot")
             CarpetPlot(
                 anatomical_image=anatomical_nifti_image,
                 functional_image=fmriprep_func_nifti_image,
@@ -110,7 +113,7 @@ class PostRunAnalysis:
                 displacement_threshold=mm_displacement_threshold,
                 transform_suffix=".tfm",
                 plot_title="fMRIPrep + Intravolume Motion Corrected Data: Voxel Percent Signal Change Carpet Plot + Displacements",
-                output_directory=fmriprep_data_output_dir,
+                output_directory=os.path.join(fmriprep_data_output_dir, "segmentations"),
                 output_file_path=os.path.join(fmriprep_data_output_dir, "fmriprep_data_carpet_plot.html"),
                 also_save_png_file=True   
             )
@@ -123,11 +126,12 @@ class PostRunAnalysis:
                 plot_title="fMRIPrep + Intravolume Motion Corrected Data: tSNR Plot"
             )
 
-            print(f"\nSeed to Voxel Correlation")
+            print(f"\nDoing Seed to Voxel Correlation")
             SeedToVoxelCorrelation(
                 nifti_image_path=fmriprep_func_nifti_image,
                 nifti_image_mask_path=brain_mask_path,
                 json_file_path=json_file,
+                confounds_file_path=confounds_file_path,
                 output_directory_path=fmriprep_data_output_dir,
                 plot_title="fMRIPrep + Intravolume Motion Corrected Data: Seed to Voxel Correlation"
             )
@@ -144,6 +148,7 @@ if __name__ == "__main__":
     parser.add_argument("--brain_mask_path", required=True, help="Must be in subject-space.")
     parser.add_argument("--reference_volume_path", required=True)
     parser.add_argument("--output_directory", required=False, default="outputs", help=f"Default: {os.path.abspath('outputs')}")
+    parser.add_argument("--confounds_file_path", required=True, help="fMRIPrep desc-confounds_timeseries.tsv file.")
     args: argparse.Namespace = parser.parse_args()
 
     PostRunAnalysis(
@@ -153,6 +158,7 @@ if __name__ == "__main__":
         mm_displacement_threshold=args.mm_displacement_threshold,
         brain_mask_path=os.path.abspath(args.brain_mask_path),
         reference_volume_path=os.path.abspath(args.reference_volume_path),
+        confounds_file_path=os.path.abspath(args.confounds_file_path),
         raw_func_nifti_image=os.path.abspath(args.raw_func_nifti_image_path) if args.raw_func_nifti_image_path else None,
         corrected_func_nifti_image=os.path.abspath(args.corrected_nifti_image_path) if args.corrected_nifti_image_path else None,
         fmriprep_func_nifti_image=os.path.abspath(args.fmriprep_nifti_image_path) if args.fmriprep_nifti_image_path else None,

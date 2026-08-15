@@ -1,6 +1,7 @@
 import os
 import json
 import numpy as np
+import pandas as pd
 import nibabel as nib
 from typing import Any
 import matplotlib.pyplot as plt
@@ -15,6 +16,7 @@ class SeedToVoxelCorrelation:
                  nifti_image_path: str, 
                  nifti_image_mask_path: str,
                  json_file_path: str,
+                 confounds_file_path: str,
                  seed_coords: tuple[int, int, int] = (0, -52, 18),
                  seed_radius: float = 8,
                  output_directory_path: str = "seed-to-voxel_outputs",
@@ -25,7 +27,7 @@ class SeedToVoxelCorrelation:
         """
 
         print(f"Input NiFTI Image Path: {nifti_image_path}")
-        print(f"Input NiFTI Brain Masl: {nifti_image_mask_path}")
+        print(f"Input NiFTI Brain Mask: {nifti_image_mask_path}")
         print(f"Input JSON File Path: {json_file_path}")
         print(f"ROI Seed Coordinates: {seed_coords}")
         print(f"ROI Seed Radius: {seed_radius} mm")
@@ -48,12 +50,20 @@ class SeedToVoxelCorrelation:
 
 
         print("Loading Confounds")
-        confounds, sample_mask = load_confounds(
-            img_files=nifti_image_path,
-            strategy=["high_pass", "motion", "wm_csf"],
-            motion="basic",
-            wm_csf="basic",
-        )
+        confounds: pd.DataFrame = pd.read_csv(confounds_file_path, sep="\t")
+        confound_columns: list[str] = [
+            "trans_x",
+            "trans_y",
+            "trans_z",
+            "rot_x",
+            "rot_y",
+            "rot_z",
+            "white_matter",
+            "csf",
+        ]
+
+        confounds: pd.DataFrame = confounds[confound_columns].fillna(0)
+        
         print("Extracting the time series from the functional imaging within the sphere.")
         seed_masker: NiftiSpheresMasker = NiftiSpheresMasker(
             seeds=[seed_coords],
@@ -211,6 +221,11 @@ if __name__ == "__main__":
         default="seed-to-voxel_outputs",
         help=f"Default: {os.path.abspath('seed-to-voxel_outputs')}"
     )
+    parser.add_argument(
+        "--confounds_file_path", 
+        required=True, 
+        help="fMRIPrep desc-confounds_timeseries.tsv file."
+    )
     args: argparse.Namespace = parser.parse_args()
     SeedToVoxelCorrelation(
         nifti_image_path=os.path.abspath(args.nifti_image_path),
@@ -218,7 +233,8 @@ if __name__ == "__main__":
         json_file_path=os.path.abspath(args.json_file_path),
         seed_coords=tuple(args.seed_coords),
         seed_radius=args.seed_radius,
-        output_directory_path=os.path.abspath(args.output_directory_path)
+        output_directory_path=os.path.abspath(args.output_directory_path),
+        confounds_file_path=os.path.abspath(args.confounds_file_path)
     )
 
 
