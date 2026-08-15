@@ -540,6 +540,18 @@ class StartSingleRunfMRIPrep:
         
         return filename
 
+def get_fmriprep_outputs(fmriprep_func_directory: str, subj_id: int, ses_id: int, run_id: int, 
+                        find_mask: bool = True, file_extension: str = ".nii.gz", 
+                        space_keyword: str = ""  # leave space_keyword blank for subj-space
+                        ) -> str:
+
+    participant_str: str = f"sub-{'{:02d}'.format(subj_id)}_ses-{'{:02d}'.format(ses_id)}_task-func_run-{'{:02d}'.format(run_id)}"
+    if space_keyword != "":
+        participant_str += f"_space-{space_keyword}"
+
+    file_ending: str = "_desc-brain_mask" + file_extension if find_mask else "_desc-preproc_bold" + file_extension
+
+    return os.path.join(fmriprep_func_directory, participant_str + file_ending)
 
 # more verbose than subprocess.CalledProcessError
 class CalledProcessError(subprocess.CalledProcessError):

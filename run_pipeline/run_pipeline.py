@@ -180,7 +180,7 @@ class RunPipeline:
                 omp_nthreads=configurations.OMP_NTHREADS, # pyright: ignore[reportArgumentType],
                 mem_mb=configurations.MEM_MB # pyright: ignore[reportArgumentType]
             )        
-
+        
 
 if __name__ == "__main__":
     import argparse
