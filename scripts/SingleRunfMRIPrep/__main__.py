@@ -560,6 +560,30 @@ def get_fmriprep_func_outputs(fmriprep_directory: str, subj_id: int, ses_id: int
 
     return os.path.join(fmriprep_func_directory, participant_str + file_ending)
 
+
+def get_fmriprep_anat_outputs(fmriprep_directory: str, subj_id: int, ses_id: int,
+                              file_extension: str = ".nii.gz", space_keyword: str = "",  # leave space_keyword blank for subj-space
+                              t2w: bool = False) -> str:
+
+    fmriprep_anat_directory: str = os.path.join(
+        fmriprep_directory, 
+        f"sub-{'{:02d}'.format(subj_id)}",
+        f"ses-{'{:02d}'.format(ses_id)}",
+        "anat"
+    )
+    filename: str = f"sub-{'{:02d}'.format(subj_id)}_ses-{'{:02d}'.format(ses_id)}"
+    if space_keyword != "":
+        filename += f"_space-{space_keyword}"
+    filename += "_desc-preproc_"
+    if t2w:
+        filename += "T2w"
+    else:
+        filename += "T1w"
+    filename += file_extension
+
+    return os.path.join(fmriprep_anat_directory, filename)
+
+
 # more verbose than subprocess.CalledProcessError
 class CalledProcessError(subprocess.CalledProcessError):
     def __str__(self) -> str:
