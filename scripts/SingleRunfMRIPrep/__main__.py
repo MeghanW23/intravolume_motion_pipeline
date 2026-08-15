@@ -540,10 +540,17 @@ class StartSingleRunfMRIPrep:
         
         return filename
 
-def get_fmriprep_outputs(fmriprep_func_directory: str, subj_id: int, ses_id: int, run_id: int, 
-                        find_mask: bool = True, file_extension: str = ".nii.gz", 
-                        space_keyword: str = ""  # leave space_keyword blank for subj-space
-                        ) -> str:
+def get_fmriprep_func_outputs(fmriprep_directory: str, subj_id: int, ses_id: int, run_id: int, 
+                              find_mask: bool = True, file_extension: str = ".nii.gz",
+                              space_keyword: str = ""  # leave space_keyword blank for subj-space
+                              ) -> str:
+    
+    fmriprep_func_directory: str = os.path.join(
+        fmriprep_directory, 
+        f"sub-{'{:02d}'.format(subj_id)}",
+        f"ses-{'{:02d}'.format(ses_id)}",
+        "func"
+    )
 
     participant_str: str = f"sub-{'{:02d}'.format(subj_id)}_ses-{'{:02d}'.format(ses_id)}_task-func_run-{'{:02d}'.format(run_id)}"
     if space_keyword != "":
