@@ -6,7 +6,7 @@ from nilearn.plotting import plot_stat_map
 
 
 class CalculateTSNR:
-    def __init__(self, nifti_image_path: str, nifti_brain_mask_path: str, output_directory: str = "outputs") -> None:
+    def __init__(self, nifti_image_path: str, nifti_brain_mask_path: str, output_directory: str = "outputs", plot_title: str = "tSNR Plot") -> None:
 
 
         os.makedirs(output_directory, exist_ok=True)
@@ -68,9 +68,7 @@ class CalculateTSNR:
         plot_stat_map(
             tsnr_img,
             bg_img=mean_img(img),
-            title=\
-                f"tSNR: {os.path.basename(nifti_image_path)}" +
-                f"\nMean tSNR: {round(mean_tsnr, 2)}, Median tSNR: {round(median_tsnr, 2)}",
+            title="tSNR Plot",
             display_mode='z',
             cut_coords=3,
             output_file=tsnr_img_plot

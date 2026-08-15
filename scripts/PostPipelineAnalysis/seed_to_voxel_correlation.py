@@ -17,7 +17,8 @@ class SeedToVoxelCorrelation:
                  json_file_path: str,
                  seed_coords: tuple[int, int, int] = (0, -52, 18),
                  seed_radius: float = 8,
-                 output_directory_path: str = "seed-to-voxel_outputs") -> None:
+                 output_directory_path: str = "seed-to-voxel_outputs",
+                 plot_title: str = "Seed-to-Voxel Correlation") -> None:
         """
         Producing single subject maps of seed-to-voxel correlation
         Implements: https://nilearn.github.io/dev/auto_examples/03_connectivity/plot_seed_to_voxel_correlation.html 
@@ -130,7 +131,7 @@ class SeedToVoxelCorrelation:
             threshold=0.5,
             vmax=1,
             cut_coords=seed_coords,
-            title=f"Seed-to-voxel correlation (Seed Coordinates: {seed_coords})",
+            title=f"{plot_title}: {seed_coords}"
         ) # pyright: ignore[reportAssignmentType]
         display.add_markers(
             marker_coords=[seed_coords], marker_color="g", marker_size=300
