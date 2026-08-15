@@ -1,8 +1,5 @@
 import os 
 import sys
-# add script directory to path
-sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from manage_configuration_files import Configurations
 # add post-pipeline analysis directory to path
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "PostPipelineAnalysis"))
 from calculate_tsnr import CalculateTSNR
@@ -14,7 +11,6 @@ class PostRunAnalysis:
                  json_file: str,
                  anatomical_nifti_image: str,
                  transform_directory: str,
-                 slice_times_text_file: str, 
                  mm_displacement_threshold: int,
                  brain_mask_path: str,
                  reference_volume_path: str,
@@ -40,7 +36,6 @@ class PostRunAnalysis:
                 transform_suffix=".tfm",
                 plot_title="Raw Data: Voxel Percent Signal Change Carpet Plot + Displacements",
                 output_directory=raw_data_output_dir,
-                slice_times_text_file=slice_times_text_file,
                 also_save_png_file=True   
             )
 
@@ -77,7 +72,6 @@ class PostRunAnalysis:
                 transform_suffix=".tfm",
                 plot_title="Intravolume Motion Corrected Data: Voxel Percent Signal Change Carpet Plot + Displacements",
                 output_directory=corrected_data_output_dir,
-                slice_times_text_file=slice_times_text_file,
                 also_save_png_file=True   
             )
 
@@ -115,7 +109,6 @@ class PostRunAnalysis:
                 transform_suffix=".tfm",
                 plot_title="fMRIPrep + Intravolume Motion Corrected Data: Voxel Percent Signal Change Carpet Plot + Displacements",
                 output_directory=fmriprep_data_output_dir,
-                slice_times_text_file=slice_times_text_file,
                 also_save_png_file=True   
             )
 
@@ -135,5 +128,28 @@ class PostRunAnalysis:
                 output_directory_path=fmriprep_data_output_dir,
                 plot_title="fMRIPrep + Intravolume Motion Corrected Data: Seed to Voxel Correlation"
             )
+if __name__ == "__main__":
+    import argparse
+    parser: argparse.ArgumentParser = argparse.ArgumentParser(description="Wrapper post-analysis scripts.")
+    parser.add_argument("--raw_func_nifti_image_path", required=True, help="Raw, unprocessed nifti image.")
+    parser.add_argument("--corrected_nifti_image_path", required=True, help="The nifti image outputted by the motion correction step.")
+    parser.add_argument("--fmriprep_nifti_image_path", required=True, help="The subject-space nifti image outputted by fmriPrep.")
+    parser.add_argument("--json_file_path", required=True, help="The dcm2niix-outputted json sidecar.")
+    parser.add_argument("--anatomical_image_path", required=True)
+    parser.add_argument("--transform_directory", required=True, help="Transform directory outputted by the motion characterization step.")
+    parser.add_argument("--mm_displacement_threshold", required=True, help="in mm")
+    parser.add_argument("--brain_mask_path", required=True, help="Must be in subject-space.")
+    parser.add_argument("--reference_volume_path", required=True)
+    args: argparse.Namespace = parser.parse_args()
 
-
+    PostRunAnalysis(
+        json_file=os.path.abspath(args.json_file_path),
+        anatomical_nifti_image=os.path.abspath(args.anatomical_image_path),
+        transform_directory=os.path.abspath(args.transform_directory),
+        mm_displacement_threshold=args.mm_displacement_threshold,
+        brain_mask_path=os.path.abspath(args.brain_mask_path),
+        reference_volume_path=os.path.abspath(args.reference_volume_path),
+        raw_func_nifti_image=os.path.abspath(args.raw_func_nifti_image_path) if args.raw_func_nifti_image_path else None,
+        corrected_func_nifti_image=os.path.abspath(args.corrected_nifti_image_path) if args.corrected_nifti_image_path else None,
+        fmriprep_func_nifti_image=os.path.abspath(args.fmriprep_nifti_image_path) if args.fmriprep_nifti_image_path else None
+    )
