@@ -143,6 +143,7 @@ if __name__ == "__main__":
     parser.add_argument("--mm_displacement_threshold", required=True, help="in mm", type=float)
     parser.add_argument("--brain_mask_path", required=True, help="Must be in subject-space.")
     parser.add_argument("--reference_volume_path", required=True)
+    parser.add_argument("--output_directory", required=False, default="outputs", help=f"Default: {os.path.abspath('outputs')}")
     args: argparse.Namespace = parser.parse_args()
 
     PostRunAnalysis(
@@ -154,5 +155,6 @@ if __name__ == "__main__":
         reference_volume_path=os.path.abspath(args.reference_volume_path),
         raw_func_nifti_image=os.path.abspath(args.raw_func_nifti_image_path) if args.raw_func_nifti_image_path else None,
         corrected_func_nifti_image=os.path.abspath(args.corrected_nifti_image_path) if args.corrected_nifti_image_path else None,
-        fmriprep_func_nifti_image=os.path.abspath(args.fmriprep_nifti_image_path) if args.fmriprep_nifti_image_path else None
+        fmriprep_func_nifti_image=os.path.abspath(args.fmriprep_nifti_image_path) if args.fmriprep_nifti_image_path else None,
+        output_directory=os.path.abspath(args.output_directory)
     )
