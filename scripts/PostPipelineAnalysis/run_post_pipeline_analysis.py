@@ -36,7 +36,8 @@ class PostRunAnalysis:
                 transform_suffix=".tfm",
                 plot_title="Raw Data: Voxel Percent Signal Change Carpet Plot + Displacements",
                 output_directory=raw_data_output_dir,
-                also_save_png_file=True   
+                output_file_path=os.path.join(raw_data_output_dir, "raw_data_carpet_plot.html"),
+                also_save_png_file=True  
             )
 
             print(f"\nCalculating TSNR")
@@ -72,6 +73,7 @@ class PostRunAnalysis:
                 transform_suffix=".tfm",
                 plot_title="Intravolume Motion Corrected Data: Voxel Percent Signal Change Carpet Plot + Displacements",
                 output_directory=corrected_data_output_dir,
+                output_file_path=os.path.join(corrected_data_output_dir, "corrected_data_carpet_plot.html"),
                 also_save_png_file=True   
             )
 
@@ -109,6 +111,7 @@ class PostRunAnalysis:
                 transform_suffix=".tfm",
                 plot_title="fMRIPrep + Intravolume Motion Corrected Data: Voxel Percent Signal Change Carpet Plot + Displacements",
                 output_directory=fmriprep_data_output_dir,
+                output_file_path=os.path.join(fmriprep_data_output_dir, "fmriprep_data_carpet_plot.html"),
                 also_save_png_file=True   
             )
 

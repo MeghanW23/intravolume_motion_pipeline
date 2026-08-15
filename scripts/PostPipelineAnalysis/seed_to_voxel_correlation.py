@@ -25,10 +25,12 @@ class SeedToVoxelCorrelation:
         """
 
         print(f"Input NiFTI Image Path: {nifti_image_path}")
+        print(f"Input NiFTI Brain Masl: {nifti_image_mask_path}")
         print(f"Input JSON File Path: {json_file_path}")
         print(f"ROI Seed Coordinates: {seed_coords}")
         print(f"ROI Seed Radius: {seed_radius} mm")
         print(f"Output Directory Path: {output_directory_path}")
+        print(f"Plot Title: {plot_title}")
 
         os.makedirs(output_directory_path, exist_ok=True)
 
