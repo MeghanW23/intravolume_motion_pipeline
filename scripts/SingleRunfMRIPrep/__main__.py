@@ -540,6 +540,7 @@ class StartSingleRunfMRIPrep:
         
         return filename
 
+
 def get_fmriprep_func_outputs(fmriprep_directory: str, subj_id: int, ses_id: int, run_id: int, 
                               find_mask: bool = False, file_extension: str = ".nii.gz",
                               space_keyword: str = ""  # leave space_keyword blank for subj-space
