@@ -189,21 +189,21 @@ class CharacterizeIntraVolumeMotion:
         =======================================================
         """
         input_reference_volume_path: str = volume_paths[reference_volume_index]
-        reference_volume_path = ""
+        self.reference_volume_path: str = ""
         if upsample_reference_volume:
-            reference_volume_path: str = os.path.join(working_directory, f"upsampled_{os.path.basename(input_reference_volume_path)}") 
+            self.reference_volume_path: str = os.path.join(working_directory, f"upsampled_{os.path.basename(input_reference_volume_path)}") 
             UpsampleReferenceVolume(
                 input_nifti_image=input_reference_volume_path,
-                output_file_path=reference_volume_path,
+                output_file_path=self.reference_volume_path,
                 new_spacing=reference_volume_spacing # pyright: ignore[reportArgumentType]
             )
         else:
-            reference_volume_path: str = input_reference_volume_path
-        print(f"Reference Volume Path: {reference_volume_path}")
+            self.reference_volume_path: str = input_reference_volume_path
+        print(f"Reference Volume Path: {self.reference_volume_path}")
         print("Copying Reference Volume to Output Directory...")
         shutil.copy(
-            src=reference_volume_path,
-            dst=os.path.join(output_directory, "refvol_" + os.path.basename(reference_volume_path))
+            src=self.reference_volume_path,
+            dst=os.path.join(output_directory, "refvol_" + os.path.basename(self.reference_volume_path))
         )
 
         """
@@ -214,7 +214,7 @@ class CharacterizeIntraVolumeMotion:
         print("Creating Identity Transform")
         identity_transform_path: str = os.path.join(working_directory, "identity-centered.tfm")
         MakeIdentityTransform(
-            input_nifti_image=reference_volume_path,
+            input_nifti_image=self.reference_volume_path,
             output_file_path=identity_transform_path
         )
         print(f"Created Identity Transform at: {identity_transform_path}")
@@ -232,7 +232,7 @@ class CharacterizeIntraVolumeMotion:
                 volume_num=volume_num,
                 num_volumes=len(volume_paths),
                 slice_timing=slice_timing,
-                reference_volume_path=reference_volume_path,
+                reference_volume_path=self.reference_volume_path,
                 transform_paths=transform_paths,
                 run_environment=run_environment,
                 executable_smsmireg_file=smsmireg_executable_path,

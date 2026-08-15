@@ -108,7 +108,7 @@ class RunPipeline:
         ========================================
         """
         if configurations.RUN_MOTION_CHARACTERIZATION:
-            CharacterizeIntraVolumeMotion(
+            self.motion_char_step = CharacterizeIntraVolumeMotion(
                 nifti_image_path=func_nifti_image_path,
                 json_file_path=func_json_file_path,
                 working_directory=configurations.WORKING_DIRECTORY_PATH,
@@ -153,16 +153,13 @@ class RunPipeline:
             mcorr_output_filename_pattern=configurations.MCORR_OUTPUT_FILENAME_PATTERN,
             mcorr_abruptmotion_filename=configurations.MCORR_ABRUPTMOTION_FILE_NAME
         )
-        
+
         """
         ========================================
         STEP THREE: FMRIPREP
         ========================================
         """
         if configurations.RUN_FMRIPREP:
-
-            
-
             StartSingleRunfMRIPrep(
                 func_data=[self.motion_corrected_image_path, self.func_json_file_path],
                 anat_data=\
