@@ -192,19 +192,6 @@ class StartMotionCorrection:
             exit;" 
         ])
 
-        """
-        =======================================================
-        GET RESULTING IMAGE
-        =======================================================
-        """
-        self.corrected_image: str = find_intravolume_corrected_data(
-            output_directory_path=output_directory,
-            mcorr_output_filename_pattern=mcorr_output_filename_pattern,
-            mcorr_abruptmotion_filename=mcorr_abruptmotion_filename
-        )
-        print(f"Intra-Volume Motion Corrected NiFTI Image: {self.corrected_image}")
-
-
     def validate_inputted_data(self,
                                dicom_directory: str | None = None,
                                nifti_image_path: str | None = None,
@@ -261,6 +248,7 @@ class StartMotionCorrection:
         subprocess.run(
             command
         )
+
         
 def find_intravolume_corrected_data(output_directory_path: str, mcorr_output_filename_pattern: str, mcorr_abruptmotion_filename: str) -> str:
         corrected_image: str = ""
@@ -291,7 +279,29 @@ def find_intravolume_corrected_data(output_directory_path: str, mcorr_output_fil
         
         else:
             return matching_corrected_files[0]
+
+
+def find_binary_mask(output_directory_path: str, pattern: str = "*_bgremoved_MASK.nii.gz") -> str:
+    matching_files: list[str] = sorted(glob(os.path.join(output_directory_path, pattern)), key=os.path.getmtime)
+    matching_file: str = matching_files[-1]
+
+    if len(matching_files) == 0:
+        raise FileNotFoundError(
+            f"Could not find file matching: {os.path.join(output_directory_path, pattern)}. " \
+            "Is the class RemoveBackground's argument: 'save_binary_mask' set to True? "
+        )
     
+    elif len(matching_files) > 1:
+        warnings.warn(
+            message=\
+                f"Found more than one file match the pattern: {os.path.join(output_directory_path, pattern)}. " \
+                f"Returning the most recently modified file: {matching_file}.",
+            category=UserWarning
+            )
+
+    return matching_file
+
+
 if __name__ == "__main__":
     import argparse
     parser: argparse.ArgumentParser = argparse.ArgumentParser(

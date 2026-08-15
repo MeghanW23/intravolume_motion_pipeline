@@ -147,7 +147,13 @@ class RunPipeline:
                 matlab_path=configurations.MATLAB_INSTALLATION_PATH,
                 n_jobs=configurations.N_JOBS
             )
-            self.motion_corrected_image_path: str = self.motion_correction_step.corrected_image
+        from MotionCorrection.__main__ import find_intravolume_corrected_data
+        self.motion_corrected_image_path: str = find_intravolume_corrected_data(
+            output_directory_path=configurations.OUTPUT_DIRECTORY_PATH,
+            mcorr_output_filename_pattern=configurations.MCORR_OUTPUT_FILENAME_PATTERN,
+            mcorr_abruptmotion_filename=configurations.MCORR_ABRUPTMOTION_FILE_NAME
+        )
+        
         """
         ========================================
         STEP THREE: FMRIPREP
@@ -155,14 +161,7 @@ class RunPipeline:
         """
         if configurations.RUN_FMRIPREP:
 
-            # if configurations.RUN_MOTION_CORRECTION == False
-            if not configurations.RUN_MOTION_CORRECTION:
-                from MotionCorrection.__main__ import find_intravolume_corrected_data
-                self.motion_corrected_image_path: str = find_intravolume_corrected_data(
-                    output_directory_path=configurations.OUTPUT_DIRECTORY_PATH,
-                    mcorr_output_filename_pattern=configurations.MCORR_OUTPUT_FILENAME_PATTERN,
-                    mcorr_abruptmotion_filename=configurations.MCORR_ABRUPTMOTION_FILE_NAME
-                )
+            
 
             StartSingleRunfMRIPrep(
                 func_data=[self.motion_corrected_image_path, self.func_json_file_path],
