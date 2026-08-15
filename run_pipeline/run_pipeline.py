@@ -84,21 +84,21 @@ class RunPipeline:
                     output_directory=os.path.join(configurations.WORKING_DIRECTORY_PATH, "func_images"),
                     dcm2niix_path=configurations.DCM2NIIX_PATH
                 )
-                func_nifti_image_path: str = dcm2niix_module.return_nifti_image() # pyright: ignore[reportAssignmentType]
-                func_json_file_path: str = dcm2niix_module.return_json_file() # pyright: ignore[reportAssignmentType]
+                self.func_nifti_image_path: str = dcm2niix_module.return_nifti_image() # pyright: ignore[reportAttributeAccessIssue]
+                self.func_json_file_path: str = dcm2niix_module.return_json_file() # pyright: ignore[reportAttributeAccessIssue]
 
         # copy raw data into output directory
-        if not os.path.basename(func_nifti_image_path) in configurations.OUTPUT_DIRECTORY_PATH:
+        if not os.path.basename(self.func_nifti_image_path) in configurations.OUTPUT_DIRECTORY_PATH:
             print(f"Copying Raw NiFTI Data into Output Directory: {configurations.OUTPUT_DIRECTORY_PATH}")
             shutil.copy(
-                src=func_nifti_image_path,
-                dst=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, os.path.basename(func_nifti_image_path))
+                src=self.func_nifti_image_path,
+                dst=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, os.path.basename(self.func_nifti_image_path))
             )
-        if not os.path.basename(func_json_file_path) in configurations.OUTPUT_DIRECTORY_PATH:
+        if not os.path.basename(self.func_json_file_path) in configurations.OUTPUT_DIRECTORY_PATH:
             print(f"Copying Raw JSON File into Output Directory: {configurations.OUTPUT_DIRECTORY_PATH}")
             shutil.copy(
-                    src=func_json_file_path,
-                    dst=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, os.path.basename(func_json_file_path))
+                    src=self.func_json_file_path,
+                    dst=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, os.path.basename(self.func_json_file_path))
                 )
 
 
@@ -154,12 +154,21 @@ class RunPipeline:
         ========================================
         """
         if configurations.RUN_FMRIPREP:
+
+            # if configurations.RUN_MOTION_CORRECTION == False
+            if not configurations.RUN_MOTION_CORRECTION:
+                from MotionCorrection.__main__ import find_intravolume_corrected_data
+                self.motion_corrected_image_path: str = find_intravolume_corrected_data(
+                    output_directory_path=configurations.OUTPUT_DIRECTORY_PATH,
+                    mcorr_output_filename_pattern=configurations.MCORR_OUTPUT_FILENAME_PATTERN,
+                    mcorr_abruptmotion_filename=configurations.MCORR_ABRUPTMOTION_FILE_NAME
+                )
+
             StartSingleRunfMRIPrep(
-                func_data=[
-                    self.motion_corrected_image_path, 
-                    func_json_file_path],
+                func_data=[self.motion_corrected_image_path, self.func_json_file_path],
                 anat_data=\
-                    [configurations.ANATOMICAL_DICOM_DIRECTORY] if configurations.ANATOMICAL_DICOM_DIRECTORY
+                    [configurations.ANATOMICAL_DICOM_DIRECTORY] 
+                    if configurations.ANATOMICAL_DICOM_DIRECTORY
                     else [configurations.ANATOMICAL_NIFTI_IMAGE_PATH, configurations.ANATOMICAL_JSON_FILE_PATH], # pyright: ignore[reportArgumentType]
                 series_name=configurations.SERIES_NAME, # pyright: ignore[reportArgumentType]
                 subject_id=configurations.SUBJECT_ID, # pyright: ignore[reportArgumentType]
