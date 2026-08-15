@@ -11,7 +11,7 @@ class PostRunAnalysis:
                  json_file: str,
                  anatomical_nifti_image: str,
                  transform_directory: str,
-                 mm_displacement_threshold: int,
+                 mm_displacement_threshold: float,
                  brain_mask_path: str,
                  reference_volume_path: str,
                  raw_func_nifti_image: str | None = None,
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     parser.add_argument("--json_file_path", required=True, help="The dcm2niix-outputted json sidecar.")
     parser.add_argument("--anatomical_image_path", required=True)
     parser.add_argument("--transform_directory", required=True, help="Transform directory outputted by the motion characterization step.")
-    parser.add_argument("--mm_displacement_threshold", required=True, help="in mm")
+    parser.add_argument("--mm_displacement_threshold", required=True, help="in mm", type=float)
     parser.add_argument("--brain_mask_path", required=True, help="Must be in subject-space.")
     parser.add_argument("--reference_volume_path", required=True)
     args: argparse.Namespace = parser.parse_args()
