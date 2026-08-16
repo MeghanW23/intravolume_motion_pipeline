@@ -7,4 +7,4 @@
 	url = https://github.com/josh-auger/motion-monitor
 [submodule "scripts/MotionCorrection/rsfMRI_SMC_mc"]
 	path = scripts/MotionCorrection/rsfMRI_SMC_mc
-	url = https://github.com/bchimagine/rsfMRI_SMC_mc
+	url = https://github.com/MeghanW23/rsfMRI_SMC_mc.git

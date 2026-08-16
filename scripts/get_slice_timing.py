@@ -10,8 +10,8 @@ class GetSliceTiming:
 
     def __init__(self, 
                  json_data: str | dict[str, Any], # type: ignore
-                 output_json_timing_path: str | None,
-                 output_txt_slice_order_path: str | None) -> None:
+                 output_json_timing_path: str | None = None,
+                 output_txt_slice_order_path: str | None = None) -> None:
         
         if isinstance(json_data, str):
             print(f"Loading JSON Data from JSON File: {json_data}")
