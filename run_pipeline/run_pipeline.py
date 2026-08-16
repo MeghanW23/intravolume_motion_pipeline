@@ -56,8 +56,8 @@ class RunPipeline:
         DO DICOM TO NIFTI IF NEEDED 
         ========================================
         """
-        func_nifti_image_path: str | None = configurations.FUNCTIONAL_NIFTI_IMAGE_PATH # pyright: ignore
-        func_json_file_path: str | None = configurations.FUNCTIONAL_JSON_FILE_PATH # pyright: ignore
+        self.func_nifti_image_path: str | None = configurations.FUNCTIONAL_NIFTI_IMAGE_PATH # pyright: ignore
+        self.func_json_file_path: str | None = configurations.FUNCTIONAL_JSON_FILE_PATH # pyright: ignore
         if configurations.FUNCTIONAL_DICOM_DIRECTORY:
                 """
                 =======================================================
@@ -109,8 +109,8 @@ class RunPipeline:
         """
         if configurations.RUN_MOTION_CHARACTERIZATION:
             self.motion_char_step = CharacterizeIntraVolumeMotion(
-                nifti_image_path=func_nifti_image_path,
-                json_file_path=func_json_file_path,
+                nifti_image_path=self.func_nifti_image_path,
+                json_file_path=self.func_json_file_path,
                 working_directory=configurations.WORKING_DIRECTORY_PATH,
                 output_directory=configurations.OUTPUT_DIRECTORY_PATH,
                 run_environment=configurations.OPTIMIZER_RUN_ENVIRONMENT,
@@ -137,8 +137,8 @@ class RunPipeline:
         if configurations.RUN_MOTION_CORRECTION:
             self.motion_correction_step = StartMotionCorrection(
                 radian_parameters_path=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "radian-parameters.txt"),
-                nifti_image_path=func_nifti_image_path,
-                json_file_path=func_json_file_path,
+                nifti_image_path=self.func_nifti_image_path,
+                json_file_path=self.func_json_file_path,
                 working_directory=configurations.WORKING_DIRECTORY_PATH,
                 output_directory=configurations.OUTPUT_DIRECTORY_PATH,
                 motion_threshold=configurations.MOTION_THRESHOLD,
