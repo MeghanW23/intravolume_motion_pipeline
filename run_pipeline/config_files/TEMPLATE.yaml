@@ -126,10 +126,23 @@ OPTIMIZER_SINGULARITY_IMAGE_PATH: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P0004940
 # https://github.com/ComputationalRadiology/sms-mi-reg/blob/main/retro-motion-measurement.cxx
 OPTIMIZER_EXECUTABLE_PATH: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline/scripts/MotionCharacterization/sms-mi-reg/build/retro-motion-measurement"
 
-# A file matching MCORR_OUTPUT_FILENAME_PATTERN is created when displacement > MOTION_THRESHOLD.
-# If displacement < MOTION_THRESHOLD, it will run fmriprep on the original, raw data.
-MCORR_OUTPUT_FILENAME_PATTERN: "recon_scrub_betainit1_*.nii.gz"
-MCORR_ABRUPTMOTION_FILE_NAME: "recon_abruptmotion.nii.gz"
+# This is the main MATLAB script the controls the motion correction step
+# it is found in the 'slice_to_volume_fwdmodel' directory of the repo:
+# https://github.com/MeghanW23/rsfMRI_SMC_mc, which was forked and edited
+# the CRL's repo: https://github.com/bchimagine/rsfMRI_SMC_mc 
+MAIN_MOTION_CORRECTION_MATLAB_SCRIPT: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline_v2/scripts/MotionCorrection/rsfMRI_SMC_mc/slice_to_volume_fwdmodel/main_cameraparams.m"
+
+# The reconstructed image produced by the motion correction step
+# before performing any scrubbing 
+# (will output: NON_SCRUBBED_DATA_FILENAME_PREFIX + '.nii.gz')
+NON_SCRUBBED_DATA_FILENAME_PREFIX: "no-scrubbing_motion-corrected_func_image"
+
+# A file matching SCRUBBED_DATA_FILENAME_PREFIX is created when
+# by the motion correction scripts when the input data has 
+# at least 1 3D volume containing above-threshold intravolume motion 
+# and the motion correction step scrubs said volumes.
+# (will output: SCRUBBED_DATA_FILENAME_PREFIX + '.nii.gz')
+SCRUBBED_DATA_FILENAME_PREFIX: "scrubbed_and_motion-corrected_func_image"
 
 # Conda paths
 CONDA_ENV_NAME: "intravolume_motion_pipeline_env"

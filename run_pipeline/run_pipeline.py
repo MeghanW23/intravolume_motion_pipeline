@@ -134,32 +134,36 @@ class RunPipeline:
         STEP TWO: MOTION CORRECTION
         ========================================
         """
+        motion_correction_output_directory: str = os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "motion_correction_outputs")
         if configurations.RUN_MOTION_CORRECTION:
             self.motion_correction_step = StartMotionCorrection(
-                radian_parameters_path=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "radian-parameters.txt"),
                 nifti_image_path=self.func_nifti_image_path,
                 json_file_path=self.func_json_file_path,
-                working_directory=configurations.WORKING_DIRECTORY_PATH,
-                output_directory=configurations.OUTPUT_DIRECTORY_PATH,
-                motion_threshold=configurations.MOTION_THRESHOLD,
+                radian_parameters_text_file=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "radian-parameters.txt"),
+                displacements_text_file=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "displacements.txt"),
+                motion_threshold_as_percent=configurations.MOTION_THRESHOLD,
+                matlab_main_script_path=configurations.MAIN_MOTION_CORRECTION_MATLAB_SCRIPT,
+                noscrubbing_recon_filename_prefix=configurations.NON_SCRUBBED_DATA_FILENAME_PREFIX,
+                scrubbed_recon_filename_prefix=configurations.SCRUBBED_DATA_FILENAME_PREFIX,
+                output_directory_path=motion_correction_output_directory,
+                working_directory_path=configurations.WORKING_DIRECTORY_PATH,
                 dcmdjpeg_path=configurations.DCMDJPEG_PATH,
                 dcm2niix_path=configurations.DCM2NIIX_PATH,
-                matlab_path=configurations.MATLAB_INSTALLATION_PATH,
-                n_jobs=configurations.N_JOBS
+                matlab_path=configurations.MATLAB_INSTALLATION_PATH
             )
-        from MotionCorrection.__main__ import find_intravolume_corrected_data
-        self.motion_corrected_image_path: str = find_intravolume_corrected_data(
-            output_directory_path=configurations.OUTPUT_DIRECTORY_PATH,
-            mcorr_output_filename_pattern=configurations.MCORR_OUTPUT_FILENAME_PATTERN,
-            mcorr_abruptmotion_filename=configurations.MCORR_ABRUPTMOTION_FILE_NAME
-        )
-
+        
         """
         ========================================
         STEP THREE: FMRIPREP
         ========================================
         """
         if configurations.RUN_FMRIPREP:
+            from MotionCorrection.__main__ import find_intravolume_corrected_data
+            self.motion_corrected_image_path: str = find_intravolume_corrected_data(
+                output_directory_path=motion_correction_output_directory,
+                scrubbed_data_filename_prefix=configurations.SCRUBBED_DATA_FILENAME_PREFIX,
+                nonscrubbed_data_filename_prefix=configurations.NON_SCRUBBED_DATA_FILENAME_PREFIX
+            )
             StartSingleRunfMRIPrep(
                 func_data=[self.motion_corrected_image_path, self.func_json_file_path],
                 anat_data=\
