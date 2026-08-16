@@ -11,7 +11,7 @@ class GetSliceTiming:
     def __init__(self, 
                  json_data: str | dict[str, Any], # type: ignore
                  output_json_timing_path: str | None,
-                 output_txt_timing_path: str | None) -> None:
+                 output_txt_slice_order_path: str | None) -> None:
         
         if isinstance(json_data, str):
             print(f"Loading JSON Data from JSON File: {json_data}")
@@ -34,11 +34,11 @@ class GetSliceTiming:
             )
             print(f"Slice Timing JSON path saved.")
 
-        if output_txt_timing_path:
-            print(f"Saving Slice Aquisition Timing to: {output_txt_timing_path}")
+        if output_txt_slice_order_path:
+            print(f"Saving Slice Aquisition Timing to: {output_txt_slice_order_path}")
             self.save_to_txt_file(
                 self.slice_timing,
-                output_txt_timing_path=output_txt_timing_path
+                output_txt_slice_order_path=output_txt_slice_order_path
             )
             print(f"Slice Timing Text File path saved.")
 
@@ -92,21 +92,13 @@ class GetSliceTiming:
 
     def save_to_txt_file(self,
                          slice_timing_data: OrderedDict[float, list[int]], 
-                         output_txt_timing_path: str):
-
-
-        num_slices: int = 0
-        for slice_list in slice_timing_data.values():
-            num_slices += len(slice_list) 
-
-        slice_times: list[float] = list(np.zeros(num_slices))
-        for slice_time, slice_num_list in slice_timing_data.items():
-            for slice_num in slice_num_list:
-                slice_times[slice_num] = slice_time
-
-        with open(output_txt_timing_path, mode='w') as file:
-            for slice_time in slice_times:
-                file.write(str(slice_time) + '\n')
+                         output_txt_slice_order_path: str):
+        sms_factor: int = len(list(slice_timing_data.values())[0])
+        output_txt_slice_order_path = output_txt_slice_order_path.replace(".txt", f"_sms-fac-{str(sms_factor)}.txt")
+        with open(output_txt_slice_order_path, mode='w') as file:
+            for slice_group_indices in list(slice_timing_data.values()):
+                for slice_num in slice_group_indices:
+                    file.write(f"{str(slice_num)}\n")
 
 
     def print_slice_timing(self): 
@@ -133,9 +125,9 @@ if __name__ == "__main__":
                             "Add a path if you'd like to save the slice timing" \
                             " to a JSON File. Else, no files will be created." \
                             " Default = None")
-    parser.add_argument("--output_txt_timing_path", required=False, default=None,
+    parser.add_argument("--output_txt_slice_order_path", required=False, default=None,
                         help=\
-                            "Add a path if you'd like to save the slice aquisition times" \
+                            "Add a path if you'd like to save the slice order times" \
                             " to a .txt file. Else, no files will be created. " \
                             " Default = None")
     args: argparse.Namespace = parser.parse_args()
@@ -144,7 +136,7 @@ if __name__ == "__main__":
         output_json_timing_path=os.path.abspath(args.output_json_timing_path) 
                         if args.output_json_timing_path else
                         None,
-        output_txt_timing_path=os.path.abspath(args.output_txt_timing_path) 
-                        if args.output_txt_timing_path else
+        output_txt_slice_order_path=os.path.abspath(args.output_txt_slice_order_path) 
+                        if args.output_txt_slice_order_path else
                         None
     ).print_slice_timing()
