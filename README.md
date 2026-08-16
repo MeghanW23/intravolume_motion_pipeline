@@ -22,13 +22,13 @@ This project has submodules. *You will need to request access to any submodules 
 To clone the project with submodules, given you have access to them, run:
 ```
 # If connecting to GitHub with SSH 
-git clone --recurse-submodules git@github.com:MeghanW23/intravolume_motion_pipeline_v2.git
+git clone --recurse-submodules git@github.com:MeghanW23/intravolume_motion_pipeline.git
 
 # If connecting to GitHub over HTTPS
-git clone --recurse-submodules https://github.com/MeghanW23/intravolume_motion_pipeline_v2.git
+git clone --recurse-submodules https://github.com/MeghanW23/intravolume_motion_pipeline.git
 ```
 ### 2. Edit TEMPLATE.yaml software paths
-You will need to edit the various software paths in the [run_pipeline/config_files/TEMPLATE.yaml](https://github.com/MeghanW23/intravolume_motion_pipeline_v2/blob/main/run_pipeline/config_files/TEMPLATE.yaml) file so that it points to the correct paths on your system. Currently, the paths are set up for E3.
+You will need to edit the various software paths in the [run_pipeline/config_files/TEMPLATE.yaml](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/run_pipeline/config_files/TEMPLATE.yaml) file so that it points to the correct paths on your system. Currently, the paths are set up for E3.
 ### 3. Create the Conda environment
 You will need to create a Conda (or potentially Python) environment to install the necessary packages. There is a environment.yml file you can use at `run_pipeline/environment.yml`. Once you have created the environment, don't forget to edit the following paths in your .yaml file(s):
 <br>
@@ -74,10 +74,10 @@ If you are opting to use a Docker image, you will only need to set OPTIMIZER_RUN
 ## How to Run the Pipeline
 
 #### 1. Create a configuration file
-Create a config file for your data by making a copy of [run_pipeline/config_files/TEMPLATE.yaml](https://github.com/MeghanW23/intravolume_motion_pipeline_v2/blob/main/run_pipeline/config_files/TEMPLATE.yaml). These config files are used to tell the pipeline what data to use, what steps to run, and what configurations to use. For additional information on how to use a config file, there are notes in the TEMPLATE.yaml file.
+Create a config file for your data by making a copy of [run_pipeline/config_files/TEMPLATE.yaml](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/run_pipeline/config_files/TEMPLATE.yaml). These config files are used to tell the pipeline what data to use, what steps to run, and what configurations to use. For additional information on how to use a config file, there are notes in the TEMPLATE.yaml file.
 
 #### 2. Run the pipeline
-[run_pipeline/submit_job.sh](https://github.com/MeghanW23/intravolume_motion_pipeline_v2/blob/main/run_pipeline/submit_job.sh) starts the pipeline as a [Slurm](https://slurm.schedmd.com/overview.html) batch job. It receives one config file as a command line input and runs the pipeline wrapper script `run_pipeline/run_pipeline.py`. Pass the config file to `submit_job.sh` and start a slurm job like this:
+[run_pipeline/submit_job.sh](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/run_pipeline/submit_job.sh) starts the pipeline as a [Slurm](https://slurm.schedmd.com/overview.html) batch job. It receives one config file as a command line input and runs the pipeline wrapper script `run_pipeline/run_pipeline.py`. Pass the config file to `submit_job.sh` and start a slurm job like this:
 ```
 sbatch submit_job.sh config_files/<your config file>
 ```
