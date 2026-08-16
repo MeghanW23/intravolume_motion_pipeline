@@ -4,7 +4,7 @@
         ignore = dirty
 [submodule "scripts/MotionCharacterization/motion-monitor"]
 	path = scripts/MotionCharacterization/motion-monitor
-	url = https://github.com/josh-auger/motion-monitor
+	url = git@github.com:josh-auger/motion-monitor.git
 [submodule "scripts/MotionCorrection/rsfMRI_SMC_mc"]
 	path = scripts/MotionCorrection/rsfMRI_SMC_mc
-	url = https://github.com/MeghanW23/rsfMRI_SMC_mc.git
+	url = git@github.com:MeghanW23/rsfMRI_SMC_mc.git
