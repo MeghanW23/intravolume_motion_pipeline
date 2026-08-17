@@ -46,6 +46,9 @@ class RunPipeline:
 
         print("Making a Copy of your Configuration File in the Output Directory")
         copied_configuration_file_path: str = os.path.join(configurations.OUTPUT_DIRECTORY_PATH, os.path.basename(configuration_file))
+        if os.path.exists(copied_configuration_file_path):
+            if copied_configuration_file_path != configuration_file:
+                os.remove(copied_configuration_file_path)
         shutil.copy(
             src=configuration_file,
             dst=copied_configuration_file_path
@@ -88,17 +91,19 @@ class RunPipeline:
                 self.func_json_file_path: str = dcm2niix_module.return_json_file() # pyright: ignore[reportAttributeAccessIssue]
 
         # copy raw data into output directory
-        if not os.path.basename(self.func_nifti_image_path) in configurations.OUTPUT_DIRECTORY_PATH:
+        copied_nifti_path: str = os.path.join(configurations.OUTPUT_DIRECTORY_PATH, os.path.basename(self.func_nifti_image_path))
+        if not os.path.exists(copied_nifti_path):
             print(f"Copying Raw NiFTI Data into Output Directory: {configurations.OUTPUT_DIRECTORY_PATH}")
             shutil.copy(
                 src=self.func_nifti_image_path,
-                dst=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, os.path.basename(self.func_nifti_image_path))
+                dst=copied_nifti_path
             )
-        if not os.path.basename(self.func_json_file_path) in configurations.OUTPUT_DIRECTORY_PATH:
+        copied_json_path: str = os.path.join(configurations.OUTPUT_DIRECTORY_PATH, os.path.basename(self.func_json_file_path))
+        if not os.path.exists(copied_json_path):
             print(f"Copying Raw JSON File into Output Directory: {configurations.OUTPUT_DIRECTORY_PATH}")
             shutil.copy(
                     src=self.func_json_file_path,
-                    dst=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, os.path.basename(self.func_json_file_path))
+                    dst=copied_json_path
                 )
 
 
