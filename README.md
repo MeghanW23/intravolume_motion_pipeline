@@ -55,7 +55,7 @@ You can install the software via any of the three following options:
 
 - #### Option Two - Compile the CPP Code on Directly on the Host Machine:
   - Follow the steps in the [`scripts/MotionCharacterization/compile_sms-mi-reg.sh`](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/scripts/MotionCharacterization/compile_sms-mi-reg.sh) script.
-  - You will need to have [ITK](https://docs.itk.org/en/latest/download.html) installed. See: "Create the Conda environment" above.
+  - You will need to have [ITK](https://docs.itk.org/en/latest/download.html) installed. 
 
 - #### Option Three - Build the Singularity Image by Converting the Docker Image to a `.sif` file:
   - On many HPCs, including BCH's E3, you will not have `sudo` access. In these cases, many developers opt to use [Singularity](https://docs.sylabs.io/guides/2.6/user-guide/introduction.html), which does not require `sudo` privileges, instead of Docker.
