@@ -185,7 +185,7 @@ def find_intravolume_corrected_data(output_directory_path: str, scrubbed_data_fi
         corrected_image: str = os.path.join(output_directory_path, nonscrubbed_data_filename_prefix) 
         warnings.warn(
             message=(
-                f"Could not find scrubbed data at: {corrected_image}"
+                f"Could not find scrubbed data at: {os.path.join(output_directory_path, scrubbed_data_filename_prefix)}"
                 f"Using file: {corrected_image}. "
                 "If your data has no above-threshold motion, this is expected. "
                 "If not, something has gone wrong. "
