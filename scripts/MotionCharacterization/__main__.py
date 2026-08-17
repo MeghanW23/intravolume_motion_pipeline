@@ -110,8 +110,7 @@ class CharacterizeIntraVolumeMotion:
         os.makedirs(slice_timing_dir, exist_ok=True)
         slice_timing_module: GetSliceTiming = GetSliceTiming(
             json_data=json_file_path, # pyright: ignore[reportArgumentType]
-            output_json_timing_path=os.path.join(slice_timing_dir, "slice_timing.json"),
-            output_txt_timing_path=os.path.join(slice_timing_dir, "slice_aquisition_times.txt")
+            output_json_timing_path=os.path.join(slice_timing_dir, "slice_timing.json")
         ) 
         slice_timing_module.print_slice_timing()
         slice_timing: OrderedDict[float, list[int]] = slice_timing_module.return_slice_timing()
