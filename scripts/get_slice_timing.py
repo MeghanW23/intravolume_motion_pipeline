@@ -94,7 +94,6 @@ class GetSliceTiming:
                          slice_timing_data: OrderedDict[float, list[int]], 
                          output_txt_slice_order_path: str):
         sms_factor: int = len(list(slice_timing_data.values())[0])
-        output_txt_slice_order_path = output_txt_slice_order_path.replace(".txt", f"_sms-fac-{str(sms_factor)}.txt")
         with open(output_txt_slice_order_path, mode='w') as file:
             for slice_group_indices in list(slice_timing_data.values()):
                 for slice_num in slice_group_indices:
