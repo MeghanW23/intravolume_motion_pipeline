@@ -129,23 +129,25 @@ class StartMotionCorrection:
         START MATLAB MAIN SCRIPT
         =======================================================
         """
+        matlab_function: tuple[str] = (
+            f"{os.path.basename(matlab_main_script_path)[:-2]}("
+            f"'{nifti_image_path}', "
+            f"'{bgremoved_input_nifti_image_path}', "
+            f"'{output_directory_path}', "
+            f"'{radian_parameters_text_file}', "
+            f"'{displacements_text_file}', "
+            f"'{slice_ordering_path}', "
+            f"'{noscrubbing_recon_filename_prefix}', "
+            f"'{scrubbed_recon_filename_prefix}', "
+            f"{threshold_in_mm}, "
+            f"{sms_factor});"
+        )
         command: list[str] = [
-            matlab_main_script_path, 
-            "-nosplash", "-nodesktop",
-            "-r", f"addpath('{os.path.dirname(matlab_main_script_path)}'); \
-                clear;close all;clc; \
-                {os.path.basename(matlab_main_script_path)[:-2]}( \
-                    {nifti_image_path}, \
-                    {bgremoved_input_nifti_image_path}, \
-                    {output_directory_path}, \
-                    {radian_parameters_text_file}, \
-                    {displacements_text_file}, \
-                    {slice_ordering_path}, \
-                    {noscrubbing_recon_filename_prefix}, \
-                    {scrubbed_recon_filename_prefix}, \
-                    {str(threshold_in_mm)}, \
-                    {str(sms_factor)} \
-                )"
+            matlab_path,
+            "-batch",
+            f"addpath('{os.path.dirname(matlab_main_script_path)}'); "
+            f"clear; close all; clc; "
+            f"{matlab_function}"
         ]
         print(f"Running MATLAB Script: {command}")
         subprocess.run(
@@ -235,13 +237,19 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--nifti_image_path",
-        required=True,
-        help="The raw 4D NiFTI Image"
+        required=False,
+        help=\
+            "The raw 4D NiFTI Image. " + \
+            "Please enter either a value for --dicom_directory OR " + \
+            " a value for BOTH: --nifti_image_file_path and --json_file_path."
     )
     parser.add_argument(
         "--json_file_path",
-        required=True,
-        help="The JSON sidecar for the raw 4D NiFTI Image"
+        required=False,
+        help=\
+            "The JSON sidecar for the raw 4D NiFTI Image. " + \
+            "Please enter either a value for --dicom_directory OR " + \
+            " a value for BOTH: --nifti_image_file_path and --json_file_path."
     )
     parser.add_argument(
         "--output_directory_path",
@@ -273,6 +281,7 @@ if __name__ == "__main__":
         "--motion_threshold_as_percent",
         required=False,
         default=10,
+        type=int,
         help=\
             "Volume where ANY slice group has a displacement value " \
             "> the motion threshold will be scrubbed. Takes in the threshold " \
