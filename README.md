@@ -12,7 +12,9 @@ This project directly addresses the motion confound using this novel slice-by-sl
 ----
 
 ## How to Set Up the Pipeline
-#### This pipeline is memory-intensive and long-running, so it is important to run on an [HPC](https://www.intel.com/content/www/us/en/learn/what-is-hpc.html) instead of locally.
+#### Notes:
+- This pipeline is memory-intensive and long-running, so it is important to run on an [HPC](https://www.intel.com/content/www/us/en/learn/what-is-hpc.html) instead of locally.
+- You will need MATLAB installed for this pipeline. 
 
 ***Note to Cohen Lab Researchers**: This repository is already existing and configured on E3 at: `/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline`. You will need access to the Neurofeedback project PHI folder (`Groups/P00049401`) to access the repo.*
 
