@@ -70,7 +70,7 @@ You can install the software via any of the three following options:
 - `OPTIMIZER_RUN_ENVIRONMENT`: Enter the optimizer option you have chosen. Input: 'singularity', 'docker', or 'local'.
 - `OPTIMIZER_SINGULARITY_IMAGE_PATH`: If using a Singularity image, please provide the Singularity .sif path here.
 - `OPTIMIZER_EXECUTABLE_PATH`: If using the compiled `retro-motion-measurement.cxx` program, please provide the path to the compiled CPP code here.
-If you are opting to use a Docker image, you will only need to set OPTIMIZER_RUN_ENVIRONMENT to 'docker'.
+If you are opting to use a Docker image, you will only need to set `OPTIMIZER_RUN_ENVIRONMENT` to 'docker'.
 
 ----
 
