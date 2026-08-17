@@ -86,7 +86,7 @@ N_JOBS: -1 # -1 = All CPU cores, -2 = All CPU cores except one
 # This motion threshold will determine which slice groups and 
 # volumes have "too much" motion. The threshold below is the 
 # pecentage of the diameter of a single voxel.
-MOTION_THRESHOLD: 10
+MOTION_THRESHOLD: 15
 
 # For limiting the intensity of the voxels of the 3D volumes
 LIMIT_VOXEL_INTENSITY: True
