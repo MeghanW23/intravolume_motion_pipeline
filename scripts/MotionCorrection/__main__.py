@@ -129,7 +129,7 @@ class StartMotionCorrection:
         START MATLAB MAIN SCRIPT
         =======================================================
         """
-        matlab_function: tuple[str] = (
+        matlab_function: str = (
             f"{os.path.basename(matlab_main_script_path)[:-2]}("
             f"'{nifti_image_path}', "
             f"'{bgremoved_input_nifti_image_path}', "

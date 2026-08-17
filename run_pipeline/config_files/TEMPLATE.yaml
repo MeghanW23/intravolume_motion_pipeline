@@ -114,7 +114,7 @@ HEAD_RADIUS: 50
 
 # For OPTIMIZER_RUN_ENVIRONMENT, please enter: 
 # "singularity", "docker", or "local"
-OPTIMIZER_RUN_ENVIRONMENT: "local"
+OPTIMIZER_RUN_ENVIRONMENT: "singularity"
 
 # If OPTIMIZER_RUN_ENVIRONMENT = "singularity":
 # please also provide the Singularity .sif path via: OPTIMIZER_SINGULARITY_IMAGE_PATH
