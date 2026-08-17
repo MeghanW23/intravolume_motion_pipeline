@@ -130,7 +130,7 @@ OPTIMIZER_EXECUTABLE_PATH: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intra
 # it is found in the 'slice_to_volume_fwdmodel' directory of the repo:
 # https://github.com/MeghanW23/rsfMRI_SMC_mc, which was forked and edited
 # the CRL's repo: https://github.com/bchimagine/rsfMRI_SMC_mc 
-MAIN_MOTION_CORRECTION_MATLAB_SCRIPT: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline_v2/scripts/MotionCorrection/rsfMRI_SMC_mc/slice_to_volume_fwdmodel/main_cameraparams.m"
+MAIN_MOTION_CORRECTION_MATLAB_SCRIPT: "/lab-share/Neuro-Cohen-e2/Groups/IRB-P00049401/intravolume_motion_pipeline/scripts/MotionCorrection/rsfMRI_SMC_mc/slice_to_volume_fwdmodel/main_cameraparams.m"
 
 # The reconstructed image produced by the motion correction step
 # before performing any scrubbing 
