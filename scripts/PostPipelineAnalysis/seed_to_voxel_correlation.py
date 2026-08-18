@@ -5,6 +5,7 @@ import pandas as pd
 import nibabel as nib
 from typing import Any
 import matplotlib.pyplot as plt
+from nilearn.image import mean_img
 from nilearn.maskers import NiftiMasker
 from nilearn.plotting import plot_stat_map
 from nilearn.maskers import NiftiSpheresMasker
@@ -73,7 +74,7 @@ class SeedToVoxelCorrelation:
             low_pass=0.1,
             high_pass=0.01,
             t_r=t_r,
-            memory="nilearn_cache",
+            memory="nilearn_cache", # pyright: ignore[reportArgumentType]
             memory_level=1,
             verbose=1
         )
@@ -91,7 +92,7 @@ class SeedToVoxelCorrelation:
             low_pass=0.1,
             high_pass=0.01,
             t_r=t_r,
-            memory="nilearn_cache",
+            memory="nilearn_cache", # pyright: ignore[reportArgumentType]
             memory_level=1,
             verbose=1,
         )
@@ -140,6 +141,7 @@ class SeedToVoxelCorrelation:
         seed_to_voxel_correlations_img: nib.Nifti1Image = brain_masker.inverse_transform(seed_to_voxel_correlations.T) # pyright: ignore[reportPrivateImportUsage, reportAssignmentType]
         display: OrthoSlicer = plot_stat_map(
             seed_to_voxel_correlations_img,
+            bg_img= mean_img(img),
             threshold=0.5,
             vmax=1,
             cut_coords=seed_coords,

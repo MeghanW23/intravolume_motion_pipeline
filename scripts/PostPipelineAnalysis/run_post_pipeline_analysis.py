@@ -56,7 +56,7 @@ class PostRunAnalysis:
                 json_file_path=json_file,
                 confounds_file_path=confounds_file_path,
                 output_directory_path=raw_data_output_dir,
-                plot_title="Raw Data: Seed to Voxel Correlation"
+                plot_title=f"Raw Data: \nSeed to Voxel Correlation"
             )
 
 
@@ -94,7 +94,7 @@ class PostRunAnalysis:
                 json_file_path=json_file,
                 confounds_file_path=confounds_file_path,
                 output_directory_path=corrected_data_output_dir,
-                plot_title="Intravolume Motion Corrected Data: Seed to Voxel Correlation"
+                plot_title=f"Intravolume Motion Corrected Data:\nSeed to Voxel Correlation"
             )
 
 
@@ -133,7 +133,7 @@ class PostRunAnalysis:
                 json_file_path=json_file,
                 confounds_file_path=confounds_file_path,
                 output_directory_path=fmriprep_data_output_dir,
-                plot_title="fMRIPrep + Intravolume Motion Corrected Data: Seed to Voxel Correlation"
+                plot_title=f"fMRIPrep + Intravolume Motion Corrected Data:\nSeed to Voxel Correlation"
             )
 if __name__ == "__main__":
     import argparse
