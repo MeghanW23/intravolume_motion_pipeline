@@ -36,7 +36,7 @@ class CarpetPlot:
                  output_directory = "outputs", transform_suffix = ".tfm", 
                  plot_title="Voxel Percent Signal Change Carpet Plot + Displacements",
                  output_file_path="carpet_plot.html", slice_times_text_file = None,
-                 also_save_png_file = True):
+                 also_save_png_file = True, framewise_transform_directory = None):
         
         os.makedirs(output_directory, exist_ok=True)
 
@@ -80,6 +80,24 @@ class CarpetPlot:
         print(f"Max Displacement: {max(displacements)}mm")
         print(f"Mean Displacement: {statistics.mean(displacements)}mm") 
 
+        fd_displacements = []
+        if framewise_transform_directory:
+            print(f"Getting Framewise Displacements")
+            fd_transform_paths = sorted(glob(os.path.join(framewise_transform_directory, "*" + transform_suffix)))
+            print(f"{len(fd_transform_paths)} Total Transforms")
+            for i, _ in enumerate(fd_transform_paths):
+                if i == 0:
+                    continue 
+                fd_displacements.append(self.calculate_displacement(
+                        transform1_path=fd_transform_paths[i - 1],
+                        transform2_path=fd_transform_paths[i]
+                ))
+            print(f"{len(fd_displacements)} Displacement Values Calculated")
+            print(f"Min Displacement: {min(fd_displacements)}mm")
+            print(f"Max Displacement: {max(fd_displacements)}mm")
+            print(f"Mean Displacement: {statistics.mean(fd_displacements)}mm") 
+            
+
         print("\nGetting Motion Flagged Volumes")
         motion_flagged_volumes = self.get_motion_flagged_volumes(
             num_volumes=len(transform_paths) // len(slice_timing),
@@ -88,6 +106,16 @@ class CarpetPlot:
             mm_displacement_threshold=displacement_threshold
         )
         print(f"Motion Flagged Volumes:\n{motion_flagged_volumes}")
+
+        fd_motion_flagged_volumes = []
+        if framewise_transform_directory:
+            fd_motion_flagged_volumes = [
+                volume_num
+                for volume_num, fd_val in enumerate(fd_displacements)
+                if fd_val > displacement_threshold
+            ]
+            print(f"Framewise Motion Flagged Volumes:\n{fd_motion_flagged_volumes}")
+
 
 
         #  psc: 2D array of shape (n_voxels, n_timepoints) in PSC units
@@ -146,17 +174,45 @@ class CarpetPlot:
             go.Scatter(
                 x=list(range(len(displacements))),
                 y=displacements,
+                mode="lines+markers",
+                marker=dict(size=5),
                 showlegend=True,
                 hovertemplate=(
                     "<b>Aquisition:</b> %{x}" + "<br>" +
-                    "<b>Displacement (mm</b>: %{y} " + "<br>"
+                    "<b>Displacement (mm)</b>: %{y} " + "<br>"
                 ),
-                name="Displacement (mm)",
+                name="Intravolume Displacement (mm)",
+                line=dict(color="red")
                 
             ),
             row=1,
             col=1
         )
+        if framewise_transform_directory:
+            fig.add_trace(
+                go.Scatter(
+                    x=[
+                        volume_num * len(slice_timing) for volume_num in 
+                        list(range(len(fd_displacements)))
+                    ],
+                    y=fd_displacements,
+                    showlegend=True,
+                    mode="lines+markers",
+                    marker=dict(size=5),
+                    customdata=np.column_stack([
+                        [volume_num for volume_num
+                        in range(len(displacements))]
+                    ]),
+                    hovertemplate=(
+                        "<b>Volume Number:</b> %{customdata[0]}" + "<br>" +
+                        "<b>Displacement (mm)</b>: %{y} " + "<br>"
+                    ),
+                    name="Framewise Displacement (mm)",
+                    line=dict(color="blue")
+                ),
+                row=1,
+                col=1
+            )
         fig.add_trace(
             go.Scatter(
                 x=[0, len(displacements)-1],
@@ -180,25 +236,53 @@ class CarpetPlot:
                         (flagged_volume * len(slice_timing)) + len(slice_timing),
                     ],
                     y=[
-                        min(displacements) - 0.1, 
-                        max(displacements) * 1.1, 
-                        max(displacements) * 1.1, 
-                        min(displacements) - 0.1
+                        min(displacements) - 0.1 if not framewise_transform_directory else min(displacements + fd_displacements) - 0.1, 
+                        max(displacements) * 1.1 if not framewise_transform_directory else max(displacements + fd_displacements) * 1.1, 
+                        max(displacements) * 1.1 if not framewise_transform_directory else max(displacements + fd_displacements) * 1.1,
+                        min(displacements) - 0.1  if not framewise_transform_directory else min(displacements + fd_displacements) - 0.1
                     ], 
                     fill="toself",
-                    fillcolor="rgba(0,0,0,0.25)",
+                    fillcolor="rgba(225,0,0,0.25)",
+                    mode='none',
                     line=dict(width=0),
                     legendgroup="motion_flags",
-                    mode="none",
                     name=f"Motion Flags: {len(motion_flagged_volumes)} of {len(transform_paths) // len(slice_timing)} Volumes Flagged",
                     showlegend=True if i == 0 else False,
                     hoverinfo="skip",
                 ),
             row=1, col=1
         )
-        fig.update_yaxes(title_text="Displacement (mm)", title_font=dict(size=11), title_standoff=5, showticklabels=True, row=1)
-        fig.update_xaxes(ticks="", showticklabels=False, row=1, col=1)
+        if framewise_transform_directory:
+            for i, flagged_volume in enumerate(fd_motion_flagged_volumes):
+                fig.add_trace(
+                        go.Scatter(
+                            x=[
+                                flagged_volume * len(slice_timing), 
+                                flagged_volume * len(slice_timing), 
+                                (flagged_volume * len(slice_timing)) + len(slice_timing), 
+                                (flagged_volume * len(slice_timing)) + len(slice_timing),
+                            ],
+                            y=[
+                                min(displacements + fd_displacements) - 0.1, 
+                                max(displacements + fd_displacements) * 1.1,
+                                max(displacements + fd_displacements) * 1.1,
+                                min(displacements + fd_displacements) - 0.1
+                            ], 
+                            fill="toself",
+                            fillcolor="rgba(0,0,225,0.25)",
+                            mode='none',
+                            line=dict(width=0),
+                            legendgroup="fd_motion_flags",
+                            name=f"Framewise Motion Flags: {len(motion_flagged_volumes)} of {len(transform_paths) // len(slice_timing)} Volumes Flagged",
+                            showlegend=True if i == 0 else False,
+                            hoverinfo="skip",
+                        ),
+                    row=1, col=1
+                )
 
+        fig.update_yaxes(title_text="Displacement (mm)", title_font=dict(size=11), title_standoff=5, showticklabels=True, row=1)
+        fig.update_xaxes(ticks="", showticklabels=False, row=1, col=1, range=[0, len(displacements)])
+        fig.update_xaxes(matches="x")
 
         ## GRAY MATTER CARPET PLOT 
         print("\nPlotting Gray Matter")
@@ -548,6 +632,12 @@ if __name__ == "__main__":
         required=True
     )
     parser.add_argument(
+        "--framewise_transform_directory",
+        required=False,
+        default=None,
+        help="If you want to also plot framewise displacement. Default: None (no FD plotting)."
+    )
+    parser.add_argument(
         "--displacement_threshold",
         required=False,
         type=float,
@@ -585,6 +675,9 @@ if __name__ == "__main__":
         functional_image=os.path.abspath(args.functional_image),
         reference_volume_image=os.path.abspath(args.reference_volume_image),
         transform_directory=os.path.abspath(args.transform_directory),
+        framewise_transform_directory=\
+            os.path.abspath(args.framewise_transform_directory) 
+            if args.framewise_transform_directory else None,
         displacement_threshold=args.displacement_threshold,
         output_directory=os.path.abspath(args.output_directory),
         plot_title=args.plot_title,
