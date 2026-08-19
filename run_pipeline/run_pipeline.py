@@ -188,8 +188,70 @@ class RunPipeline:
                 n_jobs=configurations.N_JOBS,
                 omp_nthreads=configurations.OMP_NTHREADS, # pyright: ignore[reportArgumentType],
                 mem_mb=configurations.MEM_MB # pyright: ignore[reportArgumentType]
-            )        
+            )       
+
+        """
+        ========================================
+        STEP FOUR: RUN POST-ANALYSIS SCRIPTS
+        ========================================
+        """
+        if configurations.RUN_POST_PIPELINE_ANALYSES:
+            self.post_pipeline_analyses(configurations)
         
+    def post_pipeline_analyses(self, configurations: Configurations):
+
+        def get_fmriprep_dir(output_directory_path: str) -> str:
+
+            fmriprep_directories: list[str] = sorted(glob(os.path.join(output_directory_path, "fmriprep*")))
+            if len(fmriprep_directories) == 0:
+                raise ValueError(
+                    f"No fMRIPrep Output Directories (matching: {os.path.join(output_directory_path, "fmriprep*")}) " 
+                    "found in output directory.")
+            elif len(fmriprep_directories) > 1:
+                warnings.warn(
+                    message=f"Multiple fMRIPrep Output Directories Found. Using: {fmriprep_directories[-1]}",
+                    category=UserWarning
+                )
+            return fmriprep_directories[-1]
+
+        from get_motion_threshold import GetMotionThreshold
+        sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "scripts", "PostPipelineAnalysis"))
+        from PostPipelineAnalysis import PostRunAnalysis
+
+        fmriprep_directory: str = get_fmriprep_dir(configurations.OUTPUT_DIRECTORY_PATH)
+        fmriprep_func_directory: str = glob(os.path.join(fmriprep_directory, "*", "*", "func"))[-1]
+        fmriprep_anat_directory: str = glob(os.path.join(fmriprep_directory, "*", "*", "anat"))[-1]
+
+        inputs: dict = {
+            "raw_func_image": self.func_nifti_image_path,
+            "motion_corrected_func_image": self.motion_corrected_image_path,
+            "json_file_path": self.func_json_file_path,
+            "transform_directory": os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "transforms"),
+            "fmriprep_func_image": glob(os.path.join(fmriprep_func_directory, f"*run-{'{:02d}'.format(configurations.RUN_NUM)}_desc-preproc_bold.nii.gz"))[-1],
+            "fmriprep_func_image_mask": glob(os.path.join(fmriprep_func_directory, f"*run-{'{:02d}'.format(configurations.RUN_NUM)}_desc-brain_mask.nii.gz"))[-1],
+            "fmriprep_confounds_path": glob(os.path.join(fmriprep_func_directory, f"*run-{'{:02d}'.format(configurations.RUN_NUM)}_desc-confounds_timeseries.tsv"))[-1],
+            "fmriprep_anat_image": glob(os.path.join(fmriprep_anat_directory, f"sub-{'{:02d}'.format(configurations.SUBJECT_ID)}" + f"_ses-{'{:02d}'.format(configurations.SESSION_NUM)}" + "_desc-preproc_T1w.nii.gz"))[-1],
+            "reference_volume_path": sorted(glob(os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "refvol*.nii")))[-1]
+        }
+        for file_key, file_path in inputs.items():
+            if not os.path.exists(file_path):
+                raise FileNotFoundError(
+                    f"Could not find file path for '{file_key}': {file_path}"
+                )
+            
+        PostRunAnalysis(
+            raw_func_nifti_image=inputs['raw_func_image'],
+            corrected_func_nifti_image=inputs['motion_corrected_func_image'],
+            fmriprep_func_nifti_image=inputs["fmriprep_func_image"],
+            json_file=inputs['json_file_path'],
+            brain_mask_path=inputs["fmriprep_func_image_mask"],
+            anatomical_nifti_image=inputs["fmriprep_anat_image"],
+            confounds_file_path=inputs['fmriprep_confounds_path'],
+            reference_volume_path=inputs['reference_volume_path'],
+            transform_directory=inputs['transform_directory'],
+            mm_displacement_threshold=GetMotionThreshold(nifti_image=self.func_nifti_image_path, threshold_as_percent=configurations.MOTION_THRESHOLD).return_mm_threshold(),
+            output_directory=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "post-pipeline_analyses")
+        )
 
 if __name__ == "__main__":
     import argparse

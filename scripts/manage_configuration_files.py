@@ -12,6 +12,8 @@ class Configurations(BaseModel):
     RUN_MOTION_CORRECTION: bool
     RUN_FMRIPREP: bool
 
+    RUN_POST_PIPELINE_ANALYSES: bool
+
     WORKING_DIRECTORY_PATH: str
     OUTPUT_DIRECTORY_PATH: str
 
