@@ -7,7 +7,7 @@ import SimpleITK as sitk
 class CalculateDisplacements:
     def __init__(self, 
                  transform_directory: str,
-                 output_file_path: str,
+                 output_file_path: str | None = None,
                  file_extension: str = '.tfm',
                  head_radius: float = 50) -> None:
 
@@ -22,7 +22,7 @@ class CalculateDisplacements:
             )
         
         print("Calculating Displacements")
-        all_displacements: list[float] = []
+        self.all_displacements: list[float] = []
         for transform_num, _ in enumerate(transform_paths):
             if transform_num == 0:
                 continue
@@ -41,13 +41,15 @@ class CalculateDisplacements:
                 f": {round(displacement, 4)}mm"
             )
 
-            all_displacements.append(displacement)
+            self.all_displacements.append(displacement)
 
-        self.write_displacements_to_file(
-            all_displacements,
-            output_file_path=output_file_path
-        )
-        print(f"Displacements written to: {output_file_path}")
+        print("All Displacements Calculated.")
+        if output_file_path:
+            self.write_displacements_to_file(
+                self.all_displacements,
+                output_file_path=output_file_path
+            )
+            print(f"Displacements Written To: {output_file_path}")
     
     def calculate_displacement(self, 
                                transform1_path: str, 
@@ -123,7 +125,10 @@ class CalculateDisplacements:
         with open(output_file_path, mode='w') as file:
             for displacement in displacements:
                 file.write(f"{displacement}\n")
-        
+
+    def return_displacements(self) -> list[float]:
+        return self.all_displacements
+
 
 if __name__ == "__main__":
     import argparse
