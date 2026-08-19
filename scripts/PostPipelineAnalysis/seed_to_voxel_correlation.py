@@ -37,6 +37,7 @@ class SeedToVoxelCorrelation:
         print(f"Plot Title: {plot_title}")
 
         os.makedirs(output_directory_path, exist_ok=True)
+        os.makedirs(cache_directory, exist_ok=True)
 
         print(f"Loading NiFTI Image: {os.path.basename(nifti_image_path)}")
         img: nib.Nifti1Image = nib.load(nifti_image_path) # pyright: ignore[reportAssignmentType, reportPrivateImportUsage]
