@@ -306,7 +306,7 @@ class CharacterizeIntraVolumeMotion:
             output_rotation_unit='degrees'
         )
 
-        graph_directory: str = os.path.join(output_transform_directory, "motion-char_graphs")
+        graph_directory: str = os.path.join(output_directory, "motion-characterization_graphs")
         os.makedirs(graph_directory, exist_ok=True)
         """
         =======================================================

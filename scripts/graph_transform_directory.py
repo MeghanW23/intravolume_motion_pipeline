@@ -15,7 +15,8 @@ class GraphTransformDirectory:
                  input_rotation_unit: str, 
                  plot_tile: str = "Motion Characterization Plots", 
                  threshold_in_mm: float | None = None,
-                 transform_suffix: str = ".tfm", framewise_displacements = False):
+                 transform_suffix: str = ".tfm", framewise_displacements = False,
+                 also_save_to_png: bool = True):
 
         # Get and load transforms from transform directory 
         transforms: list[sitk.Euler3DTransform | sitk.VersorRigid3DTransform] = \
@@ -282,7 +283,9 @@ class GraphTransformDirectory:
         # Save plot 
         print("Saving Plot")
         fig.write_html(output_file_path)
-        # fig.show()  
+
+        if also_save_to_png:
+            fig.write_image(output_file_path.replace(".html", ".png"))
 
         
     def find_transform_paths(self, 
@@ -504,7 +507,11 @@ if __name__ == '__main__':
         action='store_true',
         help="Use this flag if the inputted transforms characterize framewise motion, not intravolume motion."
     )
-    
+    parser.add_argument(
+        "--also_save_to_png",
+        action="store_true",
+        help="In addition to outputting an .html file, it will also output a .png file."
+    )
     args = parser.parse_args()
 
     GraphTransformDirectory(
@@ -515,5 +522,6 @@ if __name__ == '__main__':
         input_rotation_unit=args.input_rotation_unit,
         transform_suffix=args.transform_suffix,
         threshold_in_mm=args.threshold_in_mm,
-        framewise_displacements=args.framewise_displacements
+        framewise_displacements=args.framewise_displacements,
+        also_save_to_png=args.also_save_to_png
     )
