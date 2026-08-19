@@ -1,11 +1,14 @@
 import os 
 import sys
+from glob import glob
 # add post-pipeline analysis directory to path
 sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "PostPipelineAnalysis"))
 from calculate_tsnr import CalculateTSNR
 from graph_carpet_plot import CarpetPlot
 from seed_to_voxel_correlation import SeedToVoxelCorrelation
- 
+from fmriprep_motion_to_transform_directory import ConvertfMRIPrepTsvToTransformDirectory
+from compare_fd_vs_sd import CompareFDvsSD
+
 class PostRunAnalysis:
     def __init__(self,
                 json_file: str,
@@ -15,6 +18,7 @@ class PostRunAnalysis:
                 brain_mask_path: str,
                 reference_volume_path: str,
                 confounds_file_path: str,
+                head_radius: int = 50,
                 raw_func_nifti_image: str | None = None,
                 corrected_func_nifti_image: str | None = None,
                 fmriprep_func_nifti_image: str | None = None,
@@ -22,9 +26,33 @@ class PostRunAnalysis:
 
         os.makedirs(output_directory, exist_ok=True)
 
+        fixed_parameters: list[float] = self.get_fixed_parameters(
+            sorted(glob(os.path.join(transform_directory, "*.tfm")))[-1]
+        )
+        print(f"Fixed Parameters: {fixed_parameters}")
+
+        framewise_transform_directory: str = os.path.join(output_directory, "fmriprep_inverse_transforms")
+        ConvertfMRIPrepTsvToTransformDirectory(
+            fmriprep_confounds_file=confounds_file_path,
+            fixed_parameters=fixed_parameters,
+            output_directory=framewise_transform_directory
+        )
+
         if raw_func_nifti_image:
             raw_data_output_dir: str = os.path.join(output_directory, "raw_data_outputs")
             os.makedirs(raw_data_output_dir, exist_ok=True)
+
+            CompareFDvsSD(
+                intravolume_transform_directory=transform_directory,
+                framewise_transform_directory=framewise_transform_directory,
+                json_file_path=json_file,
+                mm_motion_threshold=mm_displacement_threshold,
+                also_save_png=True,
+                head_radius=head_radius,
+                input_rotation_unit='versor',
+                output_directory=os.path.join(output_directory, "fd-vs-sd_results"),
+                plot_tile=os.path.basename(raw_func_nifti_image) + ": Framewise vs Intravolume Motion"
+            )
 
             print(f"\nCreating Raw Data Carpet Plot")
             CarpetPlot(
@@ -33,6 +61,7 @@ class PostRunAnalysis:
                 json_file=json_file,
                 reference_volume_image=reference_volume_path,
                 transform_directory=transform_directory,
+                framewise_transform_directory=framewise_transform_directory,
                 displacement_threshold=mm_displacement_threshold,
                 transform_suffix=".tfm",
                 plot_title="Raw Data: Voxel Percent Signal Change Carpet Plot + Displacements",
@@ -71,6 +100,7 @@ class PostRunAnalysis:
                 json_file=json_file,
                 reference_volume_image=reference_volume_path,
                 transform_directory=transform_directory,
+                framewise_transform_directory=framewise_transform_directory,
                 displacement_threshold=mm_displacement_threshold,
                 transform_suffix=".tfm",
                 plot_title="Intravolume Motion Corrected Data: Voxel Percent Signal Change Carpet Plot + Displacements",
@@ -110,6 +140,7 @@ class PostRunAnalysis:
                 json_file=json_file,
                 reference_volume_image=reference_volume_path,
                 transform_directory=transform_directory,
+                framewise_transform_directory=framewise_transform_directory,
                 displacement_threshold=mm_displacement_threshold,
                 transform_suffix=".tfm",
                 plot_title="fMRIPrep + Intravolume Motion Corrected Data: Voxel Percent Signal Change Carpet Plot + Displacements",
@@ -135,6 +166,16 @@ class PostRunAnalysis:
                 output_directory_path=fmriprep_data_output_dir,
                 plot_title=f"fMRIPrep + Intravolume Motion Corrected Data:\nSeed to Voxel Correlation"
             )
+
+
+    def get_fixed_parameters(self, transform_path: str) -> list[float]:
+        with open(transform_path, mode='r') as file:
+            for line in file:
+                if 'FixedParameters' in line:
+                    return [float(param_val) for param_val in line.split(" ")[1:]]
+            else:
+                raise ValueError(f"Could not find fixed parameters in transform: {transform_path}")
+            
 if __name__ == "__main__":
     import argparse
     parser: argparse.ArgumentParser = argparse.ArgumentParser(description="Wrapper post-analysis scripts.")

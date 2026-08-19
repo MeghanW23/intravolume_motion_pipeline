@@ -249,6 +249,7 @@ class RunPipeline:
             confounds_file_path=inputs['fmriprep_confounds_path'],
             reference_volume_path=inputs['reference_volume_path'],
             transform_directory=inputs['transform_directory'],
+            head_radius=configurations.HEAD_RADIUS,
             mm_displacement_threshold=GetMotionThreshold(nifti_image=self.func_nifti_image_path, threshold_as_percent=configurations.MOTION_THRESHOLD).return_mm_threshold(),
             output_directory=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "post-pipeline_analyses")
         )
