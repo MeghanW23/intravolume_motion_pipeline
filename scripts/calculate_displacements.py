@@ -9,19 +9,22 @@ class CalculateDisplacements:
                  transform_directory: str,
                  output_file_path: str | None = None,
                  file_extension: str = '.tfm',
-                 head_radius: float = 50) -> None:
+                 head_radius: float = 50,
+                 verbose: bool = True) -> None:
 
         transform_paths: list[str] = sorted(glob(
             os.path.join(transform_directory, "*" + file_extension.strip())
         ))
-        print(f"{len(transform_paths)} Transform Paths found in directory: {transform_directory}")
+        if verbose:
+            print(f"{len(transform_paths)} Transform Paths found in directory: {transform_directory}")
         if len(transform_paths) == 0:
             raise FileNotFoundError(
                  f"No Files found with file extension: '{file_extension.strip()}' "
                  f"in directory: {transform_directory}"
             )
-        
-        print("Calculating Displacements")
+
+        if verbose:
+            print("Calculating Displacements")
         self.all_displacements: list[float] = []
         for transform_num, _ in enumerate(transform_paths):
             if transform_num == 0:
@@ -32,24 +35,27 @@ class CalculateDisplacements:
                 transform2_path=transform_paths[transform_num],
                 head_radius=head_radius
             )
-            
-            print(
-                f"Displacement Between: " + \
-                transform_paths[transform_num - 1] + \
-                " and " + \
-                transform_paths[transform_num] + \
-                f": {round(displacement, 4)}mm"
-            )
+
+            if verbose:
+                print(
+                    f"Displacement Between: " + \
+                    transform_paths[transform_num - 1] + \
+                    " and " + \
+                    transform_paths[transform_num] + \
+                    f": {round(displacement, 4)}mm"
+                )
 
             self.all_displacements.append(displacement)
 
-        print("All Displacements Calculated.")
+        if verbose:
+            print("All Displacements Calculated.")
         if output_file_path:
             self.write_displacements_to_file(
                 self.all_displacements,
                 output_file_path=output_file_path
             )
-            print(f"Displacements Written To: {output_file_path}")
+            if verbose:
+                print(f"Displacements Written To: {output_file_path}")
     
     def calculate_displacement(self, 
                                transform1_path: str, 
