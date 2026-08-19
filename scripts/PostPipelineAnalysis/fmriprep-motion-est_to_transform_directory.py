@@ -36,9 +36,10 @@ class ConvertfMRIPrepTsvToTransformDirectory:
             versor_transform.SetFixedParameters(center)
             versor_transform.SetTranslation(translation)
             versor_transform.SetMatrix(matrix)
+            
 
             sitk.WriteTransform(
-                versor_transform,
+                versor_transform.GetInverse(), # MAP REF TO SLICE GROUP
                 os.path.join(output_directory, f"transform-{'{:04d}'.format(frame_num)}.tfm")
             )
 
