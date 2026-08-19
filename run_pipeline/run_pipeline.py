@@ -251,6 +251,7 @@ class RunPipeline:
             transform_directory=inputs['transform_directory'],
             head_radius=configurations.HEAD_RADIUS,
             mm_displacement_threshold=GetMotionThreshold(nifti_image=self.func_nifti_image_path, threshold_as_percent=configurations.MOTION_THRESHOLD).return_mm_threshold(),
+            working_directory=configurations.WORKING_DIRECTORY_PATH,
             output_directory=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "post-pipeline_analyses")
         )
 

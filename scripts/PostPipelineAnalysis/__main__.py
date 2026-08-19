@@ -22,9 +22,11 @@ class PostRunAnalysis:
                 raw_func_nifti_image: str | None = None,
                 corrected_func_nifti_image: str | None = None,
                 fmriprep_func_nifti_image: str | None = None,
+                working_directory: str = "working",
                 output_directory: str = "outputs"):
 
         os.makedirs(output_directory, exist_ok=True)
+        os.makedirs(working_directory, exist_ok=True)
 
         fixed_parameters: list[float] = self.get_fixed_parameters(
             sorted(glob(os.path.join(transform_directory, "*.tfm")))[-1]
@@ -84,6 +86,7 @@ class PostRunAnalysis:
                 nifti_image_mask_path=brain_mask_path,
                 json_file_path=json_file,
                 confounds_file_path=confounds_file_path,
+                cache_directory=os.path.join(working_directory, "nilearn_cache"),
                 output_directory_path=raw_data_output_dir,
                 plot_title=f"Raw Data: \nSeed to Voxel Correlation"
             )
@@ -123,6 +126,7 @@ class PostRunAnalysis:
                 nifti_image_mask_path=brain_mask_path,
                 json_file_path=json_file,
                 confounds_file_path=confounds_file_path,
+                cache_directory=os.path.join(working_directory, "nilearn_cache"),
                 output_directory_path=corrected_data_output_dir,
                 plot_title=f"Intravolume Motion Corrected Data:\nSeed to Voxel Correlation"
             )
@@ -163,6 +167,7 @@ class PostRunAnalysis:
                 nifti_image_mask_path=brain_mask_path,
                 json_file_path=json_file,
                 confounds_file_path=confounds_file_path,
+                cache_directory=os.path.join(working_directory, "nilearn_cache"),
                 output_directory_path=fmriprep_data_output_dir,
                 plot_title=f"fMRIPrep + Intravolume Motion Corrected Data:\nSeed to Voxel Correlation"
             )

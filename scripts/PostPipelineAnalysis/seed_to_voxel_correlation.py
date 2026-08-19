@@ -20,6 +20,7 @@ class SeedToVoxelCorrelation:
                  confounds_file_path: str,
                  seed_coords: tuple[int, int, int] = (0, -52, 18),
                  seed_radius: float = 8,
+                 cache_directory: str = "nilearn_cache",
                  output_directory_path: str = "seed-to-voxel_outputs",
                  plot_title: str = "Seed-to-Voxel Correlation") -> None:
         """
@@ -74,7 +75,7 @@ class SeedToVoxelCorrelation:
             low_pass=0.1,
             high_pass=0.01,
             t_r=t_r,
-            memory="nilearn_cache", # pyright: ignore[reportArgumentType]
+            memory=cache_directory, # pyright: ignore[reportArgumentType]
             memory_level=1,
             verbose=1
         )
@@ -92,7 +93,7 @@ class SeedToVoxelCorrelation:
             low_pass=0.1,
             high_pass=0.01,
             t_r=t_r,
-            memory="nilearn_cache", # pyright: ignore[reportArgumentType]
+            memory=cache_directory, # pyright: ignore[reportArgumentType]
             memory_level=1,
             verbose=1,
         )
@@ -218,6 +219,12 @@ if __name__ == "__main__":
         help="Indicates, in millimeters, the radius for the sphere around the seed. Default: 8mm"
     )
     parser.add_argument(
+        "--cache_directory_path",
+        required=False,
+        default="nilearn_cache",
+        help=f"Cache directory path for nilearn. Default: {os.path.abspath('nilearn_cache')}"
+    )
+    parser.add_argument(
         "--output_directory_path",
         required=False,
         default="seed-to-voxel_outputs",
@@ -235,6 +242,7 @@ if __name__ == "__main__":
         json_file_path=os.path.abspath(args.json_file_path),
         seed_coords=tuple(args.seed_coords),
         seed_radius=args.seed_radius,
+        cache_directory=os.path.abspath(args.cache_directory_path),
         output_directory_path=os.path.abspath(args.output_directory_path),
         confounds_file_path=os.path.abspath(args.confounds_file_path)
     )
