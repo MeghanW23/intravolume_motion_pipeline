@@ -2,6 +2,7 @@ import os
 import math
 import json
 import statistics
+import warnings
 import numpy as np
 import nibabel as nib
 from glob import glob
@@ -366,15 +367,20 @@ class CarpetPlot:
         print(f"\nOutput .html Plot At: {output_file_path}")
 
         if also_save_png_file:
+            try:
+                fig.write_image(
+                    output_file_path.replace(".html", ".png"),
+                    width=1400,
+                    height=900, 
+                    scale=2)
 
-            fig.write_image(
-                output_file_path.replace(".html", ".png"),
-                width=1400,
-                height=900, 
-                scale=2)
+                print(f"\nOutput .png Plot At: {output_file_path.replace('.html', '.png')}")
 
-            print(f"\nOutput .png Plot At: {output_file_path.replace('.html', '.png')}")
-
+            except TimeoutError:
+                warnings.warn(
+                    message="TimeoutError occured writing the carpet plot to a .png file. We will skip this step.",
+                    category=UserWarning
+                )
     
     
     def get_slice_timing(self, json_path, slice_times_text_file):
