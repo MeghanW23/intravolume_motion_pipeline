@@ -5,7 +5,6 @@ import numpy as np
 from glob import glob
 import nibabel as nib
 import SimpleITK as sitk 
-from scipy.signal import find_peaks
 from  plotly import graph_objects as go
 
 class FourierTransform:
