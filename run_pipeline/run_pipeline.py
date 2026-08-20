@@ -205,7 +205,7 @@ class RunPipeline:
             fmriprep_directories: list[str] = sorted(glob(os.path.join(output_directory_path, "fmriprep*")))
             if len(fmriprep_directories) == 0:
                 raise ValueError(
-                    f"No fMRIPrep Output Directories (matching: {os.path.join(output_directory_path, "fmriprep*")}) " 
+                    f"No fMRIPrep Output Directories (matching: {os.path.join(output_directory_path, 'fmriprep*')}" 
                     "found in output directory.")
             elif len(fmriprep_directories) > 1:
                 warnings.warn(
