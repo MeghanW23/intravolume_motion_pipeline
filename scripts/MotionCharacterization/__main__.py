@@ -36,6 +36,7 @@ class CharacterizeIntraVolumeMotion:
                  singularity_image_path: str | None = None,
                  n_jobs: int | None = os.cpu_count(),
                  motion_threshold: float | None = None,
+                 percent_of_volumes_cutoff: int = 25,
                  reference_volume_index: int | None = None, # pyright: ignore[reportRedeclaration],
                  limit_voxel_intensity: bool = True,
                  voxel_intensity_lower_bound: int | None = 50,
@@ -307,7 +308,8 @@ class CharacterizeIntraVolumeMotion:
                 displacements_text_file=displacements_text_file,
                 nifti_image_path=nifti_image_path, # pyright: ignore[reportArgumentType]
                 json_file_path=json_file_path,  # pyright: ignore[reportArgumentType]
-                output_directory=threshold_output_directory
+                output_directory=threshold_output_directory,
+                percent_of_volumes_cutoff=percent_of_volumes_cutoff
             ).return_motion_threshold()
             print(f"Recevied Motion Threshold of: {self.motion_threshold} mm")
             print(f"See Threshold Selection Plots at: {threshold_output_directory}")

@@ -21,6 +21,7 @@ class StartMotionCorrection:
                  dicom_directory: str | None = None, 
                  series_name: str | None = None,
                  motion_threshold: float | None = None, # pyright: ignore[reportRedeclaration]
+                 percent_of_volumes_cutoff: int = 25,
                  output_directory_path: str = "outputs",
                  working_directory_path: str = "working",
                  matlab_main_script_path: str = os.path.abspath('main_cameraparams.m'),
@@ -97,7 +98,8 @@ class StartMotionCorrection:
                 displacements_text_file=displacements_text_file,
                 nifti_image_path=nifti_image_path, # pyright: ignore[reportArgumentType]
                 json_file_path=json_file_path, # pyright: ignore[reportArgumentType]
-                output_directory=threshold_output_directory
+                output_directory=threshold_output_directory,
+                percent_of_volumes_cutoff=percent_of_volumes_cutoff
             ).return_motion_threshold()
             print(f"Recevied Motion Threshold of: {self.motion_threshold} mm")
             print(f"See Threshold Selection Plots at: {threshold_output_directory}")

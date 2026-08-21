@@ -58,6 +58,8 @@ class Configurations(BaseModel):
 
     MOTION_THRESHOLD: float | None
 
+    PERCENT_OF_VOLUMES_CUTOFF:int = Field(ge=0, lt=100)
+
     REFERENCE_VOLUME_INDEX: int | None
 
     UPSAMPLE_REFERENCE_VOLUME: bool

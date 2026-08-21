@@ -124,6 +124,7 @@ class RunPipeline:
                 singularity_image_path=configurations.OPTIMIZER_SINGULARITY_IMAGE_PATH,
                 n_jobs=configurations.N_JOBS,
                 motion_threshold=configurations.MOTION_THRESHOLD,
+                percent_of_volumes_cutoff=configurations.PERCENT_OF_VOLUMES_CUTOFF,
                 reference_volume_index=configurations.REFERENCE_VOLUME_INDEX,
                 limit_voxel_intensity=configurations.LIMIT_VOXEL_INTENSITY,
                 voxel_intensity_lower_bound=configurations.VOXEL_LOWER_BOUND,
@@ -148,6 +149,7 @@ class RunPipeline:
                 radian_parameters_text_file=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "radian-parameters.txt"),
                 displacements_text_file=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "displacements.txt"),
                 motion_threshold=self.motion_char_step.motion_threshold if configurations.RUN_MOTION_CHARACTERIZATION else configurations.MOTION_THRESHOLD,
+                percent_of_volumes_cutoff=configurations.PERCENT_OF_VOLUMES_CUTOFF,
                 matlab_main_script_path=configurations.MAIN_MOTION_CORRECTION_MATLAB_SCRIPT,
                 noscrubbing_recon_filename_prefix=configurations.NON_SCRUBBED_DATA_FILENAME_PREFIX,
                 scrubbed_recon_filename_prefix=configurations.SCRUBBED_DATA_FILENAME_PREFIX,
@@ -240,7 +242,8 @@ class RunPipeline:
                 displacements_text_file=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "displacements.txt"),
                 nifti_image_path=self.func_nifti_image_path,
                 json_file_path=self.func_json_file_path,
-                output_directory=threshold_output_directory
+                output_directory=threshold_output_directory,
+                percent_of_volumes_cutoff=configurations.PERCENT_OF_VOLUMES_CUTOFF
             ).return_motion_threshold()
             print(f"Recevied Motion Threshold of: {motion_threshold} mm")
             print(f"See Threshold Selection Plots at: {threshold_output_directory}")
