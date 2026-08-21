@@ -16,7 +16,7 @@ class IdentifyReferenceVolume:
                  nifti_image_path: str, 
                  json_file_path: str, 
                  working_directory: str = 'working',
-                 threshold_in_mm: float = 10,
+                 threshold_in_mm: float = 0.6,
                  reference_volume_spacing: tuple[float, float, float] = (1.236, 1.236, 1.236),
                  run_environment: str = "docker",
                  smsmireg_executable_path: str | None = None,
@@ -29,7 +29,7 @@ class IdentifyReferenceVolume:
         print(f"Nifti Image Path: {nifti_image_path}")
         print(f"JSON File Path: {json_file_path}")
         print(f"Working Directory: {working_directory}")
-        print(f"Threshold in mm: {threshold_in_mm}%")
+        print(f"Threshold in Milimeters: {threshold_in_mm}")
         print(f"Reference Volume Spacing: {reference_volume_spacing}")
         print(f"Run Environment: {run_environment}")
         print(f"Executable Path: {smsmireg_executable_path}")
