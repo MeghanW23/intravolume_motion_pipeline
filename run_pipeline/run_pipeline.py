@@ -140,18 +140,18 @@ class RunPipeline:
         STEP TWO: MOTION CORRECTION
         ========================================
         """
-        motion_correction_output_directory: str = os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "motion_correction_outputs")
+        self.motion_correction_output_directory: str = os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "motion_correction_outputs")
         if configurations.RUN_MOTION_CORRECTION:
             self.motion_correction_step = StartMotionCorrection(
                 nifti_image_path=self.func_nifti_image_path,
                 json_file_path=self.func_json_file_path,
                 radian_parameters_text_file=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "radian-parameters.txt"),
                 displacements_text_file=os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "displacements.txt"),
-                motion_threshold=self.motion_char_step.motion_threshold if configurations.RUN_MOTION_CHARACTERIZATION else None,
+                motion_threshold=self.motion_char_step.motion_threshold if configurations.RUN_MOTION_CHARACTERIZATION else configurations.MOTION_THRESHOLD,
                 matlab_main_script_path=configurations.MAIN_MOTION_CORRECTION_MATLAB_SCRIPT,
                 noscrubbing_recon_filename_prefix=configurations.NON_SCRUBBED_DATA_FILENAME_PREFIX,
                 scrubbed_recon_filename_prefix=configurations.SCRUBBED_DATA_FILENAME_PREFIX,
-                output_directory_path=motion_correction_output_directory,
+                output_directory_path=self.motion_correction_output_directory,
                 working_directory_path=configurations.WORKING_DIRECTORY_PATH,
                 dcmdjpeg_path=configurations.DCMDJPEG_PATH,
                 dcm2niix_path=configurations.DCM2NIIX_PATH,
@@ -166,7 +166,7 @@ class RunPipeline:
         if configurations.RUN_FMRIPREP:
             from MotionCorrection.__main__ import find_intravolume_corrected_data
             self.motion_corrected_image_path: str = find_intravolume_corrected_data(
-                output_directory_path=motion_correction_output_directory,
+                output_directory_path=self.motion_correction_output_directory,
                 scrubbed_data_filename_prefix=configurations.SCRUBBED_DATA_FILENAME_PREFIX,
                 nonscrubbed_data_filename_prefix=configurations.NON_SCRUBBED_DATA_FILENAME_PREFIX
             )
@@ -219,15 +219,18 @@ class RunPipeline:
         sys.path.append(os.path.join(os.path.dirname(os.path.dirname(__file__)), "scripts", "PostPipelineAnalysis"))
         from PostPipelineAnalysis import PostRunAnalysis
 
+        # Get the main preprocessed data directories for fMRIPrep
         fmriprep_directory: str = get_fmriprep_dir(configurations.OUTPUT_DIRECTORY_PATH)
         fmriprep_func_directory: str = glob(os.path.join(fmriprep_directory, "*", "*", "func"))[-1]
         fmriprep_anat_directory: str = glob(os.path.join(fmriprep_directory, "*", "*", "anat"))[-1]
 
         # If the RUN_MOTION_CHARACTERIZATION or RUN_MOTION_CORRECTION steps 
-        # already got a threshold, just use that. Else, calculate the 
-        # threshold here 
+        # already got a threshold, or if one was given in the .yaml file, 
+        # just use that. Else, calculate the threshold here 
         motion_threshold: float = 0.6
-        if configurations.RUN_MOTION_CHARACTERIZATION:
+        if configurations.MOTION_THRESHOLD != None:
+            motion_threshold: float = configurations.MOTION_THRESHOLD
+        elif configurations.RUN_MOTION_CHARACTERIZATION:
             motion_threshold: float = self.motion_char_step.motion_threshold
         elif configurations.RUN_MOTION_CORRECTION:
             motion_threshold: float = self.motion_correction_step.motion_threshold
@@ -242,6 +245,16 @@ class RunPipeline:
             print(f"Recevied Motion Threshold of: {motion_threshold} mm")
             print(f"See Threshold Selection Plots at: {threshold_output_directory}")
 
+        # If it doesnt already exist, find the motion corrected image via
+        # MotionCorrection's func: 'find_intravolume_corrected_data()'
+        from MotionCorrection.__main__ import find_intravolume_corrected_data
+        self.motion_corrected_image_path: str = find_intravolume_corrected_data(
+            output_directory_path=self.motion_correction_output_directory,
+            scrubbed_data_filename_prefix=configurations.SCRUBBED_DATA_FILENAME_PREFIX,
+            nonscrubbed_data_filename_prefix=configurations.NON_SCRUBBED_DATA_FILENAME_PREFIX
+        )
+
+        # Make sure all inputs exist
         inputs: dict = {
             "raw_func_image": self.func_nifti_image_path,
             "motion_corrected_func_image": self.motion_corrected_image_path,
