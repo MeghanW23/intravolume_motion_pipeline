@@ -9,18 +9,18 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from decompress_dicoms import DecompressDicoms
 from dicom_to_nifti import DicomToNifti
 from get_slice_timing import GetSliceTiming
-from get_motion_threshold import GetMotionThreshold
+from determine_motion_threshold import DetermineMotionThreshold
 from remove_background import RemoveBackground
 
 class StartMotionCorrection:
     def __init__(self, 
                  radian_parameters_text_file: str, 
                  displacements_text_file: str,
-                 motion_threshold_as_percent: int,
                  nifti_image_path: str | None,  # pyright: ignore[reportRedeclaration]
                  json_file_path: str | None,  # pyright: ignore[reportRedeclaration]
                  dicom_directory: str | None = None, 
                  series_name: str | None = None,
+                 motion_threshold: float | None = None, # pyright: ignore[reportRedeclaration]
                  output_directory_path: str = "outputs",
                  working_directory_path: str = "working",
                  matlab_main_script_path: str = os.path.abspath('main_cameraparams.m'),
@@ -33,6 +33,8 @@ class StartMotionCorrection:
         self.validate_inputted_data(dicom_directory, nifti_image_path, json_file_path)
         os.makedirs(output_directory_path, exist_ok=True)
         os.makedirs(working_directory_path, exist_ok=True)
+        self.motion_threshold: float | None = motion_threshold # pyright: ignore[reportRedeclaration, reportAttributeAccessIssue]
+
         if dicom_directory != None: 
             """
             =======================================================
@@ -89,11 +91,16 @@ class StartMotionCorrection:
         GET MOTION THRESHOLD IN MM
         =======================================================
         """
-        threshold_in_mm: float = GetMotionThreshold(
-            nifti_image=nifti_image_path, # pyright: ignore[reportArgumentType]
-            threshold_as_percent=motion_threshold_as_percent
-        ).return_mm_threshold()
-        print(f"Motion Threshold for Scrubbing in mm: {threshold_in_mm}")
+        if self.motion_threshold == None:
+            threshold_output_directory: str = os.path.join(output_directory_path, "threshold_selection_outputs")
+            self.motion_threshold: float = DetermineMotionThreshold(
+                displacements_text_file=displacements_text_file,
+                nifti_image_path=nifti_image_path, # pyright: ignore[reportArgumentType]
+                json_file_path=json_file_path, # pyright: ignore[reportArgumentType]
+                output_directory=threshold_output_directory
+            ).return_motion_threshold()
+            print(f"Recevied Motion Threshold of: {self.motion_threshold} mm")
+            print(f"See Threshold Selection Plots at: {threshold_output_directory}")
 
         """
         =======================================================
@@ -139,7 +146,7 @@ class StartMotionCorrection:
             f"'{slice_ordering_path}', "
             f"'{noscrubbing_recon_filename_prefix}', "
             f"'{scrubbed_recon_filename_prefix}', "
-            f"{threshold_in_mm}, "
+            f"{self.motion_threshold}, "
             f"{sms_factor});"
         )
         command: list[str] = [
@@ -278,15 +285,15 @@ if __name__ == "__main__":
             "during the motion characterization step"
     )
     parser.add_argument(
-        "--motion_threshold_as_percent",
+        "--motion_threshold",
         required=False,
-        default=10,
-        type=int,
+        default=None,
+        type=float,
         help=\
             "Volume where ANY slice group has a displacement value " \
             "> the motion threshold will be scrubbed. Takes in the threshold " \
-            "as a percentage of the diagonal of a single voxel. " \
-            "Default: 10 percent"
+            "in mm. Leave as None and we will calculate a threshold." \
+            "Default: None."
     )
     args: argparse.Namespace = parser.parse_args()
     StartMotionCorrection(
@@ -297,7 +304,7 @@ if __name__ == "__main__":
         json_file_path=os.path.abspath(args.json_file_path) if args.json_file_path else None,
         radian_parameters_text_file=os.path.abspath(args.radian_parameters_text_file),
         displacements_text_file=os.path.abspath(args.displacements_text_file),
-        motion_threshold_as_percent=args.motion_threshold_as_percent,
+        motion_threshold=args.motion_threshold,
         output_directory_path=os.path.abspath(args.output_directory_path),
         working_directory_path=os.path.abspath(args.working_directory_path)
     )

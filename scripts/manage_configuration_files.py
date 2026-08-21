@@ -56,7 +56,7 @@ class Configurations(BaseModel):
 
     N_JOBS: int
 
-    MOTION_THRESHOLD: int = Field(ge=0, le=100)
+    MOTION_THRESHOLD: float | None
 
     REFERENCE_VOLUME_INDEX: int | None
 

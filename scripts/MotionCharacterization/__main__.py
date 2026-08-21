@@ -12,6 +12,7 @@ from decompress_dicoms import DecompressDicoms
 from dicom_to_nifti import DicomToNifti
 from get_slice_timing import GetSliceTiming
 from extract_images import ExtractNiFTIImage
+from determine_motion_threshold import DetermineMotionThreshold
 from identify_reference_volume import IdentifyReferenceVolume
 from limit_voxel_intensity_range import LimitVoxelIntensityRange
 from upsample_volume import UpsampleReferenceVolume
@@ -19,7 +20,6 @@ from make_identity_transform import MakeIdentityTransform
 from run_alignment import RunAlignments
 from calculate_displacements import CalculateDisplacements
 from write_parameters_to_textfile import WriteParametersToTextFile
-from get_motion_threshold import GetMotionThreshold
 from graph_transform_directory import GraphTransformDirectory
 from fourier_transform_on_displacement_values import FourierTransform
 
@@ -35,7 +35,7 @@ class CharacterizeIntraVolumeMotion:
                  smsmireg_executable_path: str | None = None,
                  singularity_image_path: str | None = None,
                  n_jobs: int | None = os.cpu_count(),
-                 motion_threshold: int = 10,
+                 motion_threshold: float | None = None,
                  reference_volume_index: int | None = None, # pyright: ignore[reportRedeclaration],
                  limit_voxel_intensity: bool = True,
                  voxel_intensity_lower_bound: int | None = 50,
@@ -58,7 +58,6 @@ class CharacterizeIntraVolumeMotion:
         print(f"Compiled Sms-Mi-Reg File: {smsmireg_executable_path}")
         print(f"Singularity Image Path: {singularity_image_path}")
         print(f"N_Jobs: {n_jobs}")
-        print(f"Motion Threshold: {motion_threshold}")
         print("======================================================================\n")
 
         self.validate_inputted_data(dicom_directory, nifti_image_path, json_file_path)
@@ -66,6 +65,8 @@ class CharacterizeIntraVolumeMotion:
         os.makedirs(working_directory, exist_ok=True)
         os.makedirs(output_directory, exist_ok=True)
         os.chdir(working_directory)
+
+        self.motion_threshold: float | None = motion_threshold # pyright: ignore[reportRedeclaration, reportAttributeAccessIssue]
 
         if dicom_directory != None: 
             """
@@ -129,21 +130,6 @@ class CharacterizeIntraVolumeMotion:
         ).return_images()
         print(f"{len(volume_paths)} 3D Volumes Were Extracted.")
 
-        """
-        =======================================================
-        GET DISPLACEMENT THRESHOLD IN MM 
-        =======================================================
-        """
-        print(
-            "Calculating the motion threshold in mm from " + \
-            "the threshold as a percentage of the diagonal " + \
-            f"of a single voxel: {motion_threshold}% "
-        )
-        mm_motion_threshold: float = GetMotionThreshold(
-            nifti_image=nifti_image_path, # pyright: ignore[reportArgumentType]
-            threshold_as_percent=motion_threshold
-        ).return_mm_threshold()
-
 
         """
         =======================================================
@@ -156,7 +142,6 @@ class CharacterizeIntraVolumeMotion:
                 nifti_image_path=nifti_image_path, # pyright: ignore[reportArgumentType]
                 json_file_path=json_file_path, # pyright: ignore[reportArgumentType]
                 working_directory=os.path.join(working_directory, "reference_volume_script_outputs"),
-                threshold_in_mm=mm_motion_threshold,
                 run_environment=run_environment,
                 smsmireg_executable_path=smsmireg_executable_path,
                 singularity_image_file=singularity_image_path,
@@ -271,11 +256,13 @@ class CharacterizeIntraVolumeMotion:
         =======================================================
         """
         print("Computing Displacements Between Transforms.")
+        displacements_text_file: str = os.path.join(output_directory, "displacements.txt")
         CalculateDisplacements(
             transform_directory=output_transform_directory,
-            output_file_path=os.path.join(output_directory, "displacements.txt"),
+            output_file_path=displacements_text_file,
             head_radius=head_radius
         )
+        print(f"Displacement Values Written to Text File: {displacements_text_file}")
 
         """
         =======================================================
@@ -310,6 +297,23 @@ class CharacterizeIntraVolumeMotion:
         os.makedirs(graph_directory, exist_ok=True)
         """
         =======================================================
+        GET DISPLACEMENT THRESHOLD IN MM 
+        =======================================================
+        """
+        
+        if self.motion_threshold == None:
+            threshold_output_directory: str = os.path.join(output_directory, "threshold_selection_outputs")
+            self.motion_threshold: float = DetermineMotionThreshold(
+                displacements_text_file=displacements_text_file,
+                nifti_image_path=nifti_image_path, # pyright: ignore[reportArgumentType]
+                json_file_path=json_file_path,  # pyright: ignore[reportArgumentType]
+                output_directory=threshold_output_directory
+            ).return_motion_threshold()
+            print(f"Recevied Motion Threshold of: {self.motion_threshold} mm")
+            print(f"See Threshold Selection Plots at: {threshold_output_directory}")
+
+        """
+        =======================================================
         GRAPH DISPLACEMENT AND PARAMETER RESULTS 
         =======================================================
         """
@@ -320,7 +324,7 @@ class CharacterizeIntraVolumeMotion:
             json_path=json_file_path, # pyright: ignore[reportArgumentType]
             output_file_path=graph_plot_path,
             input_rotation_unit="versor",
-            threshold_in_mm=mm_motion_threshold
+            threshold_in_mm=self.motion_threshold
         )
         print(f"See Plot at: {graph_plot_path}")
 
@@ -525,11 +529,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "--motion_threshold",
         required=False,
-        default=10,
-        type=int,
+        default=None,
+        type=float,
         help=\
-            "The percentage of the diameter of a single voxel. " + \
-            "Default: 10 Percent."
+            "Please give input in millimeters. If you dont give an input, we will select one ourselves."
     )
     args: argparse.Namespace = parser.parse_args()
     CharacterizeIntraVolumeMotion(
