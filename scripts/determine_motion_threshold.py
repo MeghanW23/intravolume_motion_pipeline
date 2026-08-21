@@ -24,11 +24,11 @@ class DetermineMotionThreshold:
                  nifti_image_path: str,
                  json_file_path: str, 
                  output_directory: str = "outputs",
-                 percent_of_volumes_to_scrub: int = 25) -> None:
+                 percent_of_volumes_cutoff: int = 25) -> None:
 
         os.makedirs(output_directory, exist_ok=True)
-        if not (0 < percent_of_volumes_to_scrub < 100):
-            raise ValueError("arg: 'percent_of_volumes_to_scrub' must be between 0 and 100")
+        if not (0 < percent_of_volumes_cutoff < 100):
+            raise ValueError("arg: 'percent_of_volumes_cutoff' must be between 0 and 100")
 
         """
         ====================================================================
@@ -114,9 +114,9 @@ class DetermineMotionThreshold:
             ], 
             key = lambda x: x[0]
         )
-        num_volumes_to_keep: int = int(num_volumes * (1 - (percent_of_volumes_to_scrub / 100)))
+        num_volumes_to_keep: int = int(num_volumes * (1 - (percent_of_volumes_cutoff / 100)))
         remaining_volumes: list[tuple[float, int]] = sorted_volumes[:num_volumes_to_keep]
-        print(f"At a Threshold of {percent_of_volumes_to_scrub}%, We Keep {num_volumes_to_keep} Volumes:")
+        print(f"At a Threshold of {percent_of_volumes_cutoff}%, We Keep {num_volumes_to_keep} Volumes:")
         print(", ".join(f"Volume {volume_num} ({round(max_disp_val, 2)} mm)" for max_disp_val, volume_num in remaining_volumes))
 
         """
@@ -320,11 +320,11 @@ if __name__ == "__main__":
         help="JSON Sidecar outputted by dcm2niix. To determine the number of slice groups."
     )
     parser.add_argument(
-        "--percent_of_volumes_to_scrub",
+        "--percent_of_volumes_cutoff",
         required=False,
         type=int,
         default=25,
-        help="Default: 25 Percent"
+        help="Default: 25 Percent. Used as part of the motion threshold calculation."
     )
     parser.add_argument(
         "--output_directory",
@@ -338,5 +338,5 @@ if __name__ == "__main__":
         nifti_image_path=os.path.abspath(args.nifti_image_path),
         json_file_path=os.path.abspath(args.json_file_path),
         output_directory=os.path.abspath(args.output_directory),
-        percent_of_volumes_to_scrub=args.percent_of_volumes_to_scrub
+        percent_of_volumes_cutoff=args.percent_of_volumes_cutoff
     )
