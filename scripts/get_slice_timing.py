@@ -4,8 +4,6 @@ import warnings
 from typing import Any
 from collections import OrderedDict
 
-import numpy as np
-
 class GetSliceTiming:
 
     def __init__(self, 
