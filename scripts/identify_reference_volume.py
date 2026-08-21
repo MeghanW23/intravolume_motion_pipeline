@@ -159,8 +159,13 @@ class IdentifyReferenceVolume:
                 self.reference_volume_index = volume_num
                 self.reference_volume_path = upsampled_volume_path
                 return 
-            
-        print(f"NO GOOD REFERENCE VOLUME FOUND.")
+
+        raise ValueError(
+            f"No Good Reference Volume Found for Image: {nifti_image_path} "
+            f"at a Threshold of: {threshold_in_mm} mm. "
+            f"Please Lower your Threshold and Try Again."
+        )
+        
 
     def get_slice_timing(self, json_path: str) -> OrderedDict[float, list[int]]:
 
