@@ -77,19 +77,28 @@ If you are opting to use a Docker image, you will only need to set `OPTIMIZER_RU
 ## How to Run the Pipeline
 
 #### 1. Create a configuration file
-Create a config file for your data by making a copy of [`run_pipeline/config_files/TEMPLATE.yaml`](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/run_pipeline/config_files/TEMPLATE.yaml). These config files are used to tell the pipeline what data to use, what steps to run, and what configurations to use. For additional information on how to use a config file, there are notes in the TEMPLATE.yaml file.
+- Create a config file for your data by making a copy of [`run_pipeline/config_files/TEMPLATE.yaml`](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/run_pipeline/config_files/TEMPLATE.yaml).
+- These config files are used to tell the pipeline what data to use, what steps to run, and what configurations to use.
+- For additional information on how to use a config file, there are notes in the TEMPLATE.yaml file.
 
 #### 2. Run the pipeline
-[`run_pipeline/submit_job.sh`](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/run_pipeline/submit_job.sh) starts the pipeline as a [Slurm](https://slurm.schedmd.com/overview.html) batch job. It receives one config file as a command line input and runs the pipeline wrapper script `run_pipeline/run_pipeline.py`. Pass the config file to `submit_job.sh` and start a slurm job like this:
-```
-sbatch submit_job.sh config_files/<your config file>
-```
-or you can run the pipeline directly (on a system with high memory and CPU resources) using the main pipeline script: 
+- Option One:
+  - [`run_pipeline/submit_job.sh`](https://github.com/MeghanW23/intravolume_motion_pipeline/blob/main/run_pipeline/submit_job.sh) starts the pipeline as a [Slurm](https://slurm.schedmd.com/overview.html) batch job. It receives one config file as a command line input and runs the pipeline wrapper script `run_pipeline/run_pipeline.py`.
+  - Pass the config file to `submit_job.sh` and start a slurm job like this:
+    ```
+    sbatch submit_job.sh config_files/<your config file>
+    ```
+  - Using the path given in the config file's `OUTPUT_DIRECTORY_PATH` variable, the pipeline will write to the following output logs:
+    - For standard output: `<OUTPUT_DIRECTORY_PATH>/output_<SLURM_JOB_ID>.out`
+    - For standard error: `<OUTPUT_DIRECTORY_PATH>/output_<SLURM_JOB_ID>.err`
+      
+- Option Two:
+  
+  - You can also run the pipeline directly (on a system with high memory and CPU resources) using the main pipeline script: 
+    ```
+    python run_pipeline.py --configuration_file config_files/<your config file>
+    ```
 
-```
-python run_pipeline.py --configuration_file config_files/<your config file>
-```
-<br><br>
 **NOTE**: If you'd like to run only specific elements of the pipeline, each script in [`scripts`](https://github.com/MeghanW23/intravolume_motion_pipeline/tree/main/scripts) can be run individually via command line arguments or by importing the class into another python script. For information about what command line arguments the script takes, see its help options by running: 
 ```
 python scripts/<script_file_name>.py -h
