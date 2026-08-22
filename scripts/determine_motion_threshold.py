@@ -12,7 +12,7 @@ class DetermineMotionThreshold:
     Steps:
     1. Calculate the histogram of the number of volumes that exceed a threshold, for all thresholds.
         - Stop once you hit 0% of volumes
-    2. Find the threshold that corresponds to 25% of the data being excluded.
+    2. Find the threshold that corresponds to 20% of the data being excluded.
         - In general, if 20-30% of the data is above the threshold, there may be too little data
           left for reliable analysis
     3. Calculate a mean and standard deviation of the remaining 75% of volumes.
@@ -24,7 +24,7 @@ class DetermineMotionThreshold:
                  nifti_image_path: str,
                  json_file_path: str, 
                  output_directory: str = "outputs",
-                 percent_of_volumes_cutoff: int = 25) -> None:
+                 percent_of_volumes_cutoff: int = 20) -> None:
 
         os.makedirs(output_directory, exist_ok=True)
         if not (0 < percent_of_volumes_cutoff < 100):
@@ -269,12 +269,12 @@ class DetermineMotionThreshold:
             color="blue"
         )
 
-        # vertical line for 25% of volumes rejected
+        # vertical line for 20% of volumes rejected
         plt.axvline(
             x=mm_volume_cutoff,
             linestyle="--",
             color="red",
-            label=f"~25% of Volumes Have Displacements Greater Than ~{round(mm_volume_cutoff, 4)} mm"
+            label=f"~20% of Volumes Have Displacements Greater Than ~{round(mm_volume_cutoff, 4)} mm"
         )
 
         # vertical line for motion threshold 
@@ -323,8 +323,8 @@ if __name__ == "__main__":
         "--percent_of_volumes_cutoff",
         required=False,
         type=int,
-        default=25,
-        help="Default: 25 Percent. Used as part of the motion threshold calculation."
+        default=20,
+        help="Default: 20 Percent. Used as part of the motion threshold calculation."
     )
     parser.add_argument(
         "--output_directory",

@@ -95,7 +95,7 @@ MOTION_THRESHOLD:
 # As part of our motion threshold calculation, we determine 
 # the cutoff displacement where <PERCENT_OF_VOLUMES_CUTOFF>%
 # of volumes > cutoff displacement. 
-PERCENT_OF_VOLUMES_CUTOFF: 25
+PERCENT_OF_VOLUMES_CUTOFF: 20
 
 # For limiting the intensity of the voxels of the 3D volumes
 LIMIT_VOXEL_INTENSITY: True

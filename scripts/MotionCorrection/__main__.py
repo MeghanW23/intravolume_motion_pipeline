@@ -21,7 +21,7 @@ class StartMotionCorrection:
                  dicom_directory: str | None = None, 
                  series_name: str | None = None,
                  motion_threshold: float | None = None, # pyright: ignore[reportRedeclaration]
-                 percent_of_volumes_cutoff: int = 25,
+                 percent_of_volumes_cutoff: int = 20,
                  output_directory_path: str = "outputs",
                  working_directory_path: str = "working",
                  matlab_main_script_path: str = os.path.abspath('main_cameraparams.m'),

@@ -36,7 +36,7 @@ class CharacterizeIntraVolumeMotion:
                  singularity_image_path: str | None = None,
                  n_jobs: int | None = os.cpu_count(),
                  motion_threshold: float | None = None,
-                 percent_of_volumes_cutoff: int = 25,
+                 percent_of_volumes_cutoff: int = 20,
                  reference_volume_index: int | None = None, # pyright: ignore[reportRedeclaration],
                  limit_voxel_intensity: bool = True,
                  voxel_intensity_lower_bound: int | None = 50,
