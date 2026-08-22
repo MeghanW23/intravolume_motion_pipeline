@@ -285,7 +285,12 @@ class GraphTransformDirectory:
         fig.write_html(output_file_path)
 
         if also_save_to_png:
-            fig.write_image(output_file_path.replace(".html", ".png"))
+            fig.write_image(
+                output_file_path.replace(".html", ".png"), 
+                width=1400,
+                height=900,
+                scale=2
+            )
 
         
     def find_transform_paths(self, 
