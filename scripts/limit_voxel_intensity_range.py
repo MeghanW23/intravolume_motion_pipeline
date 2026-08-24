@@ -1,5 +1,4 @@
 import os 
-from glob import glob
 import SimpleITK as sitk
 from joblib import Parallel, delayed
 
@@ -26,7 +25,10 @@ class LimitVoxelIntensityRange:
             )
             for nifti_image_path in nifti_image_paths
         )
-        self.output_image_paths: list[str] = sorted(glob(os.path.join(output_directory, "clamped_*")))
+        self.output_image_paths: list[str] = [
+            os.path.join(output_directory, f"clamped_{os.path.basename(nifti_image_path)}")
+            for nifti_image_path in nifti_image_paths
+        ]
 
     def single_volume_clamp(self, 
                            nifti_image_path: str, 
