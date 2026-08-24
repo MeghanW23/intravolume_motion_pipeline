@@ -44,7 +44,8 @@ class LimitVoxelIntensityRange:
             nifti_image,
             outputPixelType=sitk.sitkFloat32,
             lowerBound=lower_bound,
-            upperBound=upper_bound
+            upperBound=upper_bound,
+            outsideValue=0.0
         )
 
         if output_file_path:
