@@ -25,7 +25,8 @@ class UpsampleReferenceVolume:
         self.resampled_image: sitk.Image = self.resample_image(
             sitk_image,
             spacing=new_spacing,
-            volume_size=new_size.tolist()
+            volume_size=new_size.tolist(),
+            interpolator=self.get_interpolator("bspline")
         )
 
         if output_file_path:
@@ -34,13 +35,27 @@ class UpsampleReferenceVolume:
                 fileName=output_file_path
             )
             print(f"Upsampled Volume at: {output_file_path}")
-       
+
+    def get_interpolator(self, interpolator_str: str) -> str:
+            # Dictionary to map strings to SimpleITK interpolators
+            interpolator_map = {
+                'nearestneighbor': sitk.sitkNearestNeighbor,
+                'linear': sitk.sitkLinear,
+                'bspline': sitk.sitkBSpline,
+                'gaussian': sitk.sitkGaussian
+            }
+    
+            clean_str: str = interpolator_str.lower()
+            if clean_str not in interpolator_map:
+                raise ValueError(f"Unknown interpolator: {interpolator_str}. Choose from {list(interpolator_map.keys())}")
+    
+            return interpolator_map[clean_str]   
         
     def resample_image(self,
                        image: sitk.Image, 
                        spacing: Sequence[float],
                        volume_size: list[int],
-                       interpolator: int = sitk.sitkLinear) -> sitk.Image:
+                       interpolator: int | str = sitk.sitkLinear) -> sitk.Image:
         
         r: sitk.ResampleImageFilter = sitk.ResampleImageFilter()
         r.SetInterpolator(interpolator)
