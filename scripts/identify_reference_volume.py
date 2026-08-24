@@ -25,7 +25,7 @@ class IdentifyReferenceVolume:
                  new_spacing: tuple[float, float, float] = (1.236, 1.236, 1.236),
                  voxel_intensity_lower_bound: int = 50,
                  voxel_intensity_upper_bound: int = 1000,
-                 head_radius: int = 50,
+                 head_radius: float = 50,
                  n_jobs: int = -1) -> None:
 
         os.makedirs(output_directory_path, exist_ok=True)
