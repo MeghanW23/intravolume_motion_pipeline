@@ -101,13 +101,15 @@ class IdentifyReferenceVolume:
             mode="lines+markers",
             name="Displacement Values"
         ))
+
+        refvol_x_list: list[float] = [x_val for x_val in x_list if int(x_val) == self.reference_volume_index]
+        refvol_y_list: list[float] = list(np.interp(refvol_x_list, x_list, y_list))
         fig.add_trace(go.Scatter(
-            x=[x_val for x_val in x_list if int(x_val) == self.reference_volume_index],
-            y=[max_disp_at_reference_volume] * len([x_val for x_val in x_list if int(x_val) == self.reference_volume_index]),
+            x=refvol_x_list,
+            y=refvol_y_list,
             mode="lines+markers",
-            name="Displacent Values in Reference Volume"
-        )
-        )
+            name="Displacement Values in Reference Volume"
+        ))
         fig.update_xaxes(title_text="Displacement Order")
         fig.update_yaxes(title_text="Displacement (in Millimeters)")
 
