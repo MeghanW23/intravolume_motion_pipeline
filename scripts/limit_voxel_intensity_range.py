@@ -15,7 +15,7 @@ class LimitVoxelIntensityRange:
 
         print(f"Clamping images to voxel intensity range: {lower_bound} - {upper_bound}")
         Parallel(n_jobs=n_jobs)(
-            delayed(self.single_voxel_clamp)(
+            delayed(self.single_volume_clamp)(
                 nifti_image_path,
                 output_file_path=os.path.join(
                     output_directory,
@@ -28,7 +28,7 @@ class LimitVoxelIntensityRange:
         )
         self.output_image_paths: list[str] = sorted(glob(os.path.join(output_directory, "clamped_*")))
 
-    def single_voxel_clamp(self, 
+    def single_volume_clamp(self, 
                            nifti_image_path: str, 
                            output_file_path: str,
                            lower_bound: int  = 50, 
@@ -40,11 +40,10 @@ class LimitVoxelIntensityRange:
                 "All input nifti image paths must be 3D."
             )
 
-        output_image: sitk.Image = sitk.Clamp(
+        output_image: sitk.Image = sitk.Threshold( 
             nifti_image,
-            outputPixelType=sitk.sitkFloat32,
-            lowerBound=lower_bound,
-            upperBound=upper_bound,
+            lower=lower_bound,
+            upper=upper_bound,
             outsideValue=0.0
         )
 
