@@ -6,42 +6,48 @@ import SimpleITK as sitk
 
 class CalculateDisplacements:
     def __init__(self, 
-                 transform_directory: str,
+                 transform_directory: str | None = None,
+                 transform_paths: list[str] | None = None, # pyright: ignore[reportRedeclaration]
                  output_file_path: str | None = None,
                  file_extension: str = '.tfm',
                  head_radius: float = 50,
                  verbose: bool = True) -> None:
 
-        transform_paths: list[str] = sorted(glob(
-            os.path.join(transform_directory, "*" + file_extension.strip())
-        ))
-        if verbose:
-            print(f"{len(transform_paths)} Transform Paths found in directory: {transform_directory}")
-        if len(transform_paths) == 0:
+        if transform_directory == None and transform_paths == None:
+            raise ValueError("Input a value for argument 'transform_directory' or 'transform_paths'")
+
+        if transform_directory:
+            transform_paths: list[str] = sorted(glob(
+                os.path.join(transform_directory, "*" + file_extension.strip())
+            ))
+            print(f"{len(transform_paths)} Transform Paths found in directory: {transform_directory}") # pyright: ignore[reportArgumentType]
+
+        if len(transform_paths) == 0: # pyright: ignore[reportArgumentType]
             raise FileNotFoundError(
-                 f"No Files found with file extension: '{file_extension.strip()}' "
-                 f"in directory: {transform_directory}"
+                "No Files found."
             )
+        elif len(transform_paths) == 1: # pyright: ignore[reportArgumentType]
+            raise ValueError("'transform_paths' must be greater than 1 path.")
 
         if verbose:
             print("Calculating Displacements")
         self.all_displacements: list[float] = []
-        for transform_num, _ in enumerate(transform_paths):
+        for transform_num, _ in enumerate(transform_paths):  # pyright: ignore[reportArgumentType]
             if transform_num == 0:
                 continue
 
             displacement: float = self.calculate_displacement(
-                transform1_path=transform_paths[transform_num - 1],
-                transform2_path=transform_paths[transform_num],
+                transform1_path=transform_paths[transform_num - 1],  # pyright: ignore[reportOptionalSubscript]
+                transform2_path=transform_paths[transform_num], # pyright: ignore[reportOptionalSubscript]
                 head_radius=head_radius
             )
 
             if verbose:
                 print(
                     f"Displacement Between: " + \
-                    transform_paths[transform_num - 1] + \
+                    transform_paths[transform_num - 1] + # pyright: ignore[reportOptionalSubscript] \ 
                     " and " + \
-                    transform_paths[transform_num] + \
+                    transform_paths[transform_num] + # pyright: ignore[reportOptionalSubscript] \
                     f": {round(displacement, 4)}mm"
                 )
 
@@ -146,7 +152,16 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--transform_directory",
-        required=True
+        required=False,
+        default=None,
+        help="Enter a list of transform_paths to '--transform_paths' or enter a directory using the '--transform_directory' flag."
+    )
+    parser.add_argument(
+        "--transform_paths",
+        required=False,
+        default=None,
+        nargs="+",
+        help="Enter a list of transform_paths to '--transform_paths' or enter a directory using the '--transform_directory' flag."
     )
     parser.add_argument(
         "--file_extension",
@@ -174,7 +189,8 @@ if __name__ == "__main__":
     )
     args: argparse.Namespace = parser.parse_args()
     CalculateDisplacements(
-        transform_directory=os.path.abspath(args.transform_directory),
+        transform_directory=os.path.abspath(args.transform_directory) if args.transform_directory else None,
+        transform_paths=[os.path.abspath(transform_path) for transform_path in args.transform_paths] if args.transform_paths else None,
         file_extension=args.file_extension,
         output_file_path=os.path.abspath(args.output_file_path),
         head_radius=args.head_radius
