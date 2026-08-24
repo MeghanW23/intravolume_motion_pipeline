@@ -21,6 +21,7 @@ class IdentifyReferenceVolume:
                  run_environment: str, 
                  smsmireg_executable_path: str | None = None,
                  singularity_image_file: str | None = None,
+                 working_directory_path: str = "working",
                  output_directory_path: str = "outputs", 
                  new_spacing: tuple[float, float, float] = (1.236, 1.236, 1.236),
                  voxel_intensity_lower_bound: int = 50,
@@ -29,6 +30,7 @@ class IdentifyReferenceVolume:
                  n_jobs: int = -1) -> None:
 
         os.makedirs(output_directory_path, exist_ok=True)
+        os.makedirs(working_directory_path, exist_ok=True)
 
         num_volumes: int = sitk.ReadImage(nifti_image_path).GetSize()[3]
         print(f"Number of Volumes: {num_volumes}")
@@ -42,7 +44,7 @@ class IdentifyReferenceVolume:
 
         volume_images: list[str] = ExtractNiFTIImage(
              input_nifti_image_path=nifti_image_path,
-             output_directory_path=output_directory_path,
+             output_directory_path=working_directory_path,
              file_prefix="volume_outputs",
              index_to_extract=-1,
              n_jobs=n_jobs
@@ -55,7 +57,7 @@ class IdentifyReferenceVolume:
                 volume_image_path=volume_images[volume_num],
                 slice_timing=slice_timing,
                 new_spacing=new_spacing,
-                output_directory_path=output_directory_path,
+                working_directory_path=working_directory_path,
                 voxel_intensity_lower_bound=voxel_intensity_lower_bound,
                 voxel_intensity_upper_bound=voxel_intensity_upper_bound,
                 run_environment=run_environment,
@@ -123,7 +125,7 @@ class IdentifyReferenceVolume:
                                volume_image_path: str,
                                slice_timing: OrderedDict[float, list[int]],
                                new_spacing: tuple[float, float, float],
-                               output_directory_path: str,
+                               working_directory_path: str,
                                voxel_intensity_lower_bound: int,
                                voxel_intensity_upper_bound: int,
                                run_environment: str, 
@@ -134,18 +136,18 @@ class IdentifyReferenceVolume:
 
         UpsampleReferenceVolume(
             input_nifti_image=volume_image_path,
-            output_file_path=os.path.join(output_directory_path, f"upsampled_{os.path.basename(volume_image_path)}"),
+            output_file_path=os.path.join(working_directory_path, f"upsampled_{os.path.basename(volume_image_path)}"),
             new_spacing=new_spacing
         ).return_resampled_image()
 
         limited_upsampled_image_path: str = LimitVoxelIntensityRange(
-            nifti_image_paths=[os.path.join(output_directory_path, f"upsampled_{os.path.basename(volume_image_path)}")],
-            output_directory=output_directory_path,
+            nifti_image_paths=[os.path.join(working_directory_path, f"upsampled_{os.path.basename(volume_image_path)}")],
+            output_directory=working_directory_path,
             lower_bound=voxel_intensity_lower_bound, 
             upper_bound=voxel_intensity_upper_bound
         ).return_output_image_paths()[0]
 
-        initial_transform_path: str = os.path.join(output_directory_path, os.path.basename(limited_upsampled_image_path).replace(".nii", "_identity.tfm"))
+        initial_transform_path: str = os.path.join(working_directory_path, os.path.basename(limited_upsampled_image_path).replace(".nii", "_identity.tfm"))
         MakeIdentityTransform(
             input_nifti_image=limited_upsampled_image_path,
             output_file_path=initial_transform_path
@@ -159,7 +161,7 @@ class IdentifyReferenceVolume:
                 target_volume_path=volume_image_path,
                 target_slice_indices=target_slice_indices,
                 initial_transform_path=initial_transform_path,
-                working_directory=output_directory_path,
+                working_directory=working_directory_path,
                 output_transform_label=f"transform-{'{:04d}'.format(volume_num)}-{'{:04d}'.format(slice_group_num)}",
                 run_environment=run_environment,
                 smsmireg_executable_path=smsmireg_executable_path,
@@ -170,7 +172,7 @@ class IdentifyReferenceVolume:
         
         displacements: list[float] = CalculateDisplacements(
             transform_paths=all_transform_paths,
-            output_file_path=os.path.join(output_directory_path, f"displacements-{'{:04d}'.format(volume_num)}.txt"),
+            output_file_path=os.path.join(working_directory_path, f"displacements-{'{:04d}'.format(volume_num)}.txt"),
             file_extension=".tfm",
             head_radius=head_radius,
             verbose=True,
@@ -197,6 +199,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--json_file_path",
         required=True
+    )
+    parser.add_argument(
+        "--working_directory_path",
+        required=False,
+        default="working",
+        help=f"Default: {os.path.abspath('working')}"
     )
     parser.add_argument(
         "--output_directory_path",
@@ -248,6 +256,7 @@ if __name__ == "__main__":
     IdentifyReferenceVolume(
         nifti_image_path=os.path.abspath(args.nifti_image_path),
         json_file_path=os.path.abspath(args.json_file_path),
+        working_directory_path=os.path.abspath(args.working_directory_path),
         output_directory_path=os.path.abspath(args.output_directory_path),
         run_environment=args.run_environment,
         smsmireg_executable_path=\
