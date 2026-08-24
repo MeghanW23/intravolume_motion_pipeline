@@ -142,13 +142,16 @@ class CharacterizeIntraVolumeMotion:
             reference_volume_index: int = IdentifyReferenceVolume(
                 nifti_image_path=nifti_image_path, # pyright: ignore[reportArgumentType]
                 json_file_path=json_file_path, # pyright: ignore[reportArgumentType]
-                working_directory=os.path.join(working_directory, "reference_volume_script_outputs"),
                 run_environment=run_environment,
                 smsmireg_executable_path=smsmireg_executable_path,
                 singularity_image_file=singularity_image_path,
+                output_directory_path=os.path.join(working_directory, "ref-vol_working"),
+                new_spacing=reference_volume_spacing, # pyright: ignore[reportArgumentType]
                 voxel_intensity_lower_bound=voxel_intensity_lower_bound, # pyright: ignore[reportArgumentType]
-                voxel_intensity_upper_bound=voxel_intensity_upper_bound,  # pyright: ignore[reportArgumentType]
+                voxel_intensity_upper_bound=voxel_intensity_upper_bound, # pyright: ignore[reportArgumentType]
+                head_radius=head_radius,
                 n_jobs=n_jobs # pyright: ignore[reportArgumentType]
+                
             ).return_reference_volume_index()
             print(f"We will use reference volume index: {reference_volume_index}")
 
