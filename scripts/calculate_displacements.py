@@ -11,7 +11,8 @@ class CalculateDisplacements:
                  output_file_path: str | None = None,
                  file_extension: str = '.tfm',
                  head_radius: float = 50,
-                 verbose: bool = True) -> None:
+                 verbose: bool = True,
+                 compare_to_first_transform: bool = False) -> None:
 
         if transform_directory == None and transform_paths == None:
             raise ValueError("Input a value for argument 'transform_directory' or 'transform_paths'")
@@ -37,19 +38,29 @@ class CalculateDisplacements:
                 continue
 
             displacement: float = self.calculate_displacement(
-                transform1_path=transform_paths[transform_num - 1],  # pyright: ignore[reportOptionalSubscript]
+                transform1_path=transform_paths[0] if compare_to_first_transform else transform_paths[transform_num - 1],  # pyright: ignore[reportOptionalSubscript]
                 transform2_path=transform_paths[transform_num], # pyright: ignore[reportOptionalSubscript]
                 head_radius=head_radius
             )
 
             if verbose:
-                print(
-                    f"Displacement Between: " + \
-                    transform_paths[transform_num - 1] + # pyright: ignore[reportOptionalSubscript] \ 
-                    " and " + \
-                    transform_paths[transform_num] + # pyright: ignore[reportOptionalSubscript] \
-                    f": {round(displacement, 4)}mm"
-                )
+                if compare_to_first_transform:
+                    print(
+                        f"Displacement Between: " + \
+                        transform_paths[0] + # pyright: ignore[reportOptionalSubscript] \ 
+                        " and " + \
+                        transform_paths[transform_num] + # pyright: ignore[reportOptionalSubscript] \
+                        f": {round(displacement, 4)}mm"
+                    )
+                else:
+                    print(
+                        f"Displacement Between: " + \
+                        transform_paths[transform_num - 1] + # pyright: ignore[reportOptionalSubscript] \ 
+                        " and " + \
+                        transform_paths[transform_num] + # pyright: ignore[reportOptionalSubscript] \
+                        f": {round(displacement, 4)}mm"
+                    )
+                    
 
             self.all_displacements.append(displacement)
 
@@ -187,11 +198,18 @@ if __name__ == "__main__":
         default=50,
         help="Radius, in mm, of the participant's head. Default: 50mm."
     )
+    parser.add_argument(
+        "--compare_to_first_transform",
+        required=False,
+        action="store_true",
+        help="Flag for calculating the displacement between every transform to the first transform."
+    )
     args: argparse.Namespace = parser.parse_args()
     CalculateDisplacements(
         transform_directory=os.path.abspath(args.transform_directory) if args.transform_directory else None,
         transform_paths=[os.path.abspath(transform_path) for transform_path in args.transform_paths] if args.transform_paths else None,
         file_extension=args.file_extension,
         output_file_path=os.path.abspath(args.output_file_path),
-        head_radius=args.head_radius
+        head_radius=args.head_radius,
+        compare_to_first_transform=args.compare_to_first_transform
     )
