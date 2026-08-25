@@ -146,7 +146,7 @@ class CharacterizeIntraVolumeMotion:
                 smsmireg_executable_path=smsmireg_executable_path,
                 singularity_image_file=singularity_image_path,
                 working_directory_path=os.path.join(working_directory, "ref-vol_working"),
-                output_directory_path=output_directory,
+                output_directory_path=os.path.join(output_directory, "ref-vol_outputs"),
                 new_spacing=reference_volume_spacing, # pyright: ignore[reportArgumentType]
                 voxel_intensity_lower_bound=voxel_intensity_lower_bound, # pyright: ignore[reportArgumentType]
                 voxel_intensity_upper_bound=voxel_intensity_upper_bound, # pyright: ignore[reportArgumentType]
