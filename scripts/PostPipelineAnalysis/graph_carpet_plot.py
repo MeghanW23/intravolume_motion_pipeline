@@ -274,7 +274,7 @@ class CarpetPlot:
                             mode='none',
                             line=dict(width=0),
                             legendgroup="fd_motion_flags",
-                            name=f"Framewise Motion Flags: {len(motion_flagged_volumes)} of {len(transform_paths) // len(slice_timing)} Volumes Flagged",
+                            name=f"Framewise Motion Flags: {len(fd_motion_flagged_volumes)} of {len(transform_paths) // len(slice_timing)} Volumes Flagged",
                             showlegend=True if i == 0 else False,
                             hoverinfo="skip",
                         ),
