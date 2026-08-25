@@ -5,7 +5,7 @@
 #SBATCH --output=logs/output_%j.out
 #SBATCH --error=logs/output_%j.err
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=116
 #SBATCH --mem=512G
 #SBATCH --mail-type=FAIL
 #SBATCH --mail-user=meghan.walsh2@childrens.harvard.edu
