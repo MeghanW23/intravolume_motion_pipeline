@@ -27,7 +27,8 @@ class IdentifyReferenceVolume:
                  voxel_intensity_lower_bound: int = 50,
                  voxel_intensity_upper_bound: int = 1000,
                  head_radius: float = 50,
-                 n_jobs: int = -1) -> None:
+                 n_jobs: int = -1,
+                 also_save_to_png: bool = True) -> None:
 
         os.makedirs(output_directory_path, exist_ok=True)
         os.makedirs(working_directory_path, exist_ok=True)
@@ -119,6 +120,16 @@ class IdentifyReferenceVolume:
         fig.write_html(output_file_path)
 
         print(f"Plot saved to: {output_file_path}")
+
+        if also_save_to_png:
+            fig.write_image(
+                output_file_path.replace(".html", ".png"),
+                width=1400,
+                                height=900,
+                                scale=2
+            )
+
+
 
     def get_intravolume_motion(self, 
                                volume_num: int , 
