@@ -16,7 +16,6 @@ class CompareTSNRPlots:
         loaded_fd_image: nib.Nifti1Image = nib.load(framewise_corrected_tsnr_nifti_image) # pyright: ignore[reportAssignmentType, reportPrivateImportUsage]
         loaded_sd_image: nib.Nifti1Image = nib.load(intravolume_corrected_tsnr_nifti_image) # pyright: ignore[reportAssignmentType, reportPrivateImportUsage]
         loaded_bg_image: nib.Nifti1Image = nib.load(background_image) # pyright: ignore[reportAssignmentType, reportPrivateImportUsage]
-
         
         diff_data: np.ndarray = loaded_sd_image.get_fdata() - loaded_fd_image.get_fdata()
         diff_image: nib.Nifti1Image =  nib.Nifti1Image(diff_data, loaded_sd_image.affine, loaded_sd_image.header) # pyright: ignore[reportPrivateImportUsage]
@@ -39,8 +38,8 @@ class CompareTSNRPlots:
             cut_coords=coords,
             vmin=min_val,
             vmax=max_val,
-            black_bg=False,
-            dim=-1,
+            black_bg=False, # type: ignore
+            dim=-1, # type: ignore
             annotate=False,
             axes=axes[0],
         ) # pyright: ignore[reportAssignmentType]
@@ -60,9 +59,9 @@ class CompareTSNRPlots:
             cut_coords=coords,
             vmin=min_val,
             vmax=max_val,
-            black_bg=False,
+            black_bg=False, # type: ignore
             annotate=False,
-            dim=-1,
+            dim=-1, # type: ignore
             axes=axes[1]
         ) # pyright: ignore[reportAssignmentType]
         sd_map.title(
@@ -78,8 +77,8 @@ class CompareTSNRPlots:
             bg_img=loaded_bg_image,
             display_mode='z',
             cut_coords=coords,
-            black_bg=False,
-            dim=-1,
+            black_bg=False, # type: ignore
+            dim=-1, # type: ignore
             annotate=False,
             axes=axes[2]
         ) # pyright: ignore[reportAssignmentType]
