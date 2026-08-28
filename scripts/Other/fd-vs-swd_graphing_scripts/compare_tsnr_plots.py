@@ -1,6 +1,7 @@
 import os 
 import numpy as np
 import nibabel as nib
+from nilearn.image import crop_img
 from matplotlib import pyplot as plt
 from nilearn.plotting import plot_stat_map
 from nilearn.plotting.displays import OrthoSlicer
@@ -11,42 +12,46 @@ class CompareTSNRPlots:
                  intravolume_corrected_tsnr_nifti_image: str, 
                  background_image: str,
                  output_file_path: str = "fd-vs-sd_tsnr_plots.png",
-                 plot_title: str = "tSNR Maps: Framewise vs. Intra-Frame Motion Corrected Preproccessed Data") -> None:
+                 plot_title: str = "Temporal Signal to Noise Ratio (tSNR)") -> None:
 
         loaded_fd_image: nib.Nifti1Image = nib.load(framewise_corrected_tsnr_nifti_image) # pyright: ignore[reportAssignmentType, reportPrivateImportUsage]
         loaded_sd_image: nib.Nifti1Image = nib.load(intravolume_corrected_tsnr_nifti_image) # pyright: ignore[reportAssignmentType, reportPrivateImportUsage]
         loaded_bg_image: nib.Nifti1Image = nib.load(background_image) # pyright: ignore[reportAssignmentType, reportPrivateImportUsage]
-        
+        loaded_bg_image = crop_img(nib.load(background_image), pad=2, copy_header=True) # type: ignore
+
         diff_data: np.ndarray = loaded_sd_image.get_fdata() - loaded_fd_image.get_fdata()
         diff_image: nib.Nifti1Image =  nib.Nifti1Image(diff_data, loaded_sd_image.affine, loaded_sd_image.header) # pyright: ignore[reportPrivateImportUsage]
 
         max_val: float = max(np.nanmax(loaded_sd_image.get_fdata()), np.nanmax(loaded_fd_image.get_fdata())) # pyright: ignore[reportAssignmentType]
         min_val: float = min(np.nanmin(loaded_sd_image.get_fdata()), np.nanmin(loaded_fd_image.get_fdata())) # pyright: ignore[reportAssignmentType]
+        vmin: float = min_val + ((max_val - min_val) / 4)
         print(f"Value Range: {min_val} to {max_val}")
 
-        fig, axes = plt.subplots(nrows=3, ncols=1, facecolor='white', figsize=(14, 8.5))
-        fig.suptitle(plot_title, fontweight="bold")
+        fig, axes = plt.subplots(nrows=3, ncols=1, facecolor='white', figsize=(5, 4))
+        fig.suptitle(plot_title, fontweight="bold", fontsize=8)
 
         num_z_slices: int = loaded_bg_image.shape[-1]
-        divisor: int = num_z_slices // 5
-        coords: list[int] = [0, divisor, divisor * 2, divisor * 3, divisor * 4]
-        
+        divisor: int = num_z_slices // 3
+        coords: list[int] = [0, int(divisor * 1.5), divisor * 3]
+        plt.rcParams.update({'font.size': 4})
+
         fd_map: OrthoSlicer = plot_stat_map(
             loaded_fd_image,
             bg_img=loaded_bg_image,
             display_mode='z',
             cut_coords=coords,
-            vmin=min_val,
+            cmap='hot',
+            vmin=vmin,
             vmax=max_val,
             black_bg=False, # type: ignore
-            dim=-1, # type: ignore
+            
             annotate=False,
             axes=axes[0],
         ) # pyright: ignore[reportAssignmentType]
-        fd_map.annotate(left_right=True, positions=False)
+        fd_map.annotate(left_right=False, positions=False, size=5)
         fd_map.title(
             "Framewise Motion-Corrected",
-            size=12,
+            size=7,
             color='black',
             bgcolor='white',
             alpha=1,
@@ -57,16 +62,16 @@ class CompareTSNRPlots:
             bg_img=loaded_bg_image,
             display_mode='z',
             cut_coords=coords,
-            vmin=min_val,
+            cmap='hot',
+            vmin=vmin,
             vmax=max_val,
             black_bg=False, # type: ignore
             annotate=False,
-            dim=-1, # type: ignore
             axes=axes[1]
         ) # pyright: ignore[reportAssignmentType]
         sd_map.title(
             "Intra-Frame Motion-Corrected",
-            size=12,
+            size=7,
             color='black',
             bgcolor='white',
             alpha=1,
@@ -78,23 +83,23 @@ class CompareTSNRPlots:
             display_mode='z',
             cut_coords=coords,
             black_bg=False, # type: ignore
-            dim=-1, # type: ignore
             annotate=False,
+            threshold=1,
             axes=axes[2]
         ) # pyright: ignore[reportAssignmentType]
-        diff_map.annotate(left_right=False, positions=True)
+        diff_map.annotate(left_right=False, positions=True, size=5)
         diff_map.title(
-            "Intra-Frame Motion-Corrected - Framewise Motion-Corrected",
-            size=12,
+            "Difference: Intra-Frame - Framewise",
+            size=7,
             color='black',
             bgcolor='white',
-            alpha=1,
+            alpha=1
         )
         plt.savefig(
             output_file_path,
             dpi=300,
             bbox_inches='tight',
-            pad_inches=0.2,   # was 0.05 — give it more room
+            pad_inches=0.2,
             facecolor='white',
         )
         print(f"Plot at: {output_file_path}")
@@ -129,8 +134,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--plot_title",
         required=False,
-        help="Default: 'tSNR Maps: Framewise vs. Intra-Frame Motion Corrected Preproccessed Data'",
-        default="tSNR Maps: Framewise vs. Intra-Frame Motion Corrected Preproccessed Data"
+        help="Default: 'Temporal Signal to Noise Ratio (tSNR)'",
+        default="Temporal Signal to Noise Ratio (tSNR)"
     )
     args: argparse.Namespace = parser.parse_args()
     CompareTSNRPlots(
