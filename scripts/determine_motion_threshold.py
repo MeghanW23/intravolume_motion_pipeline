@@ -1,6 +1,7 @@
 import os 
 import json
 import math
+import warnings
 import statistics
 import numpy as np
 from typing import Any 
@@ -136,15 +137,35 @@ class DetermineMotionThreshold:
         print(f"Remaining Data Displacements STD: {mm_std} mm")
 
         self.motion_threshold: float = mm_mean + (2 * mm_std)
-        # the minimum motion threshold is 10% the diagonal of a single voxel
-        min_motion_threshold: float = self.get_min_threshold_in_mm(
-            nifti_image_path=nifti_image_path,
-            threshold_as_percent_of_voxel=10
+        min_motion_threshold: float = self.get_threshold_in_mm(
+            spacing=voxel_spacing,
+            threshold_as_percent=10
         )
         if min_motion_threshold > self.motion_threshold:
+            warnings.warn(
+                message=\
+                    f"Calculated threshold ({self.motion_threshold} mm) is less " \
+                    f"than the minimum threshold: {min_motion_threshold} mm. " \
+                    f"Setting the threshold to the minimum threshold."
+            )
             self.motion_threshold: float = min_motion_threshold
-            
+
+        max_motion_threshold: float = self.get_threshold_in_mm(
+            spacing=voxel_spacing, 
+            threshold_as_percent=300
+        )
+        if max_motion_threshold < self.motion_threshold:
+            warnings.warn(
+                message=\
+                    f"Calculated threshold ({self.motion_threshold} mm) is greater " \
+                    f"than the maximum threshold: {max_motion_threshold} mm. " \
+                    f"Setting the threshold to the maximum threshold."
+            )
+            self.motion_threshold: float = max_motion_threshold
+
+        print(f"Motion Threshold Bounds: {min_motion_threshold} - {max_motion_threshold}")
         print(f"Motion Threshold: {self.motion_threshold}")
+        
 
         """
         ====================================================================
@@ -234,24 +255,6 @@ class DetermineMotionThreshold:
             file.write(f"percent_threshold,mm_threshold,num_volumes_flagged\n")
             for (threshold_percent, threshold_mm), displacement_values in num_volumes_flagged_per_threshold.items():
                 file.write(f"{threshold_percent},{threshold_mm},{displacement_values}\n")
-
-   
-    def get_min_threshold_in_mm(self, nifti_image_path: str, threshold_as_percent_of_voxel: int = 10) -> float:
-        """
-
-        To get the diameter of a rectangular prism (3D rectangle):
-        d = sqrt(dim_x^2 + dim_y^2 + dim_z^2)
-        
-        To get the threshold in mm:
-        mm_threshold = d * (threshold_as_percent_of_voxel / 100)
-        """
-        d_x, d_y, d_z, d_t = sitk.ReadImage(nifti_image_path).GetSpacing()
-        
-        diameter = math.sqrt(d_x ** 2 + d_y ** 2 + d_z ** 2)
-        print(f"Voxel Diameter: {diameter}mm")
-
-        return diameter * (threshold_as_percent_of_voxel / 100)
-
 
     def plot_histogram(self,
                        num_volumes_flagged_per_threshold: dict[tuple[float, float], int], 
