@@ -12,6 +12,7 @@ from decompress_dicoms import DecompressDicoms
 from dicom_to_nifti import DicomToNifti
 from get_slice_timing import GetSliceTiming
 from extract_images import ExtractNiFTIImage
+from skull_strip_volumes import SkullStripVolumes
 from determine_motion_threshold import DetermineMotionThreshold
 from identify_reference_volume import IdentifyReferenceVolume
 from limit_voxel_intensity_range import LimitVoxelIntensityRange
@@ -45,7 +46,8 @@ class CharacterizeIntraVolumeMotion:
                  dcm2niix_path: str = 'dcm2niix',
                  upsample_reference_volume: bool = True,
                  reference_volume_spacing: Sequence[float] | None = (1.236, 1.236, 1.236),
-                 head_radius: float = 50
+                 head_radius: float = 50,
+                 skull_strip_volumes: bool = True
                  ) -> None:
         
         print(f"\n========== Starting Intravolume Motion Characterization ========== ")
@@ -131,6 +133,18 @@ class CharacterizeIntraVolumeMotion:
         ).return_images()
         print(f"{len(volume_paths)} 3D Volumes Were Extracted.")
 
+
+        """
+        =======================================================
+        SKULL STRIP 3D VOLUMES
+        =======================================================
+        """
+        if skull_strip_volumes:
+            volume_paths: list[str] = SkullStripVolumes(
+                volume_path_list=volume_paths,
+                output_directory=working_directory,
+                n_jobs=n_jobs # pyright: ignore[reportArgumentType]
+            ).return_output_volume_paths()
 
         """
         =======================================================
