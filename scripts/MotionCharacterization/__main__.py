@@ -61,6 +61,7 @@ class CharacterizeIntraVolumeMotion:
         print(f"Compiled Sms-Mi-Reg File: {smsmireg_executable_path}")
         print(f"Singularity Image Path: {singularity_image_path}")
         print(f"N_Jobs: {n_jobs}")
+        print(f"Skull Strip Volumes: {skull_strip_volumes}")
         print("======================================================================\n")
 
         self.validate_inputted_data(dicom_directory, nifti_image_path, json_file_path)
@@ -133,19 +134,6 @@ class CharacterizeIntraVolumeMotion:
         ).return_images()
         print(f"{len(volume_paths)} 3D Volumes Were Extracted.")
 
-
-        """
-        =======================================================
-        SKULL STRIP 3D VOLUMES
-        =======================================================
-        """
-        if skull_strip_volumes:
-            volume_paths: list[str] = SkullStripVolumes(
-                volume_path_list=volume_paths,
-                output_directory=working_directory,
-                n_jobs=n_jobs # pyright: ignore[reportArgumentType]
-            ).return_output_volume_paths()
-
         """
         =======================================================
         FIND A REFERENCE_VOLUME
@@ -186,6 +174,18 @@ class CharacterizeIntraVolumeMotion:
             ).return_output_image_paths()
             print(f"Limited the Intensity in {len(volume_paths)} Volumes.")
 
+        """
+        =======================================================
+        SKULL STRIP 3D VOLUMES
+        =======================================================
+        """
+        if skull_strip_volumes:
+            volume_paths: list[str] = SkullStripVolumes(
+                volume_path_list=volume_paths,
+                output_directory=working_directory,
+                n_jobs=n_jobs # pyright: ignore[reportArgumentType]
+            ).return_output_volume_paths()
+            
         """
         =======================================================
         UPSAMPLE THE REFERENCE VOLUME
@@ -554,6 +554,12 @@ if __name__ == "__main__":
         help=\
             "Please give input in millimeters. If you dont give an input, we will select one ourselves."
     )
+    parser.add_argument(
+        "--skull_strip_volumes",
+        action="store_true",
+        required=False,
+        help="Flag for skull stripping the 3D volumes before alignment."
+    )
     args: argparse.Namespace = parser.parse_args()
     CharacterizeIntraVolumeMotion(
         dicom_directory=\
@@ -577,5 +583,6 @@ if __name__ == "__main__":
                 if args.singularity_image_path else None,
         n_jobs=args.n_jobs,
         motion_threshold=args.motion_threshold,
-        reference_volume_index=args.reference_volume_index
+        reference_volume_index=args.reference_volume_index,
+        skull_strip_volumes=args.skull_strip_volumes
     )
