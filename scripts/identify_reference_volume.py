@@ -122,12 +122,21 @@ class IdentifyReferenceVolume:
         print(f"Plot saved to: {output_file_path}")
 
         if also_save_to_png:
-            fig.write_image(
-                output_file_path.replace(".html", ".png"),
-                width=1400,
-                                height=900,
-                                scale=2
-            )
+            try:
+                fig.write_image(
+                    output_file_path.replace(".html", ".png"),
+                    width=1400,
+                    height=900,
+                    scale=2
+                )
+            except Exception as e:
+                if "BrowserFailedError" in type(e).__name__ or "browser seemed to close" in str(e):
+                    raise RuntimeError(
+                        f"Chrome failed to launch for image export: {e}. "
+                        f"\n\nBCH RESEARCHERS: If you are on a login node on E3, try re-running on a compute node."
+                    )
+                else:
+                    raise
 
 
 

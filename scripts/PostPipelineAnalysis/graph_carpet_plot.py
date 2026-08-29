@@ -381,6 +381,14 @@ class CarpetPlot:
                     message="TimeoutError occured writing the carpet plot to a .png file. We will skip this step.",
                     category=UserWarning
                 )
+            except Exception as e:
+                if "BrowserFailedError" in type(e).__name__ or "browser seemed to close" in str(e):
+                    raise RuntimeError(
+                        f"Chrome failed to launch for image export: {e}. "
+                        f"\n\nBCH RESEARCHERS: If you are on a login node on E3, try re-running on a compute node."
+                    )
+                else:
+                    raise
     
     
     def get_slice_timing(self, json_path, slice_times_text_file):

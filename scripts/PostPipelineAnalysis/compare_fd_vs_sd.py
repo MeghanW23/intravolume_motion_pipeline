@@ -279,8 +279,17 @@ class CompareFDvsSD:
         fig.write_html(os.path.join(output_directory, "plotted-parameters.html"))
         print(f"Figure saved to: {os.path.join(output_directory, 'plotted-parameters.html')}")
         if also_save_png:
-            fig.write_image(os.path.join(output_directory, "plotted-parameters.png"), width=1200, height=800)
-            print(f"Figure saved to: {os.path.join(output_directory, 'plotted-parameters.png')}")
+            try:
+                fig.write_image(os.path.join(output_directory, "plotted-parameters.png"), width=1200, height=800)
+                print(f"Figure saved to: {os.path.join(output_directory, 'plotted-parameters.png')}")
+            except Exception as e:
+                if "BrowserFailedError" in type(e).__name__ or "browser seemed to close" in str(e):
+                    raise RuntimeError(
+                        f"Chrome failed to launch for image export: {e}. "
+                        f"\n\nBCH RESEARCHERS: If you are on a login node on E3, try re-running on a compute node."
+                    )
+                else:
+                    raise
 
         
 
