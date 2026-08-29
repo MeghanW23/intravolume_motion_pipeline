@@ -268,7 +268,7 @@ class RunPipeline:
             "fmriprep_func_image_mask": glob(os.path.join(fmriprep_func_directory, f"*run-{'{:02d}'.format(configurations.RUN_NUM)}_desc-brain_mask.nii.gz"))[-1],
             "fmriprep_confounds_path": glob(os.path.join(fmriprep_func_directory, f"*run-{'{:02d}'.format(configurations.RUN_NUM)}_desc-confounds_timeseries.tsv"))[-1],
             "fmriprep_anat_image": glob(os.path.join(fmriprep_anat_directory, f"sub-{'{:02d}'.format(configurations.SUBJECT_ID)}" + f"_ses-{'{:02d}'.format(configurations.SESSION_NUM)}" + "_desc-preproc_T1w.nii.gz"))[-1],
-            "reference_volume_path": sorted(glob(os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "refvol*.nii")))[-1]
+            "reference_volume_path": sorted(glob(os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "refvol*.nii")) + glob(os.path.join(configurations.OUTPUT_DIRECTORY_PATH, "refvol*.nii.gz")))[-1]
         }
         for file_key, file_path in inputs.items():
             if not os.path.exists(file_path):
