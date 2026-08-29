@@ -40,7 +40,7 @@ class CompareTSNRPlots:
         vmin: float = min_val + ((max_val - min_val) / 4)
         print(f"Value Range: {min_val} to {max_val}")
 
-        fig, axes = plt.subplots(nrows=3, ncols=1, facecolor='white', figsize=(5, 4))
+        fig, axes = plt.subplots(nrows=3, ncols=1, facecolor='white', figsize=(6, 4))
         fig.suptitle(plot_title, fontweight="bold", fontsize=8)
 
         
