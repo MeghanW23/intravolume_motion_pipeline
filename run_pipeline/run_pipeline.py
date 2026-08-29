@@ -133,7 +133,8 @@ class RunPipeline:
                 dcm2niix_path=configurations.DCM2NIIX_PATH,
                 upsample_reference_volume=configurations.UPSAMPLE_REFERENCE_VOLUME,
                 reference_volume_spacing=configurations.REFERENCE_VOLUME_SPACING,
-                head_radius=configurations.HEAD_RADIUS
+                head_radius=configurations.HEAD_RADIUS,
+                skull_strip_volumes=configurations.SKULL_STRIP_VOLUMES
             )
 
         """

@@ -86,6 +86,14 @@ RUN_NUM: 1
 
 N_JOBS: -1 # -1 = All CPU cores, -2 = All CPU cores except one
 
+# Option for skull stripping the 3D volumes during 
+# the motion characterization step.
+#
+# Uses FSL's 'bet' command:
+#   bet <input_volume_path> <output_volume_path> -R 
+#
+SKULL_STRIP_VOLUMES: false
+
 # This motion threshold will determine which slice groups and 
 # volumes have "too much" motion. If you already have a 
 # threshold, enter it here in millimeters. Else, please
