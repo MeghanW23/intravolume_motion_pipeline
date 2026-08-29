@@ -92,7 +92,7 @@ N_JOBS: -1 # -1 = All CPU cores, -2 = All CPU cores except one
 # Uses FSL's 'bet' command:
 #   bet <input_volume_path> <output_volume_path> -R 
 #
-SKULL_STRIP_VOLUMES: false
+SKULL_STRIP_VOLUMES: true
 
 # This motion threshold will determine which slice groups and 
 # volumes have "too much" motion. If you already have a 
