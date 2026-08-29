@@ -47,7 +47,7 @@ class CharacterizeIntraVolumeMotion:
                  upsample_reference_volume: bool = True,
                  reference_volume_spacing: Sequence[float] | None = (1.236, 1.236, 1.236),
                  head_radius: float = 50,
-                 skull_strip_volumes: bool = True
+                 skull_strip_volumes: bool = False
                  ) -> None:
         
         print(f"\n========== Starting Intravolume Motion Characterization ========== ")
