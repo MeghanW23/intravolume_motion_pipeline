@@ -16,8 +16,8 @@ from dicom_to_nifti import DicomToNifti
 
 class StartSingleRunfMRIPrep:
     def __init__(self,
-                 func_data: list[str],
-                 anat_data: list[str],
+                 func_data: str | list[str], # pyright: ignore[reportRedeclaration]
+                 anat_data: str | list[str], # pyright: ignore[reportRedeclaration]
                  series_name: str,
                  subject_id: int,  
                  session_num: int,  
@@ -32,6 +32,12 @@ class StartSingleRunfMRIPrep:
                  omp_nthreads: int = 8,
                  mem_mb: int = 24000  # in MB
                  ) -> None: 
+
+        if isinstance(func_data, str):
+            func_data: list[str] = [func_data]
+
+        if isinstance(anat_data, str):
+            anat_data: list[str] = [anat_data]
 
         # Set up input configurations 
         if n_jobs == None:
