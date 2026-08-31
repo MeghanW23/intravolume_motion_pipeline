@@ -57,7 +57,7 @@ class CompareTSNRPlots:
             vmax=max_val,
             annotate=False,
             black_bg=False,
-            threshold=min_val + ((max_val - min_val) / 1.5),
+            # threshold=min_val + ((max_val - min_val) / 1.5),
             axes=axes[0], # pyright: ignore[reportIndexIssue, reportAssignmentType]
         )
         fd_map.annotate(left_right=False, positions=False, size=5)
@@ -79,7 +79,7 @@ class CompareTSNRPlots:
             vmax=max_val,
             annotate=False,
             black_bg=False,
-            threshold=min_val + ((max_val - min_val) / 1.5),
+            # threshold=min_val + ((max_val - min_val) / 1.5),
             axes=axes[1] # pyright: ignore[reportIndexIssue, reportAssignmentType]
         ) 
         sd_map.title(
