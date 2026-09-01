@@ -2,6 +2,7 @@ import os
 import sys
 import shutil
 import warnings
+from glob import glob
 from typing import Sequence
 import SimpleITK as sitk 
 from collections import OrderedDict
@@ -180,12 +181,12 @@ class CharacterizeIntraVolumeMotion:
         =======================================================
         """
         if skull_strip_volumes:
-            volume_paths: list[str] = SkullStripVolumes(
+            SkullStripVolumes(
                 volume_path_list=volume_paths,
                 output_directory=working_directory,
                 n_jobs=n_jobs # pyright: ignore[reportArgumentType]
-            ).return_output_volume_paths()
-            
+            )
+            volume_paths: list[str] = sorted(glob(os.path.join(output_directory, "ss_*.nii.gz")))
         """
         =======================================================
         UPSAMPLE THE REFERENCE VOLUME
