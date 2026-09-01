@@ -26,7 +26,7 @@ class UpsampleReferenceVolume:
             sitk_image,
             spacing=new_spacing,
             volume_size=new_size.tolist(),
-            interpolator=self.get_interpolator("linear")
+            interpolator=self.get_interpolator("bspline")
         )
 
         if output_file_path:
