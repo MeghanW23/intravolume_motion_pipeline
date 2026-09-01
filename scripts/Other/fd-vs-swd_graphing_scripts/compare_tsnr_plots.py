@@ -43,6 +43,14 @@ class CompareTSNRPlots:
 
         fig, axes = plt.subplots(nrows=3, ncols=1, facecolor='white', figsize=(3, 4))
         fig.suptitle(plot_title, fontweight="bold", fontsize=8)
+        fig.text(
+            0.5, 0.93,                      
+            "Single Participant",
+            ha='center',
+            fontsize=7,
+            fontweight='normal',
+            color='dimgray',
+        )
 
         
         coords: list[int] = [0, 30, 60]
@@ -62,7 +70,7 @@ class CompareTSNRPlots:
             axes=axes[0], # pyright: ignore[reportIndexIssue, reportAssignmentType]
             
         )
-        fd_map.annotate(left_right=False, positions=False, size=5)
+        fd_map.annotate(left_right=True, positions=True, size=5)
         fd_map.title(
             "Framewise Motion-Corrected",
             size=7,
@@ -95,6 +103,7 @@ class CompareTSNRPlots:
             y=1.11,
             clip_on=False,
         )
+        sd_map.annotate(left_right=True, positions=True, size=5)
 
         diff_map: OrthoSlicer = plot_stat_map(
             diff_image,
@@ -106,7 +115,7 @@ class CompareTSNRPlots:
             threshold=5,
             axes=axes[2] # pyright: ignore[reportIndexIssue, reportAssignmentType]
         )
-        diff_map.annotate(left_right=False, positions=True, size=5)
+        diff_map.annotate(left_right=True, positions=True, size=5)
         diff_map.title(
             "Difference: Intra-Frame - Framewise",
             size=7,
