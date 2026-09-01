@@ -11,15 +11,16 @@ class CompareTSNRPlots:
     def __init__(self, 
                  framewise_corrected_tsnr_nifti_image: str, 
                  intravolume_corrected_tsnr_nifti_image: str, 
-                 background_image: str,
+                 framewise_background_image: str,
+                 intravolume_background_image: str,
                  output_file_path: str = "fd-vs-sd_tsnr_plots.png",
                  plot_title: str = "Temporal Signal to Noise Ratio (tSNR)",
                  smoothing_fwhm: float | None = 6) -> None:
 
         loaded_fd_image: nib.Nifti1Image = nib.load(framewise_corrected_tsnr_nifti_image) # pyright: ignore[reportAssignmentType, reportPrivateImportUsage]
         loaded_sd_image: nib.Nifti1Image = nib.load(intravolume_corrected_tsnr_nifti_image) # pyright: ignore[reportAssignmentType, reportPrivateImportUsage]
-        loaded_bg_image: nib.Nifti1Image = nib.load(background_image) # pyright: ignore[reportAssignmentType, reportPrivateImportUsage]
-        loaded_bg_image = crop_img(nib.load(background_image), pad=2, copy_header=True) # type: ignore
+        framewise_loaded_bg_image: nib.Nifti1Image = nib.load(framewise_background_image) # pyright: ignore[reportAssignmentType, reportPrivateImportUsage]
+        intravolume_loaded_bg_image: nib.Nifti1Image = nib.load(intravolume_background_image) # pyright: ignore[reportAssignmentType, reportPrivateImportUsage]
 
         if smoothing_fwhm is not None:
             loaded_fd_image = smooth_img(
@@ -49,14 +50,14 @@ class CompareTSNRPlots:
 
         fd_map: OrthoSlicer = plot_stat_map(
             loaded_fd_image,
-            bg_img=loaded_bg_image,
+            bg_img=framewise_loaded_bg_image,
             display_mode='z',
             cut_coords=coords,
             cmap='hot',
             vmin=vmin,
             vmax=max_val,
             annotate=False,
-            black_bg=False,
+            black_bg=False, # type: ignore
             # threshold=min_val + ((max_val - min_val) / 1.5),
             axes=axes[0], # pyright: ignore[reportIndexIssue, reportAssignmentType]
             
@@ -74,14 +75,14 @@ class CompareTSNRPlots:
 
         sd_map: OrthoSlicer = plot_stat_map(
             loaded_sd_image,
-            bg_img=loaded_bg_image,
+            bg_img=intravolume_loaded_bg_image,
             display_mode='z',
             cut_coords=coords,
             cmap='hot',
             vmin=vmin,
             vmax=max_val,
             annotate=False,
-            black_bg=False,
+            black_bg=False, # type: ignore
             # threshold=min_val + ((max_val - min_val) / 1.5),
             axes=axes[1] # pyright: ignore[reportIndexIssue, reportAssignmentType]
         ) 
@@ -97,11 +98,11 @@ class CompareTSNRPlots:
 
         diff_map: OrthoSlicer = plot_stat_map(
             diff_image,
-            bg_img=loaded_bg_image,
+            bg_img=intravolume_loaded_bg_image,
             display_mode='z',
             cut_coords=coords,
             annotate=False,
-            black_bg=False,
+            black_bg=False, # type: ignore
             threshold=5,
             axes=axes[2] # pyright: ignore[reportIndexIssue, reportAssignmentType]
         )
@@ -141,9 +142,14 @@ if __name__ == "__main__":
         help="The 3D tSNR Map NiFTI Image for the Intra-Frame-Motion Corrected Data."
     )
     parser.add_argument(
-        "--background_image_path",
+        "--framewise_background_image_path",
         required=True,
-        help="The background 3D NiFTI Image."
+        help="The background 3D NiFTI Image for the Framewise-Motion Corrected Data."
+    )
+    parser.add_argument(
+        "--intravolume_background_image_path",
+        required=True,
+        help="The background 3D NiFTI Image for the Intra-Frame-Motion Corrected Data."
     )
     parser.add_argument(
         "--output_file_path",
@@ -161,7 +167,8 @@ if __name__ == "__main__":
     CompareTSNRPlots(
         framewise_corrected_tsnr_nifti_image=os.path.abspath(args.framewise_corrected_tsnr_map),
         intravolume_corrected_tsnr_nifti_image=os.path.abspath(args.intraframe_corrected_tsnr_map),
-        background_image=os.path.abspath(args.background_image_path),
+        framewise_background_image=os.path.abspath(args.framewise_background_image_path),
+        intravolume_background_image=os.path.abspath(args.intravolume_background_image_path),
         output_file_path=os.path.abspath(args.output_file_path),
         plot_title=args.plot_title
     )
