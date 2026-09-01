@@ -7,7 +7,6 @@ from calculate_tsnr import CalculateTSNR
 from graph_carpet_plot import CarpetPlot
 from seed_to_voxel_correlation import SeedToVoxelCorrelation
 from fmriprep_motion_to_transform_directory import ConvertfMRIPrepTsvToTransformDirectory
-from compare_fd_vs_sd import CompareFDvsSD
 
 class PostRunAnalysis:
     def __init__(self,
@@ -18,7 +17,6 @@ class PostRunAnalysis:
                 brain_mask_path: str,
                 reference_volume_path: str,
                 confounds_file_path: str,
-                head_radius: int = 50,
                 raw_func_nifti_image: str | None = None,
                 corrected_func_nifti_image: str | None = None,
                 fmriprep_func_nifti_image: str | None = None,
@@ -43,18 +41,6 @@ class PostRunAnalysis:
         if raw_func_nifti_image:
             raw_data_output_dir: str = os.path.join(output_directory, "raw_data_outputs")
             os.makedirs(raw_data_output_dir, exist_ok=True)
-
-            CompareFDvsSD(
-                intravolume_transform_directory=transform_directory,
-                framewise_transform_directory=framewise_transform_directory,
-                json_file_path=json_file,
-                mm_motion_threshold=mm_displacement_threshold,
-                also_save_png=True,
-                head_radius=head_radius,
-                input_rotation_unit='versor',
-                output_directory=os.path.join(output_directory, "fd-vs-sd_results"),
-                plot_tile=os.path.basename(raw_func_nifti_image) + ": Framewise vs Intravolume Motion"
-            )
 
             print(f"\nCreating Raw Data Carpet Plot")
             CarpetPlot(
