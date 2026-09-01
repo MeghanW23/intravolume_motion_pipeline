@@ -40,7 +40,7 @@ class CompareTSNRPlots:
         vmin: float = min_val + ((max_val - min_val) / 4)
         print(f"Value Range: {min_val} to {max_val}")
 
-        fig, axes = plt.subplots(nrows=3, ncols=1, facecolor='white', figsize=(6, 4))
+        fig, axes = plt.subplots(nrows=3, ncols=1, facecolor='white', figsize=(3, 4))
         fig.suptitle(plot_title, fontweight="bold", fontsize=8)
 
         
@@ -59,6 +59,7 @@ class CompareTSNRPlots:
             black_bg=False,
             # threshold=min_val + ((max_val - min_val) / 1.5),
             axes=axes[0], # pyright: ignore[reportIndexIssue, reportAssignmentType]
+            
         )
         fd_map.annotate(left_right=False, positions=False, size=5)
         fd_map.title(
@@ -67,6 +68,8 @@ class CompareTSNRPlots:
             color='black',
             bgcolor='white',
             alpha=1,
+            y=1.11,
+            clip_on=False,
         )
 
         sd_map: OrthoSlicer = plot_stat_map(
@@ -88,6 +91,8 @@ class CompareTSNRPlots:
             color='black',
             bgcolor='white',
             alpha=1,
+            y=1.11,
+            clip_on=False,
         )
 
         diff_map: OrthoSlicer = plot_stat_map(
@@ -106,7 +111,9 @@ class CompareTSNRPlots:
             size=7,
             color='black',
             bgcolor='white',
-            alpha=1
+            alpha=1,
+            y=1.11,
+            clip_on=False,
         )
         plt.savefig(
             output_file_path,
