@@ -35,9 +35,6 @@ class SkullStripVolumes:
             for volume_path in volume_path_list # pyright: ignore[reportOptionalIterable]
         )
 
-        self.output_volume_paths: list[str] = sorted(glob(os.path.join(output_directory, "ss_*.nii.gz")))
-        print(f"Created {len(self.output_volume_paths)} skull stripped volumes.")
-
 
     def run_command(self, 
                     command: list[str], 
@@ -82,10 +79,6 @@ class SkullStripVolumes:
             verbose=True
         )
         print(f"Outputted Path: {output_volume_path}")
-
-
-    def return_output_volume_paths(self) -> list[str]:
-        return self.output_volume_paths
 
 class CalledProcessError(subprocess.CalledProcessError):
     def __str__(self) -> str:
