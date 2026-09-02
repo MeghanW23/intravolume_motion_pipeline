@@ -186,7 +186,7 @@ class CharacterizeIntraVolumeMotion:
                 output_directory=working_directory,
                 n_jobs=n_jobs # pyright: ignore[reportArgumentType]
             )
-            volume_paths: list[str] = sorted(glob(os.path.join(output_directory, "ss_*.nii.gz")))
+            volume_paths: list[str] = sorted(glob(os.path.join(working_directory, "ss_*.nii.gz")))
         """
         =======================================================
         UPSAMPLE THE REFERENCE VOLUME
