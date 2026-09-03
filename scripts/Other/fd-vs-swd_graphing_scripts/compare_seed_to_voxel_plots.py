@@ -25,7 +25,7 @@ class CompareSeedToVoxelPlots:
         loaded_fd_bg_image: nib.Nifti1Image = nib.load(framewise_background_image) # pyright: ignore[reportAssignmentType, reportPrivateImportUsage]
         loaded_sd_bg_image: nib.Nifti1Image = nib.load(intravolume_background_image)  # pyright: ignore[reportAssignmentType, reportPrivateImportUsage]
 
-        if smoothing_fwhm is not None:
+        """if smoothing_fwhm is not None:
             loaded_fd_image = smooth_img(
                 loaded_fd_image,
                 fwhm=smoothing_fwhm
@@ -33,7 +33,7 @@ class CompareSeedToVoxelPlots:
             loaded_sd_image = smooth_img(
                 loaded_sd_image,
                 fwhm=smoothing_fwhm
-            ) # pyright: ignore[reportAssignmentType]
+            ) # pyright: ignore[reportAssignmentType]"""
 
         max_val: float = max(np.nanmax(loaded_sd_image.get_fdata()), np.nanmax(loaded_fd_image.get_fdata())) # pyright: ignore[reportAssignmentType]
         min_val: float = min(np.nanmin(loaded_sd_image.get_fdata()), np.nanmin(loaded_fd_image.get_fdata())) # pyright: ignore[reportAssignmentType]
@@ -58,12 +58,12 @@ class CompareSeedToVoxelPlots:
             loaded_fd_image,
             bg_img=loaded_fd_bg_image,
             cut_coords=seed_coords,
-            vmin=vmin,
-            vmax=max_val,
+            vmin=-2,
+            vmax=2,
             annotate=False,
             black_bg=False, # type: ignore
             axes=axes[0], # type: ignore
-            threshold=0.15,
+            # threshold=0.15,
         )
         fd_map.annotate(left_right=False, positions=False, size=5)
         fd_map.title(
@@ -84,12 +84,12 @@ class CompareSeedToVoxelPlots:
             loaded_sd_image,
             bg_img=loaded_sd_bg_image,
             cut_coords=seed_coords,
-            vmin=vmin,
-            vmax=max_val,
+            vmin=-2,
+            vmax=2,
             annotate=False,
             black_bg=False, # type: ignore
             axes=axes[1], # type: ignore
-            threshold=0.15
+            # threshold=0.15
         ) 
         sd_map.title(
             "Intra-Frame Motion-Corrected",

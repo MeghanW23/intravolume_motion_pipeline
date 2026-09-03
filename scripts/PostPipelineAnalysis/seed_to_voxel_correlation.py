@@ -63,6 +63,7 @@ class SeedToVoxelCorrelation:
             "rot_z",
             "white_matter",
             "csf",
+            "global_signal"
         ]
 
         confounds: pd.DataFrame = confounds[confound_columns].fillna(0)
@@ -72,6 +73,7 @@ class SeedToVoxelCorrelation:
             seeds=[seed_coords],
             radius=seed_radius,
             detrend=True,
+            standardize="zscore_sample", # pyright: ignore[reportArgumentType]
             standardize_confounds=True,
             low_pass=0.1,
             high_pass=0.01,
@@ -90,6 +92,7 @@ class SeedToVoxelCorrelation:
             mask_img=nifti_image_mask_path,
             smoothing_fwhm=6,
             detrend=True,
+            standardize="zscore_sample", # pyright: ignore[reportArgumentType]
             standardize_confounds=True,
             low_pass=0.1,
             high_pass=0.01,
