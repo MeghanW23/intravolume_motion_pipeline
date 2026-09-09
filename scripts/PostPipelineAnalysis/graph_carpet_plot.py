@@ -128,7 +128,7 @@ class CarpetPlot:
                 brain_mask=masks['gm'],
                 slice_timing=slice_timing
             ),
-            max_voxels=6000
+            max_voxels=2000
         )
         demeaned_voxels['wm'] = self.subsample_carpet(
             self.calculate_psc(
@@ -136,7 +136,7 @@ class CarpetPlot:
                 brain_mask=masks['wm'],
                 slice_timing=slice_timing
             ),
-            max_voxels=2000
+            max_voxels=500
         )
         demeaned_voxels['csf'] = self.subsample_carpet(
             self.calculate_psc(
@@ -144,7 +144,7 @@ class CarpetPlot:
                 brain_mask=masks['csf'],
                 slice_timing=slice_timing
             ),
-            max_voxels=1000
+            max_voxels=300
         )
         fig = make_subplots(
             rows=4, 
@@ -289,24 +289,21 @@ class CarpetPlot:
         print("\nPlotting Gray Matter")
         clim = float(np.percentile(np.abs(demeaned_voxels['gm']), 95)) 
         print(f"Setting color limits to ±{clim:.2f}%")
-        fig.add_trace(
-            go.Heatmap(
-                z=demeaned_voxels['gm'] ,
-                x=list(range(demeaned_voxels['gm'].shape[1])),
-                colorscale="Gray",
-                colorbar=dict(title="PSC (%)"),
-                zmin=-clim,
-                zmax=clim,
-                hovertemplate=(
-                    "<b>Aquisition:</b> %{x}" + "<br>" +
-                    "<b>Voxel Number</b>: %{y} " + "<br>" +
-                    "<b>Percent Signal Change</b>: %{z} " + "<br>"
-                ),
-                showscale=False
+        gm_heatmap: go.Heatmap = go.Heatmap(
+            z=demeaned_voxels['gm'] ,
+            x=list(range(demeaned_voxels['gm'].shape[1])),
+            colorscale="Gray",
+            colorbar=dict(title="PSC (%)"),
+            zmin=-clim,
+            zmax=clim,
+            hovertemplate=(
+                "<b>Aquisition:</b> %{x}" + "<br>" +
+                "<b>Voxel Number</b>: %{y} " + "<br>" +
+                "<b>Percent Signal Change</b>: %{z} " + "<br>"
             ),
-            row=2,
-            col=1
+            showscale=False
         )
+        fig.add_trace(gm_heatmap, row=2, col=1)
         fig.update_xaxes(ticks="", showticklabels=False, row=2, col=1)
         fig.update_yaxes(title_text="Gray Matter Voxels", title_font=dict(size=11), title_standoff=5, showticklabels=True, row=2, col=1)
 
@@ -315,21 +312,22 @@ class CarpetPlot:
         print("\nPlotting White Matter")
         clim = float(np.percentile(np.abs(demeaned_voxels['wm']), 95)) 
         print(f"Setting color limits to ±{clim:.2f}%")
-        fig.add_trace(
-            go.Heatmap(
-                z=demeaned_voxels['wm'] ,
-                x=list(range(demeaned_voxels['wm'].shape[1])),
-                colorscale="Gray",
-                colorbar=dict(title="PSC (%)"),
-                zmin=-clim,
-                zmax=clim,
-                hovertemplate=(
-                    "<b>Aquisition:</b> %{x}" + "<br>" +
-                    "<b>Voxel Number</b>: %{y} " + "<br>" +
-                    "<b>Percent Signal Change</b>: %{z} " + "<br>"
-                ),
-                showscale=False
+        wm_heatmap: go.Heatmap = go.Heatmap(
+            z=demeaned_voxels['wm'] ,
+            x=list(range(demeaned_voxels['wm'].shape[1])),
+            colorscale="Gray",
+            colorbar=dict(title="PSC (%)"),
+            zmin=-clim,
+            zmax=clim,
+            hovertemplate=(
+                "<b>Aquisition:</b> %{x}" + "<br>" +
+                "<b>Voxel Number</b>: %{y} " + "<br>" +
+                "<b>Percent Signal Change</b>: %{z} " + "<br>"
             ),
+            showscale=False
+        )
+        fig.add_trace(
+            wm_heatmap,
             row=3,
             col=1
         )
@@ -341,27 +339,33 @@ class CarpetPlot:
         print("\nPlotting CSF")
         clim = float(np.percentile(np.abs(demeaned_voxels['csf']), 95)) 
         print(f"Setting color limits to ±{clim:.2f}%")
-        fig.add_trace(
-            go.Heatmap(
-                z=demeaned_voxels['csf'] ,
-                x=list(range(demeaned_voxels['csf'].shape[1])),
-                colorscale="Gray",
-                colorbar=dict(title="PSC (%)"),
-                zmin=-clim,
-                zmax=clim,
-                hovertemplate=(
-                    "<b>Aquisition:</b> %{x}" + "<br>" +
-                    "<b>Voxel Number</b>: %{y} " + "<br>" +
-                    "<b>Percent Signal Change</b>: %{z} " + "<br>"
-                ),
-                showscale=False
+        csf_heatmap: go.Heatmap = go.Heatmap(
+            z=demeaned_voxels['csf'] ,
+            x=list(range(demeaned_voxels['csf'].shape[1])),
+            colorscale="Gray",
+            colorbar=dict(title="PSC (%)"),
+            zmin=-clim,
+            zmax=clim,
+            hovertemplate=(
+                "<b>Aquisition:</b> %{x}" + "<br>" +
+                "<b>Voxel Number</b>: %{y} " + "<br>" +
+                "<b>Percent Signal Change</b>: %{z} " + "<br>"
             ),
+            showscale=False
+        )
+        fig.add_trace(
+            csf_heatmap,
             row=4,
             col=1
         )
         fig.update_xaxes(title_text="Aquisition", title_font=dict(size=12), title_standoff=5, showticklabels=True, row=4, col=1)
         fig.update_yaxes(title_text="CSF Voxels", title_font=dict(size=11), title_standoff=5, showticklabels=True, row=4, col=1)
-        
+
+        self.heatmaps: dict[str, go.Heatmap] = {
+            'gm': gm_heatmap,
+            'wm': wm_heatmap,
+            'csf': csf_heatmap
+        }
         ## Write to file
         fig.write_html(output_file_path)
         print(f"\nOutput .html Plot At: {output_file_path}")
@@ -439,37 +443,37 @@ class CarpetPlot:
     
     def coregister_anat_to_func_fsl(self, anatomical_image, reference_volume_image, output_directory):
         flirt = fsl.FLIRT()
-        flirt.inputs.in_file = anatomical_image
-        flirt.inputs.reference = reference_volume_image
-        flirt.inputs.out_file = f"{output_directory}/anat_coreg.nii.gz"
-        flirt.inputs.out_matrix_file = f"{output_directory}/anat2func.mat"
-        flirt.inputs.cost = "corratio"      # correlation ratio, standard for cross-modal
-        flirt.inputs.dof = 6                # rigid body (no scaling, since same subject)
-        flirt.inputs.interp = "trilinear"
+        flirt.inputs.in_file = anatomical_image  # type: ignore
+        flirt.inputs.reference = reference_volume_image  # type: ignore
+        flirt.inputs.out_file = f"{output_directory}/anat_coreg.nii.gz"  # type: ignore
+        flirt.inputs.out_matrix_file = f"{output_directory}/anat2func.mat"  # type: ignore
+        flirt.inputs.cost = "corratio"  # type: ignore     correlation ratio, standard for cross-modal
+        flirt.inputs.dof = 6     # type: ignore    rigid body (no scaling, since same subject)
+        flirt.inputs.interp = "trilinear" # type: ignore
         result = flirt.run()
-        return result.outputs.out_file, result.outputs.out_matrix_file
+        return result.outputs.out_file, result.outputs.out_matrix_file # type: ignore
 
 
     def skull_strip_anat(self, coregistered_anat_image, output_directory):
         bet = fsl.BET()
-        bet.inputs.in_file = coregistered_anat_image
-        bet.inputs.out_file = os.path.join(output_directory, "ss_anat_brain.nii.gz")
-        bet.inputs.mask = True        
-        bet.inputs.frac = 0.5         
+        bet.inputs.in_file = coregistered_anat_image # type: ignore
+        bet.inputs.out_file = os.path.join(output_directory, "ss_anat_brain.nii.gz")  # type: ignore
+        bet.inputs.mask = True   # type: ignore      
+        bet.inputs.frac = 0.5     # type: ignore     
         result = bet.run()
-        return result.outputs.out_file, result.outputs.mask_file
+        return result.outputs.out_file, result.outputs.mask_file # type: ignore
 
 
     def segment_anat_fsl(self, coregistered_anat_image, output_directory):
         fast = fsl.FAST()
-        fast.inputs.in_files = [coregistered_anat_image]
-        fast.inputs.img_type = 1
-        fast.inputs.number_classes = 3
-        fast.inputs.output_biascorrected = True
-        fast.inputs.output_biasfield = False
-        fast.inputs.segments = True
-        fast.inputs.probability_maps = True
-        fast.inputs.out_basename = os.path.join(output_directory, "anat_seg")
+        fast.inputs.in_files = [coregistered_anat_image] # type: ignore
+        fast.inputs.img_type = 1 # type: ignore
+        fast.inputs.number_classes = 3 # type: ignore
+        fast.inputs.output_biascorrected = True # type: ignore
+        fast.inputs.output_biasfield = False # type: ignore
+        fast.inputs.segments = True # type: ignore
+        fast.inputs.probability_maps = True # type: ignore
+        fast.inputs.out_basename = os.path.join(output_directory, "anat_seg") # type: ignore
 
         try:
             fast.run()
@@ -529,8 +533,8 @@ class CarpetPlot:
 
 
     def calculate_psc(self, functional_image, brain_mask, slice_timing):
-        func_img = nib.load(functional_image)
-        mask_img = nib.load(brain_mask)
+        func_img = nib.load(functional_image)  # type: ignore
+        mask_img = nib.load(brain_mask)  # type: ignore
 
         mask_resampled = resample_to_img(
             source_img=mask_img,
@@ -540,7 +544,7 @@ class CarpetPlot:
             copy_header=True,
         )
 
-        func_data = func_img.get_fdata()                   # (X,Y,Z,T)
+        func_data = func_img.get_fdata()    # type: ignore   
         mask_data = mask_resampled.get_fdata().astype(bool)
 
         # ------------------------------------------------------------------
