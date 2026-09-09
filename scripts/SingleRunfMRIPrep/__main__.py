@@ -236,7 +236,8 @@ class StartSingleRunfMRIPrep:
             "--mem", str(mem_mb),
             "-w", "/work_dir",
             "--skip_bids_validation",
-            "--output-spaces", "MNI152NLin2009cAsym:res-2", "func"
+            "--output-spaces", "MNI152NLin2009cAsym:res-2", "func",
+            "--ignore", "slicetiming" # reconstruction does this step already
         ] 
         print(f"Running Command: {fmriprep_command}")
         result: subprocess.CompletedProcess = subprocess.run(fmriprep_command)
