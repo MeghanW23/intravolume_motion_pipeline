@@ -1,6 +1,7 @@
 import os 
 import json
 import math
+import warnings
 import numpy as np 
 from glob import glob
 import SimpleITK as sitk
@@ -14,7 +15,8 @@ class GraphTransformDirectory:
                  output_file_path: str, 
                  input_rotation_unit: str, 
                  plot_tile: str = "Motion Characterization Plots", 
-                 threshold_in_mm: float | None = None,
+                 threshold_in_mm: float | None = None, # pyright: ignore[reportRedeclaration]
+                 motion_flagged_volumes_text_file: str | None = None,
                  transform_suffix: str = ".tfm", framewise_displacements = False,
                  also_save_to_png: bool = True):
 
@@ -52,8 +54,21 @@ class GraphTransformDirectory:
 
         # Get motion threshold from JSON file's 'SpacingBetweenSlices' key and get motion flags based on this threshold
         self.motion_flagged_volumes: list[int] = []
-        if threshold_in_mm:
-                        
+        
+        if motion_flagged_volumes_text_file:
+            if threshold_in_mm:
+                warnings.warn(
+                    message=\
+                        "Argument 'threshold_in_mm' should be None if you inputted a value for 'motion_flagged_volumes_text_file'" + \
+                        "Setting 'threshold_in_mm' to None.",
+                    category=UserWarning
+                )
+                threshold_in_mm: float | None = None 
+                
+            self.motion_flagged_volumes: list[int]  = self.load_motion_flagged_volumes(motion_flagged_volumes_text_file) 
+            print(f"Motion Flagged Volumes:\n{self.motion_flagged_volumes}")
+
+        elif threshold_in_mm:
             self.motion_flagged_volumes: list[int] = self.get_motion_flagged_volumes(
                 num_volumes=self.num_volumes,
                 num_slice_groups=self.num_slice_groups,
@@ -61,7 +76,7 @@ class GraphTransformDirectory:
                 mm_displacement_threshold=threshold_in_mm
             )
             print(f"Motion Flagged Volumes:\n{self.motion_flagged_volumes}")
-        
+
         print("Initializing Plot")
         # Set up plot layout
         fig = make_subplots(rows=3, cols=3,
@@ -242,8 +257,8 @@ class GraphTransformDirectory:
         )
 
         # Plot displacement threshold line
-        print("Plotting Displacement Threshold")
         if threshold_in_mm:
+            print("Plotting Displacement Threshold")
             fig.add_hline(
                 y=threshold_in_mm,
                 line=dict(color="black", width=2, dash="dash"),
@@ -455,9 +470,18 @@ class GraphTransformDirectory:
                 
         with open(json_path, mode='r') as f:
             return len(set(json.load(f)['SliceTiming']))
+
         
+    def load_motion_flagged_volumes(self, motion_flag_list_path: str) -> list[int]:
 
-
+        motion_flagged_volumes: list[int] = []
+        with open(motion_flag_list_path, mode='r') as file:
+            for line in file: 
+                if not line.strip():
+                    continue 
+                motion_flagged_volumes.append(int(line.strip()))
+        return motion_flagged_volumes
+    
     def get_motion_flagged_volumes(self,
                                    num_volumes: int, 
                                    num_slice_groups: int, 
@@ -513,12 +537,23 @@ if __name__ == '__main__':
         help="The file extension of all the transforms in the directory. Default: '.tfm'"
     )
     parser.add_argument(
+        "--motion_flagged_volume_text_file",
+        required=False,
+        default=None,
+        help=\
+            "If you have a list of motion-flagged volumes, input them as a .txt file here. " + \
+            "Please enter a value for '--motion_flagged_volume_text_file' OR '--threshold_in_mm' OR neither."
+    )
+    parser.add_argument(
         "--threshold_in_mm",
         required=False,
         type=float,
         default=0.6,
-        help="Threshold in mm. Default: 0.6 mm"
+        help=\
+            "Threshold in mm. Default: 0.6 mm. " + \
+            "Please enter a value for '--motion_flagged_volume_text_file' OR '--threshold_in_mm' OR neither."
     )
+    
     parser.add_argument(
         "--framewise_displacements",
         action='store_true',
@@ -539,6 +574,9 @@ if __name__ == '__main__':
         input_rotation_unit=args.input_rotation_unit,
         transform_suffix=args.transform_suffix,
         threshold_in_mm=args.threshold_in_mm,
+        motion_flagged_volumes_text_file=\
+            os.path.abspath(args.motion_flagged_volume_text_file)
+            if args.motion_flagged_volume_text_file else None,
         framewise_displacements=args.framewise_displacements,
         also_save_to_png=args.also_save_to_png
     )
