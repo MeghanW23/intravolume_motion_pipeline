@@ -1,3 +1,5 @@
+.vscode/settings.json
+
 scripts/__pycache__
 scripts/MotionCharacterization/__pycache__
 scripts/MotionCorrection/__pycache__
