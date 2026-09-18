@@ -75,20 +75,17 @@ class CompareFDvsSD:
                 sorted_intravolume_displacements[volume_num] = []
             sorted_intravolume_displacements[volume_num].append(displacement_value)
 
-        all_mins: list[float] = []
-        all_maxes: list[float] = []
+        all_medians: list[float] = []
         for volume_num, intra_disp_list in sorted_intravolume_displacements.items(): # pyright: ignore[reportAssignmentType]
             intra_disp_list: pd.Series = pd.Series(intra_disp_list)
-            
-            all_mins.append(intra_disp_list.min())
 
-            all_maxes.append(intra_disp_list.max())
+            all_medians.append(intra_disp_list.median())
             
             axis2.fill_between(
                 [volume_num, volume_num + 1],
-                intra_disp_list.quantile(0.05), y2=intra_disp_list.quantile(0.95),
-                color='red', alpha=0.25, lw=0,
-                label='Intra-Frame-Wise (Per-Volume 5% and 95% Quartiles)' if volume_num == 0 else None
+                intra_disp_list.min(), y2=intra_disp_list.max(),
+                color='red', alpha=0.4, lw=0,
+                label='Intra-Frame-Wise (Per-Volume Range)' if volume_num == 0 else None
             )
 
         axis2.set_xlabel("Volume Number")
@@ -96,17 +93,18 @@ class CompareFDvsSD:
         axis2.set_title("Motion Traces", fontsize=10, loc='left')
         axis2.plot(
             [volume_num + 0.5 for volume_num in range(num_volumes)],
-            all_maxes,
-            label='Intra-Frame-Wise (Per-Volume Max)',
+            all_medians,
+            label='Intra-Frame-Wise (Per-Volume Median)',
             color='red',
             linewidth=2
         )
         axis2.scatter(
             [volume_num + 0.5 for volume_num in range(num_volumes)],
-            all_maxes,
+            all_medians,
             color='red',
             s=5
         )
+
         axis2.plot(
             [volume_num + 0.5 for volume_num in range(num_volumes)],
             framewise_displacements,
@@ -129,18 +127,23 @@ class CompareFDvsSD:
         axis2.set_ylabel("Displacement (mm)")
         axis2.legend(fontsize=8, loc='upper left')
 
-        axis1.eventplot(
-            [volume_num + 0.5 for volume_num in framewise_motion_flags], 
-            color='blue',
-            alpha=0.5,
-            label="Frame-Wise Motion Flag"
-        )
-        axis1.eventplot(
-            [volume_num + 0.5 for volume_num in intravolume_motion_flags], 
-            color='red',
-            alpha=0.5,
-            label="Intra-Frame-Wise Motion Flag"
-        )
+        # motion flag plots
+        for i, volume_num in enumerate(framewise_motion_flags):
+            axis1.axvspan(
+                volume_num, volume_num + 1,
+                facecolor="blue",
+                edgecolor='none',
+                label=f"Frame-Wise Motion Flags ({len(framewise_motion_flags)} / {num_volumes} Volumes)" if i == 0 else "",
+                alpha=0.5
+            )
+        for i, volume_num in enumerate(intravolume_motion_flags):
+            axis1.axvspan(
+                volume_num, volume_num + 1,
+                facecolor="red",
+                edgecolor='none',
+                label=f"Intra-Frame-Wise Motion Flags ({len(intravolume_motion_flags)} / {num_volumes} Volumes)" if i == 0 else "",
+                alpha=0.5
+            )
         axis1.set_title("Motion Flags", fontsize=10, loc='left')
         axis1.set_ylim(0.5, 1.5)
         axis1.get_yaxis().set_visible(False)
@@ -161,7 +164,6 @@ class CompareFDvsSD:
         print(f"Output Plot Saved to: {output_graph_path}")
         plt.show()
 
-            
 
     def load_intravolume_displacements(self, displacements_text_file: str) -> list[float]:
         displacements: list[float] = []
