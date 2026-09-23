@@ -187,7 +187,11 @@ class StartMotionCorrection:
             raise ValueError(error_msg)
 
     
-def find_intravolume_corrected_data(output_directory_path: str, scrubbed_data_filename_prefix: str, nonscrubbed_data_filename_prefix: str) -> str:
+def find_intravolume_corrected_data(
+    output_directory_path: str, 
+    scrubbed_data_filename_prefix: str, 
+    nonscrubbed_data_filename_prefix: str,
+    raw_func_data_path: str | None = None) -> str:
 
     corrected_image: str = os.path.join(output_directory_path, scrubbed_data_filename_prefix + ".nii.gz")
     if not os.path.exists(corrected_image):
@@ -201,6 +205,23 @@ def find_intravolume_corrected_data(output_directory_path: str, scrubbed_data_fi
             ),
             category=UserWarning
         )
+        if not os.path.exists(corrected_image):
+            if raw_func_data_path:
+                warnings.warn(
+                    message=(
+                        f"Could not find non-scrubbed (but corrected) data at: {corrected_image}. "
+                        f"We will run fMRIPrep on the RAW, UNCORRECTED DATA at: {raw_func_data_path}. "
+                        "IF YOU INTENDED TO DO INTRA-VOLUME MOTION CORRECTION ON THE DATA, SOMETHING HAS GONE WRONG. "
+                        "If you just want to run fMRIPrep on the raw data, then this is correct."
+                    )
+                )
+                return raw_func_data_path
+            else:
+                raise FileNotFoundError(
+                    f"Could not find EITHER scrubbed data at: {os.path.join(output_directory_path, scrubbed_data_filename_prefix + '.nii.gz')} " + 
+                    f"OR non-scrubbed (but corrected) data at: {corrected_image}."
+                )
+
         return corrected_image
     
     else:
