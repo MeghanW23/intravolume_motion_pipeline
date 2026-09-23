@@ -30,7 +30,8 @@ class StartSingleRunfMRIPrep:
                  FMRIPREP_TEMPLATEFLOW_DIRECTORY: str | None = None,
                  n_jobs: int | None = os.cpu_count(), # pyright: ignore[reportRedeclaration]
                  omp_nthreads: int = 8,
-                 mem_mb: int = 24000  # in MB
+                 mem_mb: int = 24000,  # in MB
+                 skip_slice_timing_correction: bool = True
                  ) -> None: 
 
         if isinstance(func_data, str):
@@ -239,6 +240,20 @@ class StartSingleRunfMRIPrep:
             "--output-spaces", "MNI152NLin2009cAsym:res-2", "func",
             "--ignore", "slicetiming" # reconstruction does this step already
         ] 
+        if skip_slice_timing_correction:
+            # The reconstruction step already does this
+            fmriprep_command += ["--ignore", "slicetiming"]
+        else:
+            warnings.warn(
+                message=(
+                    "fMRIPrep WILL BE doing slice timing correction. " 
+                    "If you ran motion-correction on the inputted func data, this should be " 
+                    "turned OFF. If you are running fMRIPrep on un-corrected data, then "
+                    "this is correct."
+                ),
+                category=UserWarning
+            )
+            
         print(f"Running Command: {fmriprep_command}")
         result: subprocess.CompletedProcess = subprocess.run(fmriprep_command)
         if result.returncode != 0:

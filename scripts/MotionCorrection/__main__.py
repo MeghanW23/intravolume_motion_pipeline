@@ -198,7 +198,7 @@ def find_intravolume_corrected_data(
         corrected_image: str = os.path.join(output_directory_path, nonscrubbed_data_filename_prefix + ".nii.gz") 
         warnings.warn(
             message=(
-                f"Could not find scrubbed data at: {os.path.join(output_directory_path, scrubbed_data_filename_prefix + '.nii.gz')}"
+                f"Could not find scrubbed data at: {os.path.join(output_directory_path, scrubbed_data_filename_prefix + '.nii.gz')}. "
                 f"Using file: {corrected_image}. "
                 "If your data has no above-threshold motion, this is expected. "
                 "If not, something has gone wrong. "

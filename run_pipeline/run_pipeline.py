@@ -167,6 +167,8 @@ class RunPipeline:
         ========================================
         """
         if configurations.RUN_FMRIPREP:
+            skip_fmriprep_slice_timing_correction: bool = True
+
             from MotionCorrection.__main__ import find_intravolume_corrected_data
             if not configurations.RUN_MOTION_CORRECTION and not configurations.RUN_MOTION_CHARACTERIZATION:
                 # For running just fmriprep (and not other steps), provide the raw data
@@ -178,6 +180,10 @@ class RunPipeline:
                     nonscrubbed_data_filename_prefix=configurations.NON_SCRUBBED_DATA_FILENAME_PREFIX,
                     raw_func_data_path=self.func_nifti_image_path
                 )
+                if self.motion_corrected_image_path == self.func_nifti_image_path: 
+                    # if this is true, then we didnt motion correct the data, and 
+                    # thus we need to have fMRIPrep do the slice-timing correction
+                    skip_fmriprep_slice_timing_correction: bool = False
             else:
                 self.motion_corrected_image_path: str = find_intravolume_corrected_data(
                     output_directory_path=self.motion_correction_output_directory,
@@ -203,7 +209,8 @@ class RunPipeline:
                 FMRIPREP_TEMPLATEFLOW_DIRECTORY=configurations.FMRIPREP_TEMPLATEFLOW_DIRECTORY,
                 n_jobs=configurations.N_JOBS,
                 omp_nthreads=configurations.OMP_NTHREADS, # pyright: ignore[reportArgumentType],
-                mem_mb=configurations.MEM_MB # pyright: ignore[reportArgumentType]
+                mem_mb=configurations.MEM_MB, # pyright: ignore[reportArgumentType]
+                skip_slice_timing_correction=skip_fmriprep_slice_timing_correction
             )       
 
         """
