@@ -213,7 +213,8 @@ def find_intravolume_corrected_data(
                         f"We will run fMRIPrep on the RAW, UNCORRECTED DATA at: {raw_func_data_path}. "
                         "IF YOU INTENDED TO DO INTRA-VOLUME MOTION CORRECTION ON THE DATA, SOMETHING HAS GONE WRONG. "
                         "If you just want to run fMRIPrep on the raw data, then this is correct."
-                    )
+                    ),
+                    category=UserWarning
                 )
                 return raw_func_data_path
             else:
