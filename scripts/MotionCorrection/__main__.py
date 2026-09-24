@@ -25,6 +25,7 @@ class StartMotionCorrection:
                  output_directory_path: str = "outputs",
                  working_directory_path: str = "working",
                  matlab_main_script_path: str = os.path.abspath('main_cameraparams.m'),
+                 motion_flag_text_file: str | None = None,
                  noscrubbing_recon_filename_prefix: str = "no-scrubbing_motion-corrected_func_image",
                  scrubbed_recon_filename_prefix: str = "scrubbed_and_motion-corrected_func_image",
                  dcmdjpeg_path: str = 'dcmdjpeg',
@@ -151,6 +152,9 @@ class StartMotionCorrection:
             f"{self.motion_threshold}, "
             f"{sms_factor});"
         )
+        if motion_flag_text_file:
+            matlab_function: str = matlab_function.replace(");", f", '{motion_flag_text_file}');")
+        
         command: list[str] = [
             matlab_path,
             "-batch",
@@ -252,7 +256,7 @@ if __name__ == "__main__":
         required=False,
         help=\
             "Please enter either a value for --dicom_directory OR " + \
-            " a value for BOTH: --nifti_image_file_path and --json_file_path.",
+            " a value for BOTH: --nifti_image_path and --json_file_path.",
         default=None
     )
     parser.add_argument(
@@ -272,7 +276,7 @@ if __name__ == "__main__":
         help=\
             "The raw 4D NiFTI Image. " + \
             "Please enter either a value for --dicom_directory OR " + \
-            " a value for BOTH: --nifti_image_file_path and --json_file_path."
+            " a value for BOTH: --nifti_image_path and --json_file_path."
     )
     parser.add_argument(
         "--json_file_path",
@@ -280,7 +284,7 @@ if __name__ == "__main__":
         help=\
             "The JSON sidecar for the raw 4D NiFTI Image. " + \
             "Please enter either a value for --dicom_directory OR " + \
-            " a value for BOTH: --nifti_image_file_path and --json_file_path."
+            " a value for BOTH: --nifti_image_path and --json_file_path."
     )
     parser.add_argument(
         "--output_directory_path",
@@ -319,6 +323,14 @@ if __name__ == "__main__":
             "in mm. Leave as None and we will calculate a threshold." \
             "Default: None."
     )
+    parser.add_argument(
+        "--motion_flag_text_file",
+        required=False,
+        default=None,
+        help=\
+            "Add a text file containing the 0-indexed volume numbers of volumes you want to scrub. " \
+            "By default, this parameter is set to None and volumes are scrubbed based on the motion_threshold given."
+    )
     args: argparse.Namespace = parser.parse_args()
     StartMotionCorrection(
         matlab_main_script_path=os.path.abspath(args.main_matlab_script_path),
@@ -330,5 +342,6 @@ if __name__ == "__main__":
         displacements_text_file=os.path.abspath(args.displacements_text_file),
         motion_threshold=args.motion_threshold,
         output_directory_path=os.path.abspath(args.output_directory_path),
-        working_directory_path=os.path.abspath(args.working_directory_path)
+        working_directory_path=os.path.abspath(args.working_directory_path),
+        motion_flag_text_file=os.path.abspath(args.motion_flag_text_file) if args.motion_flag_text_file else None
     )

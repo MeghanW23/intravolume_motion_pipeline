@@ -139,7 +139,7 @@ class DetermineMotionThreshold:
         self.motion_threshold: float = mm_mean + (2 * mm_std)
         min_motion_threshold: float = self.get_threshold_in_mm(
             spacing=voxel_spacing,
-            threshold_as_percent=10
+            threshold_as_percent=5
         )
         if min_motion_threshold > self.motion_threshold:
             warnings.warn(
