@@ -362,9 +362,9 @@ class CarpetPlot:
         fig.update_yaxes(title_text="CSF Voxels", title_font=dict(size=11), title_standoff=5, showticklabels=True, row=4, col=1)
 
         self.heatmaps: dict[str, go.Heatmap] = {
-            'gm': gm_heatmap,
-            'wm': wm_heatmap,
-            'csf': csf_heatmap
+            'Gray Matter': gm_heatmap,
+            'White Matter': wm_heatmap,
+            'Cerebrospinal Fluid': csf_heatmap
         }
         ## Write to file
         fig.write_html(output_file_path)
