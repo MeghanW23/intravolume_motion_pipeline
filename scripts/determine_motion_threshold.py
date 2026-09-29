@@ -16,7 +16,7 @@ class DetermineMotionThreshold:
     2. Find the threshold that corresponds to 20% of the data being excluded.
         - In general, if 20-30% of the data is above the threshold, there may be too little data
           left for reliable analysis
-    3. Calculate a mean and standard deviation of the remaining 70% of volumes.
+    3. Calculate a mean and standard deviation of the remaining 80% of volumes.
     4. Get mm motion threshold via: mean + (2 * standard deviation)
     """
 
