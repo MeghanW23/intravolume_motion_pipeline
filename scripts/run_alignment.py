@@ -151,28 +151,40 @@ class RunAlignments:
         )
 
 
-    def run_command(self, 
-                    command: list[str], 
-                    verbose: bool = True) -> None:
+    def run_command(
+        self,
+        command: list[str],
+        verbose: bool = True
+    ) -> None:
+
         if verbose:
             print(f"Running Command: {command}")
 
-        result: subprocess.CompletedProcess = \
-            subprocess.run(command, capture_output=True, text=True)
-        
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True
+        )
+
         if result.returncode != 0:
-            raise CalledProcessError(
-                returncode=result.returncode,
-                cmd=result.args,
+            print(f"Command failed with exit code {result.returncode}")
+            print(f"Stdout:\n{result.stdout}")
+            print(f"Stderr:\n{result.stderr}")
+
+            raise subprocess.CalledProcessError(
+                result.returncode,
+                result.args,
                 output=result.stdout,
                 stderr=result.stderr
             )
-        else:
-            print(f"Command: {command} was successful.")
-            if result.stdout:
-                print(f"Stdout:\n{result.stdout}")
-            if result.stderr:
-                print(f"Stderr:\n{result.stderr}")
+
+        print(f"Command: {command} was successful.")
+
+        if result.stdout:
+            print(f"Stdout:\n{result.stdout}")
+
+        if result.stderr:
+            print(f"Stderr:\n{result.stderr}")
 
 
     def return_output_transform_path(self) -> str:
