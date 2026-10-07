@@ -122,7 +122,7 @@ class CompareFDvsSD:
             y=mm_threshold,
             linestyle="--",
             color="black",
-            label=f"Motion Threshold: {mm_threshold} mm"
+            label=f"Motion Threshold: {round(mm_threshold, 4)} mm"
         )
         axis2.set_ylabel("Displacement (mm)")
         axis2.legend(fontsize=8, loc='upper left')
